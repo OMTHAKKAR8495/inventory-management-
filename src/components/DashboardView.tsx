@@ -7,7 +7,7 @@ import {
   AlertTriangle,
   XCircle,
   TrendingUp,
-  PieChart,
+  PieChart as PieIcon,
   Clock,
   ArrowUpRight,
   ArrowDownRight,
@@ -16,7 +16,23 @@ import {
   Calendar,
   Layers,
   ArrowRight,
+  ShoppingCart,
+  Truck,
+  BookOpen,
+  BarChart3,
+  Award,
 } from "lucide-react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import { DashboardMetrics, User } from "@/lib/types";
 
 interface DashboardViewProps {
@@ -24,15 +40,23 @@ interface DashboardViewProps {
   user: User;
   onNavigateToInventory: (filterStatus?: string) => void;
   onNavigateToBulk: () => void;
+  onNavigateToPOS?: () => void;
+  onNavigateToPO?: () => void;
+  onNavigateToKhata?: () => void;
   onQuickStockAdjust: (productId: string) => void;
   isLoading: boolean;
 }
+
+const PIE_COLORS = ["#3b82f6", "#6366f1", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#14b8a6", "#06b6d4"];
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   metrics,
   user,
   onNavigateToInventory,
   onNavigateToBulk,
+  onNavigateToPOS,
+  onNavigateToPO,
+  onNavigateToKhata,
   onQuickStockAdjust,
   isLoading,
 }) => {
@@ -59,6 +83,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const outOfStockPct = metrics.total_products > 0
     ? Math.round((metrics.out_of_stock_count / metrics.total_products) * 100)
     : 0;
+
+  const chartData = metrics.category_breakdown.map((cat) => ({
+    name: cat.category.split(" ")[0],
+    fullName: cat.category,
+    units: cat.total_units,
+    value: cat.cost_value || (cat.sales_value ? cat.sales_value * 0.8 : 0),
+  }));
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
@@ -92,21 +123,36 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => onNavigateToInventory()}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold border border-slate-200/80 transition flex items-center gap-2"
-            >
-              <Boxes className="w-4 h-4 text-blue-600" />
-              Stock Catalog
-            </button>
-            <button
-              onClick={onNavigateToBulk}
-              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2"
-            >
-              <PlusCircle className="w-4 h-4" />
-              Bulk Add / Upload
-            </button>
+          <div className="flex flex-wrap items-center gap-2.5">
+            {onNavigateToPOS && (
+              <button
+                onClick={onNavigateToPOS}
+                className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                Quick Billing (POS)
+              </button>
+            )}
+
+            {onNavigateToPO && (
+              <button
+                onClick={onNavigateToPO}
+                className="px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold border border-indigo-200 transition flex items-center gap-1.5"
+              >
+                <Truck className="w-4 h-4" />
+                Supplier POs
+              </button>
+            )}
+
+            {onNavigateToKhata && (
+              <button
+                onClick={onNavigateToKhata}
+                className="px-3.5 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-bold border border-purple-200 transition flex items-center gap-1.5"
+              >
+                <BookOpen className="w-4 h-4" />
+                Khata Ledger
+              </button>
+            )}
           </div>
         </div>
 
@@ -269,9 +315,74 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       )}
 
-      {/* Stock Health Bar & Category Breakdown */}
+      {/* Visual Charts: Recharts Bar & Pie breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left (7 cols): Bar Chart of Units */}
+        <div className="lg:col-span-7 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-blue-600" />
+              Stock Volume by Department (Units)
+            </h4>
+            <span className="text-xs text-slate-400 font-medium">Live On-Hand Inventory</span>
+          </div>
+
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#64748b" }} interval={0} angle={-20} textAnchor="end" />
+                <YAxis tick={{ fontSize: 10, fill: "#64748b" }} />
+                <Tooltip
+                  formatter={(value: any) => [`${value} units`, "Stock Count"]}
+                  labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
+                  contentStyle={{ backgroundColor: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "12px" }}
+                />
+                <Bar dataKey="units" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Right (5 cols): Donut Chart of Valuation */}
+        <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <PieIcon className="w-4 h-4 text-indigo-600" />
+              Inventory Valuation Share (₹)
+            </h4>
+            <span className="text-xs text-slate-400 font-medium">Department Split</span>
+          </div>
+
+          <div className="h-64 w-full flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  nameKey="fullName"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={3}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value: any) => [`₹${Number(value).toLocaleString("en-IN")}`, "Valuation"]}
+                  contentStyle={{ backgroundColor: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "12px" }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Stock Health Bar & Urgent Attention */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Category Breakdown & Health Bar */}
+        {/* Left 2 Cols: Health Bar */}
         <div className="lg:col-span-2 space-y-6">
           {/* Stock Health Status */}
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
@@ -317,53 +428,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
             </div>
           </div>
-
-          {/* Category Breakdown */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
-            <div className="flex items-center justify-between mb-5">
-              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <PieChart className="w-4 h-4 text-indigo-600" />
-                Category-Wise Stock Distribution
-              </h4>
-              <span className="text-xs text-slate-500">{metrics.category_breakdown.length} Departments</span>
-            </div>
-
-            <div className="space-y-4">
-              {metrics.category_breakdown.map((cat) => {
-                const pct = metrics.total_stock_units > 0
-                  ? Math.round((cat.total_units / metrics.total_stock_units) * 100)
-                  : 0;
-
-                return (
-                  <div key={cat.category} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-slate-800">{cat.category}</span>
-                      <div className="flex items-center gap-3 text-slate-500">
-                        <span>{cat.product_count} products</span>
-                        <span className="font-bold text-slate-900">{cat.total_units.toLocaleString("en-IN")} units</span>
-                        {isAdmin && cat.cost_value && (
-                          <span className="font-semibold text-blue-600">
-                            ₹{cat.cost_value.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        style={{ width: `${Math.max(pct, 4)}%` }}
-                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </div>
 
-        {/* Right 1 Col: Urgent Attention & Expiry Alerts */}
+        {/* Right 1 Col: Urgent Attention */}
         <div className="space-y-6">
-          {/* Critical Alerts Card */}
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
@@ -414,59 +482,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               ) : (
                 <div className="text-center py-6 text-xs text-slate-500">
                   No critical stock warnings right now!
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Recent Stock Movements Feed */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-blue-600" />
-                Recent Stock Activity
-              </h4>
-            </div>
-
-            <div className="space-y-3">
-              {metrics.recent_activities && metrics.recent_activities.length > 0 ? (
-                metrics.recent_activities.slice(0, 5).map((log) => {
-                  const isPositive = log.quantity_delta >= 0;
-                  return (
-                    <div key={log.id} className="flex items-start gap-2.5 text-xs">
-                      <div
-                        className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                          isPositive ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {isPositive ? (
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                        ) : (
-                          <ArrowDownRight className="w-3.5 h-3.5" />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-slate-800 truncate">{log.product_name}</span>
-                          <span
-                            className={`font-bold ml-2 shrink-0 ${
-                              isPositive ? "text-emerald-600" : "text-red-600"
-                            }`}
-                          >
-                            {isPositive ? `+${log.quantity_delta}` : log.quantity_delta}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-500 truncate">{log.reason || "Stock updated"}</p>
-                        <p className="text-[10px] text-slate-400">
-                          {new Date(log.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} by {log.user_name}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-4 text-xs text-slate-500">
-                  No stock changes logged yet.
                 </div>
               )}
             </div>

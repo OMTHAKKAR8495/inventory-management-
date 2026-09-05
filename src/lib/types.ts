@@ -124,3 +124,110 @@ export interface ProductFilters {
   page?: number;
   limit?: number;
 }
+
+// ----------------------------------------------------
+// POS & Quick Billing Models
+// ----------------------------------------------------
+export type PaymentMethod = "cash" | "upi" | "khata" | "card" | "bank_transfer";
+export type PaymentStatus = "paid" | "partial" | "unpaid";
+
+export interface InvoiceItem {
+  id: string;
+  invoice_id: string;
+  product_id: string;
+  product_name: string;
+  sku: string;
+  unit: string;
+  unit_price: number;
+  cost_price: number;
+  quantity: number;
+  total_price: number;
+}
+
+export interface Invoice {
+  id: string;
+  invoice_number: string;
+  customer_id?: string | null;
+  customer_name: string;
+  customer_phone?: string;
+  subtotal: number;
+  discount_amount: number;
+  tax_amount: number;
+  grand_total: number;
+  payment_method: PaymentMethod;
+  payment_status: PaymentStatus;
+  notes?: string;
+  created_by_id: string;
+  created_by_name: string;
+  created_at: string;
+  items?: InvoiceItem[];
+}
+
+export interface CartItem {
+  product: Product;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+}
+
+// ----------------------------------------------------
+// Procurement & Purchase Orders (PO)
+// ----------------------------------------------------
+export type POStatus = "draft" | "sent" | "received" | "cancelled";
+
+export interface PurchaseOrderItem {
+  id: string;
+  po_id: string;
+  product_id: string;
+  product_name: string;
+  sku: string;
+  current_stock: number;
+  reorder_quantity: number;
+  estimated_unit_cost: number;
+  total_estimated_cost: number;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  po_number: string;
+  supplier_name: string;
+  total_estimated_amount: number;
+  status: POStatus;
+  items_count: number;
+  notes?: string;
+  created_by_id: string;
+  created_by_name: string;
+  created_at: string;
+  received_at?: string | null;
+  items?: PurchaseOrderItem[];
+}
+
+// ----------------------------------------------------
+// Customer Khata & Trade Credit Ledger
+// ----------------------------------------------------
+export interface Customer {
+  id: string;
+  name: string;
+  store_name: string;
+  phone: string;
+  address?: string;
+  credit_limit: number;
+  current_balance: number; // positive means customer owes store
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KhataTransaction {
+  id: string;
+  customer_id: string;
+  invoice_id?: string | null;
+  type: "debit_purchase" | "credit_payment";
+  amount: number;
+  previous_balance: number;
+  new_balance: number;
+  payment_mode?: string;
+  notes?: string;
+  created_by_name: string;
+  created_at: string;
+}
+

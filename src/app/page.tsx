@@ -7,6 +7,9 @@ import { DashboardView } from "@/components/DashboardView";
 import { InventoryView } from "@/components/InventoryView";
 import { BulkUploadStudio } from "@/components/BulkUploadStudio";
 import { AuditLogsView } from "@/components/AuditLogsView";
+import { BillingCounterView } from "@/components/BillingCounterView";
+import { PurchaseOrdersView } from "@/components/PurchaseOrdersView";
+import { KhataLedgerView } from "@/components/KhataLedgerView";
 import { ProductFormModal } from "@/components/ProductFormModal";
 import { StockAdjustModal } from "@/components/StockAdjustModal";
 import { UsersModal } from "@/components/UsersModal";
@@ -19,7 +22,7 @@ import { CheckCircle2, AlertCircle } from "lucide-react";
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "inventory" | "bulk" | "audit">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "inventory" | "pos" | "procurement" | "khata" | "bulk" | "audit">("dashboard");
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [isMetricsLoading, setIsMetricsLoading] = useState(true);
 
@@ -289,6 +292,9 @@ export default function Home() {
               setActiveTab("inventory");
             }}
             onNavigateToBulk={() => setActiveTab("bulk")}
+            onNavigateToPOS={() => setActiveTab("pos")}
+            onNavigateToPO={() => setActiveTab("procurement")}
+            onNavigateToKhata={() => setActiveTab("khata")}
             onQuickStockAdjust={async (productId) => {
               try {
                 const res = await fetch(`/api/products/${productId}`);
@@ -322,6 +328,30 @@ export default function Home() {
             }}
             onOpenBulkUpload={() => setActiveTab("bulk")}
           />
+        )}
+
+        {activeTab === "pos" && (
+          <BillingCounterView
+            user={user}
+            onSaleCompleted={() => {
+              fetchMetrics();
+              showToast("Sale completed & stock updated in real time!");
+            }}
+          />
+        )}
+
+        {activeTab === "procurement" && (
+          <PurchaseOrdersView
+            user={user}
+            onRestocked={() => {
+              fetchMetrics();
+              showToast("Inward goods received and inventory catalog restocked!");
+            }}
+          />
+        )}
+
+        {activeTab === "khata" && (
+          <KhataLedgerView user={user} />
         )}
 
         {activeTab === "bulk" && (

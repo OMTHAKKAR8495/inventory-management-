@@ -166,6 +166,116 @@ function initSchema() {
       CREATE INDEX IF NOT EXISTS idx_upload_history_created ON upload_history(created_at);
     `);
 
+    // 7. Customers / Khata Table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS customers (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        store_name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        address TEXT,
+        credit_limit REAL NOT NULL DEFAULT 50000,
+        current_balance REAL NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
+      CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name);
+    `);
+
+    // 8. Invoices & Billing Table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS invoices (
+        id TEXT PRIMARY KEY,
+        invoice_number TEXT UNIQUE NOT NULL,
+        customer_id TEXT,
+        customer_name TEXT NOT NULL,
+        customer_phone TEXT,
+        subtotal REAL NOT NULL,
+        discount_amount REAL NOT NULL DEFAULT 0,
+        tax_amount REAL NOT NULL DEFAULT 0,
+        grand_total REAL NOT NULL,
+        payment_method TEXT NOT NULL,
+        payment_status TEXT NOT NULL,
+        notes TEXT,
+        created_by_id TEXT NOT NULL,
+        created_by_name TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_invoices_created ON invoices(created_at);
+      CREATE INDEX IF NOT EXISTS idx_invoices_customer ON invoices(customer_id);
+
+      CREATE TABLE IF NOT EXISTS invoice_items (
+        id TEXT PRIMARY KEY,
+        invoice_id TEXT NOT NULL,
+        product_id TEXT NOT NULL,
+        product_name TEXT NOT NULL,
+        sku TEXT NOT NULL,
+        unit TEXT NOT NULL,
+        unit_price REAL NOT NULL,
+        cost_price REAL NOT NULL,
+        quantity INTEGER NOT NULL,
+        total_price REAL NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_invoice_items_inv ON invoice_items(invoice_id);
+    `);
+
+    // 9. Khata Transactions Ledger Table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS khata_transactions (
+        id TEXT PRIMARY KEY,
+        customer_id TEXT NOT NULL,
+        invoice_id TEXT,
+        type TEXT NOT NULL CHECK(type IN ('debit_purchase', 'credit_payment')),
+        amount REAL NOT NULL,
+        previous_balance REAL NOT NULL,
+        new_balance REAL NOT NULL,
+        payment_mode TEXT,
+        notes TEXT,
+        created_by_name TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_khata_tx_cust ON khata_transactions(customer_id);
+      CREATE INDEX IF NOT EXISTS idx_khata_tx_created ON khata_transactions(created_at);
+    `);
+
+    // 10. Purchase Orders (Procurement) Table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS purchase_orders (
+        id TEXT PRIMARY KEY,
+        po_number TEXT UNIQUE NOT NULL,
+        supplier_name TEXT NOT NULL,
+        total_estimated_amount REAL NOT NULL,
+        status TEXT NOT NULL CHECK(status IN ('draft', 'sent', 'received', 'cancelled')),
+        items_count INTEGER NOT NULL DEFAULT 0,
+        notes TEXT,
+        created_by_id TEXT NOT NULL,
+        created_by_name TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        received_at TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_po_created ON purchase_orders(created_at);
+
+      CREATE TABLE IF NOT EXISTS purchase_order_items (
+        id TEXT PRIMARY KEY,
+        po_id TEXT NOT NULL,
+        product_id TEXT NOT NULL,
+        product_name TEXT NOT NULL,
+        sku TEXT NOT NULL,
+        current_stock INTEGER NOT NULL,
+        reorder_quantity INTEGER NOT NULL,
+        estimated_unit_cost REAL NOT NULL,
+        total_estimated_cost REAL NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_po_items_po ON purchase_order_items(po_id);
+    `);
+
     seedData();
   } catch (err) {
     console.error("Database initialization error:", err);
@@ -715,6 +825,21 @@ function seedData() {
     });
 
     transaction();
+  }
+
+  // Seed sample retail store customers for Khata
+  const custCount = db.prepare("SELECT COUNT(*) as count FROM customers").get() as { count: number };
+  if (custCount && custCount.count === 0) {
+    const insertCustomer = db.prepare(`
+      INSERT INTO customers (id, name, store_name, phone, address, credit_limit, current_balance, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const now = new Date().toISOString();
+    insertCustomer.run("cust_1", "Ramesh Patel", "Patel General Stores", "+91 98250 12345", "Shop 4, Market Yard, Sector 21", 100000, 14200, now, now);
+    insertCustomer.run("cust_2", "Suresh Gupta", "Gupta Provision Mart", "+91 98980 67890", "12 Gandhi Road, Near Station", 75000, 0, now, now);
+    insertCustomer.run("cust_3", "Mohan Lal", "Shree Krishna Kirana", "+91 94260 54321", "Plot 88, APMC Market Gate 2", 150000, 48500, now, now);
+    insertCustomer.run("cust_4", "Dinesh Shah", "Shah Supermarket", "+91 97120 99887", "Cross Roads, Main Bazaar", 120000, 8900, now, now);
   }
 }
 

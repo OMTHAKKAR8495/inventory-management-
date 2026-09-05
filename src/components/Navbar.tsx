@@ -20,13 +20,15 @@ import {
   Database,
   Moon,
   Sun,
+  Truck,
+  BookOpen,
 } from "lucide-react";
 import { User, DashboardMetrics } from "@/lib/types";
 
 interface NavbarProps {
   user: User;
-  activeTab: "dashboard" | "inventory" | "bulk" | "audit";
-  setActiveTab: (tab: "dashboard" | "inventory" | "bulk" | "audit") => void;
+  activeTab: "dashboard" | "inventory" | "pos" | "procurement" | "khata" | "bulk" | "audit";
+  setActiveTab: (tab: "dashboard" | "inventory" | "pos" | "procurement" | "khata" | "bulk" | "audit") => void;
   onLogout: () => void;
   onOpenUsersModal?: () => void;
   onOpenRecycleBinModal?: () => void;
@@ -90,49 +92,82 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Navigation Tabs */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
+          <nav className="hidden xl:flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
             <button
               onClick={() => setActiveTab("dashboard")}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === "dashboard"
                   ? "bg-white text-blue-700 shadow-xs"
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
               }`}
             >
-              <LayoutDashboard className="w-4 h-4" />
+              <LayoutDashboard className="w-3.5 h-3.5" />
               Overview
             </button>
             <button
               onClick={() => setActiveTab("inventory")}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === "inventory"
                   ? "bg-white text-blue-700 shadow-xs"
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
               }`}
             >
-              <Boxes className="w-4 h-4" />
-              Stock Catalog
+              <Boxes className="w-3.5 h-3.5" />
+              Catalog
+            </button>
+            <button
+              onClick={() => setActiveTab("pos")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === "pos"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-blue-700 hover:bg-blue-50 font-bold"
+              }`}
+            >
+              <Store className="w-3.5 h-3.5" />
+              Counter POS
+            </button>
+            <button
+              onClick={() => setActiveTab("procurement")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === "procurement"
+                  ? "bg-white text-indigo-700 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+              }`}
+            >
+              <Truck className="w-3.5 h-3.5" />
+              Supplier POs
+            </button>
+            <button
+              onClick={() => setActiveTab("khata")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === "khata"
+                  ? "bg-white text-purple-700 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              Khata Ledger
             </button>
             <button
               onClick={() => setActiveTab("bulk")}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === "bulk"
                   ? "bg-white text-blue-700 shadow-xs"
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
               }`}
             >
-              <FileSpreadsheet className="w-4 h-4" />
-              Bulk Add & Upload
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              Bulk Add
             </button>
             <button
               onClick={() => setActiveTab("audit")}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === "audit"
                   ? "bg-white text-blue-700 shadow-xs"
                   : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
               }`}
             >
-              <History className="w-4 h-4" />
+              <History className="w-3.5 h-3.5" />
               Movement Logs
             </button>
           </nav>
