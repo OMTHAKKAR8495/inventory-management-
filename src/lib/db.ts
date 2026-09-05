@@ -42,9 +42,8 @@ try {
 
 // Initialize Schema & Run Migrations
 function initSchema() {
-  if (globalForDb.initialized) return;
-
   try {
+    // 1. Users Table
     db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
@@ -55,7 +54,10 @@ function initSchema() {
         status TEXT NOT NULL DEFAULT 'active',
         created_at TEXT NOT NULL
       );
+    `);
 
+    // 2. Products Table
+    db.exec(`
       CREATE TABLE IF NOT EXISTS products (
         id TEXT PRIMARY KEY,
         sku TEXT UNIQUE NOT NULL,
@@ -75,12 +77,33 @@ function initSchema() {
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
+    `);
 
+    // Ensure columns exist on products
+    const productColumns = db.prepare("PRAGMA table_info(products)").all() as Array<{ name: string }>;
+    const colNames = new Set(productColumns.map((c) => c.name));
+
+    if (!colNames.has("deleted_at")) {
+      try {
+        db.exec("ALTER TABLE products ADD COLUMN deleted_at TEXT;");
+      } catch (e) {}
+    }
+    if (!colNames.has("barcode")) {
+      try {
+        db.exec("ALTER TABLE products ADD COLUMN barcode TEXT;");
+      } catch (e) {}
+    }
+
+    // Product Indexes
+    db.exec(`
       CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
       CREATE INDEX IF NOT EXISTS idx_products_name ON products(name);
       CREATE INDEX IF NOT EXISTS idx_products_sku ON products(sku);
       CREATE INDEX IF NOT EXISTS idx_products_deleted ON products(deleted_at);
+    `);
 
+    // 3. Stock Logs Table
+    db.exec(`
       CREATE TABLE IF NOT EXISTS stock_logs (
         id TEXT PRIMARY KEY,
         product_id TEXT NOT NULL,
@@ -97,7 +120,10 @@ function initSchema() {
 
       CREATE INDEX IF NOT EXISTS idx_stock_logs_product ON stock_logs(product_id);
       CREATE INDEX IF NOT EXISTS idx_stock_logs_created_at ON stock_logs(created_at);
+    `);
 
+    // 4. Password Resets Table
+    db.exec(`
       CREATE TABLE IF NOT EXISTS password_resets (
         id TEXT PRIMARY KEY,
         email TEXT NOT NULL,
@@ -105,7 +131,10 @@ function initSchema() {
         expires_at TEXT NOT NULL,
         used INTEGER NOT NULL DEFAULT 0
       );
+    `);
 
+    // 5. Login Attempts Table
+    db.exec(`
       CREATE TABLE IF NOT EXISTS login_attempts (
         ip_or_email TEXT PRIMARY KEY,
         attempts INTEGER NOT NULL DEFAULT 1,
@@ -114,18 +143,9 @@ function initSchema() {
       );
     `);
 
-    // Migration safe check: Add columns if they didn't exist in existing db
-    try {
-      db.exec("ALTER TABLE products ADD COLUMN deleted_at TEXT;");
-    } catch (e) {}
-    try {
-      db.exec("ALTER TABLE products ADD COLUMN barcode TEXT;");
-    } catch (e) {}
-
     seedData();
-    globalForDb.initialized = true;
   } catch (err) {
-    // Schema initialized
+    console.error("Database initialization error:", err);
   }
 }
 
