@@ -62,7 +62,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const trashCount = metrics?.trash_count || 0;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs transition-colors">
+    <header className="sticky top-0 z-40 bg-white backdrop-blur-md border-b border-slate-200/90 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand Logo & Name */}
@@ -72,31 +72,31 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
-                  PROVISION<span className="text-blue-600 dark:text-blue-400">SMART</span>
+                <h1 className="text-base font-bold tracking-tight text-slate-900 leading-tight">
+                  PROVISION<span className="text-blue-600">SMART</span>
                 </h1>
                 <span
                   className={`text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full border ${
                     isAdmin
-                      ? "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800"
-                      : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                      ? "bg-purple-50 text-purple-700 border-purple-200"
+                      : "bg-emerald-50 text-emerald-700 border-emerald-200"
                   }`}
                 >
                   {isAdmin ? "Admin Portal" : "Inventory Staff"}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Wholesale Goods & Provision Inventory (₹)</p>
+              <p className="text-xs text-slate-500 hidden sm:block">Wholesale Goods & Provision Inventory (₹)</p>
             </div>
           </div>
 
           {/* Navigation Tabs */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/80 dark:border-slate-700">
+          <nav className="hidden md:flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
             <button
               onClick={() => setActiveTab("dashboard")}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === "dashboard"
-                  ? "bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-300 shadow-xs"
-                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/50"
+                  ? "bg-white text-blue-700 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
               }`}
             >
               <LayoutDashboard className="w-4 h-4" />
@@ -106,8 +106,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab("inventory")}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === "inventory"
-                  ? "bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-300 shadow-xs"
-                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/50"
+                  ? "bg-white text-blue-700 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
               }`}
             >
               <Boxes className="w-4 h-4" />
@@ -117,8 +117,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab("bulk")}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === "bulk"
-                  ? "bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-300 shadow-xs"
-                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/50"
+                  ? "bg-white text-blue-700 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
               }`}
             >
               <FileSpreadsheet className="w-4 h-4" />
@@ -128,8 +128,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab("audit")}
               className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === "audit"
-                  ? "bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-300 shadow-xs"
-                  : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/50"
+                  ? "bg-white text-blue-700 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
               }`}
             >
               <History className="w-4 h-4" />
@@ -137,38 +137,27 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </nav>
 
-          {/* Right Controls: Barcode, Dark Mode, Notifications, User, Quick Switch */}
+          {/* Right Controls: Barcode, Notifications, User, Quick Switch */}
           <div className="flex items-center gap-2">
             {/* Barcode Scanner Shortcut */}
             {onOpenBarcodeScanner && (
               <button
                 onClick={onOpenBarcodeScanner}
-                className="p-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="p-2 text-slate-600 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition"
                 title="Open Barcode Scanner"
               >
                 <ScanBarcode className="w-5 h-5" />
               </button>
             )}
 
-            {/* Dark Mode Toggle */}
-            {onToggleDarkMode && (
-              <button
-                onClick={onToggleDarkMode}
-                className="p-2 text-slate-600 dark:text-slate-300 hover:text-amber-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              >
-                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
-            )}
-
             {/* Quick Demo Switcher */}
             {onSwitchRoleQuickDemo && (
-              <div className="hidden lg:flex items-center gap-1 bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800 px-2 py-1 rounded-lg">
-                <span className="text-[10px] font-medium text-amber-900 dark:text-amber-300">Demo Role:</span>
+              <div className="hidden lg:flex items-center gap-1 bg-amber-50 border border-amber-200/80 px-2 py-1 rounded-lg">
+                <span className="text-[10px] font-medium text-amber-900">Demo Role:</span>
                 <button
                   onClick={() => onSwitchRoleQuickDemo("admin")}
                   className={`text-[10px] px-1.5 py-0.5 rounded font-medium transition ${
-                    isAdmin ? "bg-amber-600 text-white font-bold" : "text-amber-800 dark:text-amber-400 hover:bg-amber-100"
+                    isAdmin ? "bg-amber-600 text-white font-bold" : "text-amber-800 hover:bg-amber-100"
                   }`}
                 >
                   Admin
@@ -176,7 +165,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   onClick={() => onSwitchRoleQuickDemo("manager")}
                   className={`text-[10px] px-1.5 py-0.5 rounded font-medium transition ${
-                    !isAdmin ? "bg-emerald-600 text-white font-bold" : "text-amber-800 dark:text-amber-400 hover:bg-amber-100"
+                    !isAdmin ? "bg-emerald-600 text-white font-bold" : "text-amber-800 hover:bg-amber-100"
                   }`}
                 >
                   Manager
@@ -191,28 +180,28 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setShowNotifications(!showNotifications);
                   setShowUserMenu(false);
                 }}
-                className="relative p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition focus:outline-hidden"
+                className="relative p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition focus:outline-hidden"
                 title="Stock Alerts"
               >
                 <Bell className="w-5 h-5" />
                 {criticalCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-slate-900 animate-pulse" />
+                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-pulse" />
                 )}
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-3 z-50 animate-fade-in">
-                  <div className="px-4 pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-200 py-3 z-50 animate-fade-in">
+                  <div className="px-4 pb-2 border-b border-slate-100 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-amber-500" />
-                      <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Stock & Expiry Alerts</h4>
+                      <h4 className="text-sm font-semibold text-slate-900">Stock & Expiry Alerts</h4>
                     </div>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600">
                       {metrics?.critical_alerts.length || 0} urgent
                     </span>
                   </div>
 
-                  <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 py-1">
+                  <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 py-1">
                     {metrics?.critical_alerts && metrics.critical_alerts.length > 0 ? (
                       metrics.critical_alerts.map((item) => (
                         <div
@@ -222,21 +211,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                             setShowNotifications(false);
                             if (onSelectAlertItem) onSelectAlertItem(item.id);
                           }}
-                          className="px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition flex items-start justify-between gap-3"
+                          className="px-4 py-2.5 hover:bg-slate-50 cursor-pointer transition flex items-start justify-between gap-3"
                         >
                           <div>
-                            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 line-clamp-1">{item.name}</p>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400">{item.category} • SKU: {item.sku}</p>
+                            <p className="text-xs font-semibold text-slate-800 line-clamp-1">{item.name}</p>
+                            <p className="text-[11px] text-slate-500">{item.category} • SKU: {item.sku}</p>
                             {item.expiry_date && (
-                              <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">Expires: {item.expiry_date}</p>
+                              <p className="text-[10px] text-amber-600 font-medium">Expires: {item.expiry_date}</p>
                             )}
                           </div>
                           <div className="text-right shrink-0">
                             <span
                               className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                 item.status === "out_of_stock"
-                                  ? "bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300"
-                                  : "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-amber-100 text-amber-700"
                               }`}
                             >
                               {item.stock_quantity <= 0 ? "0 in stock" : `${item.stock_quantity} left`}
@@ -245,19 +234,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                         </div>
                       ))
                     ) : (
-                      <div className="px-4 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
+                      <div className="px-4 py-6 text-center text-xs text-slate-500">
                         All products are currently healthy and well-stocked.
                       </div>
                     )}
                   </div>
 
-                  <div className="px-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="px-4 pt-2 border-t border-slate-100">
                     <button
                       onClick={() => {
                         setActiveTab("inventory");
                         setShowNotifications(false);
                       }}
-                      className="w-full text-center text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center justify-center gap-1 py-1"
+                      className="w-full text-center text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center justify-center gap-1 py-1"
                     >
                       View All Stock in Catalog
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -274,7 +263,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setShowUserMenu(!showUserMenu);
                   setShowNotifications(false);
                 }}
-                className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-xl hover:bg-slate-100 transition border border-transparent hover:border-slate-200"
               >
                 <div
                   className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs ${
@@ -284,24 +273,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="text-left hidden sm:block">
-                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-tight">{user.name}</p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 capitalize">{user.role}</p>
+                  <p className="text-xs font-semibold text-slate-800 leading-tight">{user.name}</p>
+                  <p className="text-[10px] text-slate-500 capitalize">{user.role}</p>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
 
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-fade-in">
-                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
-                    <p className="text-xs font-bold text-slate-900 dark:text-white">{user.name}</p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
+                <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-fade-in">
+                  <div className="px-4 py-2 border-b border-slate-100">
+                    <p className="text-xs font-bold text-slate-900">{user.name}</p>
+                    <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
                     <div className="mt-1 flex items-center gap-1.5">
                       {isAdmin ? (
                         <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />
                       ) : (
                         <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
                       )}
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-slate-600">
                         {user.role} Permissions
                       </span>
                     </div>
@@ -313,7 +302,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setShowUserMenu(false);
                         onOpenUsersModal();
                       }}
-                      className="w-full px-4 py-2 text-left text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 font-medium"
+                      className="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium"
                     >
                       <Users className="w-4 h-4 text-slate-400" />
                       Staff & User Accounts
@@ -326,7 +315,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setShowUserMenu(false);
                         onOpenRecycleBinModal();
                       }}
-                      className="w-full px-4 py-2 text-left text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-between font-medium"
+                      className="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center justify-between font-medium"
                     >
                       <div className="flex items-center gap-2">
                         <Trash2 className="w-4 h-4 text-slate-400" />
@@ -346,7 +335,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setShowUserMenu(false);
                         onOpenBackupModal();
                       }}
-                      className="w-full px-4 py-2 text-left text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 font-medium"
+                      className="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium"
                     >
                       <Database className="w-4 h-4 text-slate-400" />
                       Database Backup Snapshots
@@ -358,7 +347,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setShowUserMenu(false);
                       onLogout();
                     }}
-                    className="w-full px-4 py-2 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 flex items-center gap-2 font-medium border-t border-slate-100 dark:border-slate-800 mt-1"
+                    className="w-full px-4 py-2 text-left text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 font-medium border-t border-slate-100 mt-1"
                   >
                     <LogOut className="w-4 h-4" />
                     Sign Out
@@ -370,11 +359,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Mobile Nav Bar */}
-        <div className="flex md:hidden items-center justify-around py-2 border-t border-slate-100 dark:border-slate-800 overflow-x-auto gap-1">
+        <div className="flex md:hidden items-center justify-around py-2 border-t border-slate-100 overflow-x-auto gap-1">
           <button
             onClick={() => setActiveTab("dashboard")}
             className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-[11px] font-medium ${
-              activeTab === "dashboard" ? "text-blue-600 font-bold" : "text-slate-500 dark:text-slate-400"
+              activeTab === "dashboard" ? "text-blue-600 font-bold" : "text-slate-500"
             }`}
           >
             <LayoutDashboard className="w-4 h-4" />
@@ -383,7 +372,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("inventory")}
             className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-[11px] font-medium ${
-              activeTab === "inventory" ? "text-blue-600 font-bold" : "text-slate-500 dark:text-slate-400"
+              activeTab === "inventory" ? "text-blue-600 font-bold" : "text-slate-500"
             }`}
           >
             <Boxes className="w-4 h-4" />
@@ -392,7 +381,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("bulk")}
             className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-[11px] font-medium ${
-              activeTab === "bulk" ? "text-blue-600 font-bold" : "text-slate-500 dark:text-slate-400"
+              activeTab === "bulk" ? "text-blue-600 font-bold" : "text-slate-500"
             }`}
           >
             <FileSpreadsheet className="w-4 h-4" />
@@ -401,7 +390,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("audit")}
             className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-[11px] font-medium ${
-              activeTab === "audit" ? "text-blue-600 font-bold" : "text-slate-500 dark:text-slate-400"
+              activeTab === "audit" ? "text-blue-600 font-bold" : "text-slate-500"
             }`}
           >
             <History className="w-4 h-4" />

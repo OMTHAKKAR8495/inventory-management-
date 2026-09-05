@@ -49,16 +49,11 @@ export default function Home() {
     }, 4000);
   };
 
-  // Dark Mode initialization (Default to crisp professional light mode)
+  // Theme initialization (Always default to crisp professional clean white theme)
   useEffect(() => {
-    const savedTheme = localStorage.getItem("provisionsmart_theme");
-    if (savedTheme === "dark") {
-      setIsDarkMode(true);
-      document.documentElement.classList.add("dark");
-    } else {
-      setIsDarkMode(false);
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.remove("dark");
+    localStorage.removeItem("provisionsmart_theme");
+    setIsDarkMode(false);
   }, []);
 
   const toggleDarkMode = () => {
@@ -241,7 +236,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col selection:bg-blue-600 selection:text-white pb-16 transition-colors">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-blue-600 selection:text-white pb-16">
       {/* Top Navbar */}
       <Navbar
         user={user}
