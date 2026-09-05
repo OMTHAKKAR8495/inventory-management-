@@ -49,10 +49,10 @@ export default function Home() {
     }, 4000);
   };
 
-  // Dark Mode initialization
+  // Dark Mode initialization (Default to crisp professional light mode)
   useEffect(() => {
     const savedTheme = localStorage.getItem("provisionsmart_theme");
-    if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+    if (savedTheme === "dark") {
       setIsDarkMode(true);
       document.documentElement.classList.add("dark");
     } else {

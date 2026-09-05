@@ -62,18 +62,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-blue-950/10">
+      {/* Welcome Banner - Clean Professional Executive Header */}
+      <div className="relative overflow-hidden bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-xs font-medium text-blue-200">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-xs font-semibold text-blue-700">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               Live Wholesale Stock Pulse
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Good day, {user.name}
             </h2>
-            <p className="text-slate-300 text-sm leading-relaxed">
+            <p className="text-slate-600 text-sm leading-relaxed">
               {isAdmin
                 ? "Here is the real-time financial valuation, margin performance, and inventory health of the provision warehouse in Indian Rupees (₹)."
                 : "Manage wholesale goods, track low stock items, perform instant stock-in/out, and batch add inventory."}
@@ -83,14 +83,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => onNavigateToInventory()}
-              className="px-4 py-2.5 bg-white text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2"
+              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold border border-slate-200/80 transition flex items-center gap-2"
             >
               <Boxes className="w-4 h-4 text-blue-600" />
               Stock Catalog
             </button>
             <button
               onClick={onNavigateToBulk}
-              className="px-4 py-2.5 bg-blue-600 text-white hover:bg-blue-500 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2"
+              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2"
             >
               <PlusCircle className="w-4 h-4" />
               Bulk Add / Upload
@@ -98,9 +98,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Decorative Background Elements */}
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 -mb-16 w-60 h-60 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+        {/* Subtle Decorative Elements */}
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 bg-blue-50/50 rounded-full blur-3xl pointer-events-none" />
       </div>
 
       {/* KPI Cards Grid */}
@@ -152,7 +151,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {/* Low Stock Warning */}
           <div
             onClick={() => onNavigateToInventory("low_stock")}
-            className="bg-white p-5 rounded-2xl border border-amber-200/80 shadow-xs hover:shadow-md transition cursor-pointer group bg-gradient-to-b from-amber-50/40 to-white"
+            className="bg-white p-5 rounded-2xl border border-amber-200/80 shadow-xs hover:shadow-md transition cursor-pointer group bg-gradient-to-b from-amber-50/30 to-white"
           >
             <div className="flex items-center justify-between text-amber-700 mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider">Low Stock Threshold</span>
@@ -171,7 +170,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {/* Out of Stock */}
           <div
             onClick={() => onNavigateToInventory("out_of_stock")}
-            className="bg-white p-5 rounded-2xl border border-red-200/80 shadow-xs hover:shadow-md transition cursor-pointer group bg-gradient-to-b from-red-50/40 to-white"
+            className="bg-white p-5 rounded-2xl border border-red-200/80 shadow-xs hover:shadow-md transition cursor-pointer group bg-gradient-to-b from-red-50/30 to-white"
           >
             <div className="flex items-center justify-between text-red-700 mb-2">
               <span className="text-xs font-semibold uppercase tracking-wider">Out of Stock</span>
@@ -189,70 +188,70 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* Admin Financial Metrics Section (Protected - Rupee Format) */}
+      {/* Admin Financial Metrics Section (Clean Professional White Card - Rupee Format) */}
       {isAdmin && (
-        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-7 text-white shadow-xl">
-          <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-300 font-bold text-sm">
+        <div className="bg-white rounded-3xl p-6 sm:p-7 border border-purple-200/80 shadow-sm space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-purple-100">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 font-bold text-base flex items-center justify-center shadow-xs">
                 ₹
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white tracking-wide uppercase">
-                  Financial Valuation & Profit Potential (Admin Confidential)
+                <h4 className="text-sm font-bold text-slate-900 tracking-wide uppercase">
+                  Financial Valuation & Profit Potential
                 </h4>
-                <p className="text-xs text-slate-400">Live valuation calculated in Indian Rupees (₹) based on wholesale cost and selling rates</p>
+                <p className="text-xs text-slate-500">Live valuation calculated in Indian Rupees (₹) based on wholesale cost and selling rates</p>
               </div>
             </div>
-            <span className="text-[11px] font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2.5 py-1 rounded-full">
-              Admin Exclusive
+            <span className="text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200 px-3 py-1 rounded-full">
+              Admin Confidential
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Stock Cost Value */}
-            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Total Stock Cost Value
               </span>
-              <div className="text-2xl font-black text-white mt-1">
+              <div className="text-2xl font-black text-slate-900 mt-1">
                 ₹{metrics.total_cost_value?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">Total invested in on-hand inventory</p>
+              <p className="text-[11px] text-slate-500 mt-1 font-medium">Total invested in on-hand inventory</p>
             </div>
 
             {/* Total Potential Sales Value */}
-            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="bg-emerald-50/60 rounded-2xl p-4 border border-emerald-200/80">
+              <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
                 Total Potential Sales Value
               </span>
-              <div className="text-2xl font-black text-emerald-400 mt-1">
+              <div className="text-2xl font-black text-emerald-700 mt-1">
                 ₹{metrics.total_sales_value?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">Expected gross revenue at current pricing</p>
+              <p className="text-[11px] text-emerald-700/80 mt-1 font-medium">Expected gross revenue at current pricing</p>
             </div>
 
             {/* Projected Gross Profit */}
-            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="bg-blue-50/60 rounded-2xl p-4 border border-blue-200/80">
+              <span className="text-[11px] font-bold text-blue-800 uppercase tracking-wider">
                 Projected Gross Margin
               </span>
-              <div className="text-2xl font-black text-blue-400 mt-1 flex items-center gap-1.5">
+              <div className="text-2xl font-black text-blue-700 mt-1 flex items-center gap-1.5">
                 ₹{metrics.total_potential_profit?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                <ArrowUpRight className="w-5 h-5 text-emerald-400" />
+                <ArrowUpRight className="w-5 h-5 text-emerald-600" />
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">Selling Value minus Cost Value</p>
+              <p className="text-[11px] text-blue-700/80 mt-1 font-medium">Selling Value minus Cost Value</p>
             </div>
 
             {/* Average Margin % */}
-            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="bg-amber-50/60 rounded-2xl p-4 border border-amber-200/80">
+              <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">
                 Average Store Markup
               </span>
-              <div className="text-2xl font-black text-amber-300 mt-1">
+              <div className="text-2xl font-black text-amber-800 mt-1">
                 +{metrics.average_margin_percent}%
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">Across all wholesale goods categories</p>
+              <p className="text-[11px] text-amber-800/80 mt-1 font-medium">Across all wholesale goods categories</p>
             </div>
           </div>
         </div>
