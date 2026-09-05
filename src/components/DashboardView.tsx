@@ -1,0 +1,467 @@
+"use client";
+
+import React from "react";
+import {
+  Package,
+  Boxes,
+  AlertTriangle,
+  XCircle,
+  TrendingUp,
+  PieChart,
+  Clock,
+  ArrowUpRight,
+  ArrowDownRight,
+  PlusCircle,
+  CheckCircle2,
+  Calendar,
+  Layers,
+  ArrowRight,
+} from "lucide-react";
+import { DashboardMetrics, User } from "@/lib/types";
+
+interface DashboardViewProps {
+  metrics: DashboardMetrics | null;
+  user: User;
+  onNavigateToInventory: (filterStatus?: string) => void;
+  onNavigateToBulk: () => void;
+  onQuickStockAdjust: (productId: string) => void;
+  isLoading: boolean;
+}
+
+export const DashboardView: React.FC<DashboardViewProps> = ({
+  metrics,
+  user,
+  onNavigateToInventory,
+  onNavigateToBulk,
+  onQuickStockAdjust,
+  isLoading,
+}) => {
+  const isAdmin = user.role === "admin";
+
+  if (isLoading || !metrics) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="h-28 bg-slate-200/70 rounded-2xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const inStockPct = metrics.total_products > 0
+    ? Math.round((metrics.in_stock_count / metrics.total_products) * 100)
+    : 0;
+  const lowStockPct = metrics.total_products > 0
+    ? Math.round((metrics.low_stock_count / metrics.total_products) * 100)
+    : 0;
+  const outOfStockPct = metrics.total_products > 0
+    ? Math.round((metrics.out_of_stock_count / metrics.total_products) * 100)
+    : 0;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+      {/* Welcome Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-blue-950/10">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-xs font-medium text-blue-200">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              Live Wholesale Stock Pulse
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Good day, {user.name}
+            </h2>
+            <p className="text-slate-300 text-sm leading-relaxed">
+              {isAdmin
+                ? "Here is the real-time financial valuation, margin performance, and inventory health of the provision warehouse in Indian Rupees (₹)."
+                : "Manage wholesale goods, track low stock items, perform instant stock-in/out, and batch add inventory."}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => onNavigateToInventory()}
+              className="px-4 py-2.5 bg-white text-slate-900 hover:bg-slate-100 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2"
+            >
+              <Boxes className="w-4 h-4 text-blue-600" />
+              Stock Catalog
+            </button>
+            <button
+              onClick={onNavigateToBulk}
+              className="px-4 py-2.5 bg-blue-600 text-white hover:bg-blue-500 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2"
+            >
+              <PlusCircle className="w-4 h-4" />
+              Bulk Add / Upload
+            </button>
+          </div>
+        </div>
+
+        {/* Decorative Background Elements */}
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 -mb-16 w-60 h-60 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+      </div>
+
+      {/* KPI Cards Grid */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <Layers className="w-4 h-4 text-blue-600" />
+            Stock & Inventory Vital Statistics
+          </h3>
+          <span className="text-xs text-slate-500">Auto-synchronized with shop floor</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Products */}
+          <div
+            onClick={() => onNavigateToInventory()}
+            className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition cursor-pointer group"
+          >
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Total Products</span>
+              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition">
+                <Package className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900">
+              {metrics.total_products.toLocaleString("en-IN")}
+            </div>
+            <div className="mt-2 text-xs text-slate-500 flex items-center gap-1">
+              <span className="font-semibold text-blue-600">Active SKUs</span> in catalog
+            </div>
+          </div>
+
+          {/* Total Units */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition">
+            <div className="flex items-center justify-between text-slate-500 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Total Warehouse Units</span>
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <Boxes className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-slate-900">
+              {metrics.total_stock_units.toLocaleString("en-IN")}
+            </div>
+            <div className="mt-2 text-xs text-slate-500">
+              Bulk sacks, tins, cartons, & units
+            </div>
+          </div>
+
+          {/* Low Stock Warning */}
+          <div
+            onClick={() => onNavigateToInventory("low_stock")}
+            className="bg-white p-5 rounded-2xl border border-amber-200/80 shadow-xs hover:shadow-md transition cursor-pointer group bg-gradient-to-b from-amber-50/40 to-white"
+          >
+            <div className="flex items-center justify-between text-amber-700 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Low Stock Threshold</span>
+              <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-110 transition">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-amber-900">
+              {metrics.low_stock_count}
+            </div>
+            <div className="mt-2 text-xs text-amber-700 font-medium flex items-center gap-1">
+              Needs reorder soon <ArrowRight className="w-3 h-3" />
+            </div>
+          </div>
+
+          {/* Out of Stock */}
+          <div
+            onClick={() => onNavigateToInventory("out_of_stock")}
+            className="bg-white p-5 rounded-2xl border border-red-200/80 shadow-xs hover:shadow-md transition cursor-pointer group bg-gradient-to-b from-red-50/40 to-white"
+          >
+            <div className="flex items-center justify-between text-red-700 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">Out of Stock</span>
+              <div className="w-8 h-8 rounded-lg bg-red-100 text-red-700 flex items-center justify-center group-hover:scale-110 transition">
+                <XCircle className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-red-900">
+              {metrics.out_of_stock_count}
+            </div>
+            <div className="mt-2 text-xs text-red-700 font-medium flex items-center gap-1">
+              0 inventory on hand <ArrowRight className="w-3 h-3" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Admin Financial Metrics Section (Protected - Rupee Format) */}
+      {isAdmin && (
+        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-7 text-white shadow-xl">
+          <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-300 font-bold text-sm">
+                ₹
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white tracking-wide uppercase">
+                  Financial Valuation & Profit Potential (Admin Confidential)
+                </h4>
+                <p className="text-xs text-slate-400">Live valuation calculated in Indian Rupees (₹) based on wholesale cost and selling rates</p>
+              </div>
+            </div>
+            <span className="text-[11px] font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2.5 py-1 rounded-full">
+              Admin Exclusive
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Total Stock Cost Value */}
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                Total Stock Cost Value
+              </span>
+              <div className="text-2xl font-black text-white mt-1">
+                ₹{metrics.total_cost_value?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">Total invested in on-hand inventory</p>
+            </div>
+
+            {/* Total Potential Sales Value */}
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                Total Potential Sales Value
+              </span>
+              <div className="text-2xl font-black text-emerald-400 mt-1">
+                ₹{metrics.total_sales_value?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">Expected gross revenue at current pricing</p>
+            </div>
+
+            {/* Projected Gross Profit */}
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                Projected Gross Margin
+              </span>
+              <div className="text-2xl font-black text-blue-400 mt-1 flex items-center gap-1.5">
+                ₹{metrics.total_potential_profit?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <ArrowUpRight className="w-5 h-5 text-emerald-400" />
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">Selling Value minus Cost Value</p>
+            </div>
+
+            {/* Average Margin % */}
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                Average Store Markup
+              </span>
+              <div className="text-2xl font-black text-amber-300 mt-1">
+                +{metrics.average_margin_percent}%
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">Across all wholesale goods categories</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stock Health Bar & Category Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left 2 Cols: Category Breakdown & Health Bar */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Stock Health Status */}
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                Overall Inventory Health Ratio
+              </h4>
+              <span className="text-xs text-slate-500">{metrics.total_products} items tracked</span>
+            </div>
+
+            {/* Progress Segment Bar */}
+            <div className="w-full h-3.5 bg-slate-100 rounded-full flex overflow-hidden p-0.5 gap-0.5">
+              <div
+                style={{ width: `${inStockPct}%` }}
+                className="bg-emerald-500 rounded-full transition-all duration-500"
+                title={`In Stock: ${inStockPct}%`}
+              />
+              <div
+                style={{ width: `${lowStockPct}%` }}
+                className="bg-amber-400 rounded-full transition-all duration-500"
+                title={`Low Stock: ${lowStockPct}%`}
+              />
+              <div
+                style={{ width: `${outOfStockPct}%` }}
+                className="bg-red-500 rounded-full transition-all duration-500"
+                title={`Out of Stock: ${outOfStockPct}%`}
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-4 text-xs font-medium">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span className="text-slate-700">Healthy ({metrics.in_stock_count} items - {inStockPct}%)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                <span className="text-slate-700">Low Stock ({metrics.low_stock_count} items - {lowStockPct}%)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                <span className="text-slate-700">Out of Stock ({metrics.out_of_stock_count} items - {outOfStockPct}%)</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Category Breakdown */}
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between mb-5">
+              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <PieChart className="w-4 h-4 text-indigo-600" />
+                Category-Wise Stock Distribution
+              </h4>
+              <span className="text-xs text-slate-500">{metrics.category_breakdown.length} Departments</span>
+            </div>
+
+            <div className="space-y-4">
+              {metrics.category_breakdown.map((cat) => {
+                const pct = metrics.total_stock_units > 0
+                  ? Math.round((cat.total_units / metrics.total_stock_units) * 100)
+                  : 0;
+
+                return (
+                  <div key={cat.category} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-slate-800">{cat.category}</span>
+                      <div className="flex items-center gap-3 text-slate-500">
+                        <span>{cat.product_count} products</span>
+                        <span className="font-bold text-slate-900">{cat.total_units.toLocaleString("en-IN")} units</span>
+                        {isAdmin && cat.cost_value && (
+                          <span className="font-semibold text-blue-600">
+                            ₹{cat.cost_value.toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        style={{ width: `${Math.max(pct, 4)}%` }}
+                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Right 1 Col: Urgent Attention & Expiry Alerts */}
+        <div className="space-y-6">
+          {/* Critical Alerts Card */}
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                Action Required ({metrics.critical_alerts.length})
+              </h4>
+              <button
+                onClick={() => onNavigateToInventory("low_stock")}
+                className="text-xs font-semibold text-blue-600 hover:text-blue-700"
+              >
+                View all
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {metrics.critical_alerts.length > 0 ? (
+                metrics.critical_alerts.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition flex items-center justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-900 truncate">{item.name}</p>
+                      <p className="text-[11px] text-slate-500">{item.category}</p>
+                      {item.expiry_date && (
+                        <p className="text-[10px] text-amber-600 font-medium">Exp: {item.expiry_date}</p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span
+                        className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          item.status === "out_of_stock"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {item.stock_quantity <= 0 ? "OUT OF STOCK" : `${item.stock_quantity} left`}
+                      </span>
+                      <button
+                        onClick={() => onQuickStockAdjust(item.id)}
+                        className="block mt-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+                      >
+                        + Restock
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 text-xs text-slate-500">
+                  No critical stock warnings right now!
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Stock Movements Feed */}
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-blue-600" />
+                Recent Stock Activity
+              </h4>
+            </div>
+
+            <div className="space-y-3">
+              {metrics.recent_activities && metrics.recent_activities.length > 0 ? (
+                metrics.recent_activities.slice(0, 5).map((log) => {
+                  const isPositive = log.quantity_delta >= 0;
+                  return (
+                    <div key={log.id} className="flex items-start gap-2.5 text-xs">
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                          isPositive ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {isPositive ? (
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                        ) : (
+                          <ArrowDownRight className="w-3.5 h-3.5" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-slate-800 truncate">{log.product_name}</span>
+                          <span
+                            className={`font-bold ml-2 shrink-0 ${
+                              isPositive ? "text-emerald-600" : "text-red-600"
+                            }`}
+                          >
+                            {isPositive ? `+${log.quantity_delta}` : log.quantity_delta}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 truncate">{log.reason || "Stock updated"}</p>
+                        <p className="text-[10px] text-slate-400">
+                          {new Date(log.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} by {log.user_name}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-4 text-xs text-slate-500">
+                  No stock changes logged yet.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
