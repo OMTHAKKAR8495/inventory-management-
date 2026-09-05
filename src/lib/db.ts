@@ -3,14 +3,19 @@ import path from "path";
 import fs from "fs";
 import bcrypt from "bcryptjs";
 
-// Ensure data and backup directories exist
+// Ensure data, backup, and uploads directories exist
 const dataDir = path.join(process.cwd(), "data");
 const backupDir = path.join(dataDir, "backups");
+const uploadsDir = path.join(dataDir, "uploads");
+
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
 if (!fs.existsSync(backupDir)) {
   fs.mkdirSync(backupDir, { recursive: true });
+}
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 const dbPath = path.join(dataDir, "inventory.db");
@@ -141,6 +146,24 @@ function initSchema() {
         last_attempt TEXT NOT NULL,
         locked_until TEXT
       );
+    `);
+
+    // 6. Upload History Table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS upload_history (
+        id TEXT PRIMARY KEY,
+        original_filename TEXT NOT NULL,
+        stored_filename TEXT,
+        file_size INTEGER,
+        total_rows INTEGER NOT NULL,
+        success_count INTEGER NOT NULL,
+        failed_count INTEGER NOT NULL,
+        uploaded_by_id TEXT NOT NULL,
+        uploaded_by_name TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_upload_history_created ON upload_history(created_at);
     `);
 
     seedData();

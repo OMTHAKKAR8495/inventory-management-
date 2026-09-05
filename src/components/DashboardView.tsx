@@ -66,9 +66,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <div className="relative overflow-hidden bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-xs font-semibold text-blue-700">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Live Wholesale Stock Pulse
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-xs font-semibold text-blue-700">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Live Wholesale Stock Pulse
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-xs font-semibold text-emerald-700">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Persistent Database: Online
+              </div>
+              {metrics?.last_backup_at && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-200/60 text-xs font-semibold text-purple-700">
+                  <Clock className="w-3.5 h-3.5" />
+                  Last Backup: {new Date(metrics.last_backup_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </div>
+              )}
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Good day, {user.name}

@@ -117,6 +117,22 @@ export async function GET() {
     const totalPotentialProfit = totalSalesVal - totalCostVal;
     const avgMarginPct = totalCostVal > 0 ? (totalPotentialProfit / totalCostVal) * 100 : 0;
 
+    // Get last backup timestamp
+    let lastBackupAt: string | null = null;
+    try {
+      const fs = await import("fs");
+      const path = await import("path");
+      const backupDir = path.join(process.cwd(), "data", "backups");
+      if (fs.existsSync(backupDir)) {
+        const files = fs.readdirSync(backupDir).filter((f) => f.endsWith(".db"));
+        if (files.length > 0) {
+          const stats = files.map((f) => fs.statSync(path.join(backupDir, f)));
+          const latest = stats.reduce((prev, cur) => (cur.mtimeMs > prev.mtimeMs ? cur : prev));
+          lastBackupAt = latest.mtime.toISOString();
+        }
+      }
+    } catch (e) {}
+
     const metrics: DashboardMetrics = {
       total_products: totalProducts,
       total_stock_units: totalStockUnits,
@@ -125,6 +141,7 @@ export async function GET() {
       in_stock_count: inStockCount,
       expiring_soon_count: expiringSoonCount,
       trash_count: trashCount,
+      last_backup_at: lastBackupAt,
       total_cost_value: isAdmin ? Number(totalCostVal.toFixed(2)) : undefined,
       total_sales_value: isAdmin ? Number(totalSalesVal.toFixed(2)) : undefined,
       total_potential_profit: isAdmin ? Number(totalPotentialProfit.toFixed(2)) : undefined,

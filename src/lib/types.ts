@@ -60,6 +60,19 @@ export interface AuthSession {
   };
 }
 
+export interface UploadHistoryRecord {
+  id: string;
+  original_filename: string;
+  stored_filename?: string;
+  file_size?: number;
+  total_rows: number;
+  success_count: number;
+  failed_count: number;
+  uploaded_by_id: string;
+  uploaded_by_name: string;
+  created_at: string;
+}
+
 export interface DashboardMetrics {
   total_products: number;
   total_stock_units: number;
@@ -68,6 +81,8 @@ export interface DashboardMetrics {
   in_stock_count: number;
   expiring_soon_count: number;
   trash_count: number;
+  last_backup_at?: string | null;
+  database_file_size_kb?: number;
   // Admin only metrics (in ₹):
   total_cost_value?: number;
   total_sales_value?: number;
