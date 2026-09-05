@@ -16,6 +16,7 @@ import { UsersModal } from "@/components/UsersModal";
 import { RecycleBinModal } from "@/components/RecycleBinModal";
 import { BackupModal } from "@/components/BackupModal";
 import { BarcodeScannerModal } from "@/components/BarcodeScannerModal";
+import { ShopfloorTasksModal } from "@/components/ShopfloorTasksModal";
 import { LoginView } from "@/components/LoginView";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 
@@ -35,6 +36,12 @@ export default function Home() {
   const [isRecycleBinModalOpen, setIsRecycleBinModalOpen] = useState(false);
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
   const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
+
+  // Direct Shopfloor Tasks & Messages
+  const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
+  const [taskTargetProductId, setTaskTargetProductId] = useState<string | null>(null);
+  const [taskTargetProductName, setTaskTargetProductName] = useState<string | null>(null);
+  const [pendingTasksCount, setPendingTasksCount] = useState<number>(0);
 
   // Dark Mode
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -113,6 +120,20 @@ export default function Home() {
     }
   };
 
+  // Fetch Pending Tasks count
+  const fetchTasksCount = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch("/api/tasks?status=pending");
+      if (res.ok) {
+        const data = await res.json();
+        setPendingTasksCount(data.pendingCount || 0);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   // Fetch Dashboard Metrics
   const fetchMetrics = async () => {
     if (!user) return;
@@ -137,6 +158,7 @@ export default function Home() {
   useEffect(() => {
     if (user) {
       fetchMetrics();
+      fetchTasksCount();
     }
   }, [user, activeTab]);
 
@@ -250,6 +272,12 @@ export default function Home() {
         onOpenRecycleBinModal={() => setIsRecycleBinModalOpen(true)}
         onOpenBackupModal={() => setIsBackupModalOpen(true)}
         onOpenBarcodeScanner={() => setIsBarcodeScannerOpen(true)}
+        onOpenTasksModal={(pId?: string, pName?: string) => {
+          setTaskTargetProductId(pId || null);
+          setTaskTargetProductName(pName || null);
+          setIsTasksModalOpen(true);
+        }}
+        pendingTasksCount={pendingTasksCount}
         isDarkMode={isDarkMode}
         onToggleDarkMode={toggleDarkMode}
         metrics={metrics}
@@ -295,6 +323,11 @@ export default function Home() {
             onNavigateToPOS={() => setActiveTab("pos")}
             onNavigateToPO={() => setActiveTab("procurement")}
             onNavigateToKhata={() => setActiveTab("khata")}
+            onOpenTasksModal={(pId?: string, pName?: string) => {
+              setTaskTargetProductId(pId || null);
+              setTaskTargetProductName(pName || null);
+              setIsTasksModalOpen(true);
+            }}
             onQuickStockAdjust={async (productId) => {
               try {
                 const res = await fetch(`/api/products/${productId}`);
@@ -327,6 +360,11 @@ export default function Home() {
               setIsStockAdjustModalOpen(true);
             }}
             onOpenBulkUpload={() => setActiveTab("bulk")}
+            onOpenTasksModal={(pId?: string, pName?: string) => {
+              setTaskTargetProductId(pId || null);
+              setTaskTargetProductName(pName || null);
+              setIsTasksModalOpen(true);
+            }}
           />
         )}
 
@@ -422,6 +460,37 @@ export default function Home() {
         onProductFound={(product) => {
           setAdjustingProduct(product);
           setIsStockAdjustModalOpen(true);
+        }}
+      />
+
+      {/* Shopfloor Direct Tasks & Admin Dispatch Messaging Modal */}
+      <ShopfloorTasksModal
+        isOpen={isTasksModalOpen}
+        onClose={() => {
+          setIsTasksModalOpen(false);
+          setTaskTargetProductId(null);
+          setTaskTargetProductName(null);
+        }}
+        user={user}
+        initialProductId={taskTargetProductId}
+        initialProductName={taskTargetProductName}
+        onNavigateToStockAdjust={async (productId) => {
+          try {
+            const res = await fetch(`/api/products/${productId}`);
+            const data = await res.json();
+            if (data.product) {
+              setAdjustingProduct(data.product);
+              setIsStockAdjustModalOpen(true);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }}
+        onNavigateToPO={() => {
+          setActiveTab("procurement");
+        }}
+        onTasksUpdated={() => {
+          fetchTasksCount();
         }}
       />
     </div>

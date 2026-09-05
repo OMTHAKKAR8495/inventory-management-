@@ -22,6 +22,7 @@ import {
   Sun,
   Truck,
   BookOpen,
+  MessageSquare,
 } from "lucide-react";
 import { User, DashboardMetrics } from "@/lib/types";
 
@@ -34,6 +35,8 @@ interface NavbarProps {
   onOpenRecycleBinModal?: () => void;
   onOpenBackupModal?: () => void;
   onOpenBarcodeScanner?: () => void;
+  onOpenTasksModal?: (productId?: string, productName?: string) => void;
+  pendingTasksCount?: number;
   metrics?: DashboardMetrics | null;
   onSwitchRoleQuickDemo?: (role: "admin" | "manager") => void;
   onSelectAlertItem?: (productId: string) => void;
@@ -50,6 +53,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenRecycleBinModal,
   onOpenBackupModal,
   onOpenBarcodeScanner,
+  onOpenTasksModal,
+  pendingTasksCount = 0,
   metrics,
   onSwitchRoleQuickDemo,
   onSelectAlertItem,
@@ -206,6 +211,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                   Manager
                 </button>
               </div>
+            )}
+
+            {/* Shopfloor Direct Task & Dispatch Messages */}
+            {onOpenTasksModal && (
+              <button
+                onClick={() => onOpenTasksModal()}
+                className="relative flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/90 rounded-xl text-xs font-bold transition"
+                title={isAdmin ? "Dispatch instructions or order products for floor manager" : "View active tasks from Admin"}
+              >
+                <MessageSquare className="w-4 h-4 text-blue-600" />
+                <span className="hidden sm:inline">
+                  {isAdmin ? "Dispatch Tasks" : "Work Orders"}
+                </span>
+                {pendingTasksCount > 0 && (
+                  <span className="w-5 h-5 rounded-full bg-amber-500 text-slate-900 text-[10px] font-black flex items-center justify-center animate-pulse">
+                    {pendingTasksCount}
+                  </span>
+                )}
+              </button>
             )}
 
             {/* Notifications Dropdown */}

@@ -276,6 +276,30 @@ function initSchema() {
       CREATE INDEX IF NOT EXISTS idx_po_items_po ON purchase_order_items(po_id);
     `);
 
+    // 11. Shopfloor Direct Tasks & Messages (Admin to Manager Dispatch)
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS shopfloor_tasks (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        priority TEXT NOT NULL CHECK(priority IN ('urgent', 'normal', 'low')),
+        category TEXT NOT NULL CHECK(category IN ('stock_order', 'shelf_audit', 'customer_order', 'general_work')),
+        related_product_id TEXT,
+        related_product_name TEXT,
+        from_user_id TEXT NOT NULL,
+        from_user_name TEXT NOT NULL,
+        to_role TEXT NOT NULL DEFAULT 'manager',
+        status TEXT NOT NULL CHECK(status IN ('pending', 'in_progress', 'completed')),
+        notes TEXT,
+        created_at TEXT NOT NULL,
+        completed_at TEXT,
+        completed_by_name TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_tasks_status ON shopfloor_tasks(status);
+      CREATE INDEX IF NOT EXISTS idx_tasks_created ON shopfloor_tasks(created_at);
+    `);
+
     seedData();
   } catch (err) {
     console.error("Database initialization error:", err);
@@ -840,6 +864,66 @@ function seedData() {
     insertCustomer.run("cust_2", "Suresh Gupta", "Gupta Provision Mart", "+91 98980 67890", "12 Gandhi Road, Near Station", 75000, 0, now, now);
     insertCustomer.run("cust_3", "Mohan Lal", "Shree Krishna Kirana", "+91 94260 54321", "Plot 88, APMC Market Gate 2", 150000, 48500, now, now);
     insertCustomer.run("cust_4", "Dinesh Shah", "Shah Supermarket", "+91 97120 99887", "Cross Roads, Main Bazaar", 120000, 8900, now, now);
+  }
+
+  // Seed sample Shopfloor Tasks & Direct Dispatch Orders
+  const taskCount = db.prepare("SELECT COUNT(*) as count FROM shopfloor_tasks").get() as { count: number };
+  if (taskCount && taskCount.count === 0) {
+    const insertTask = db.prepare(`
+      INSERT INTO shopfloor_tasks (
+        id, title, description, priority, category, related_product_id,
+        related_product_name, from_user_id, from_user_name, to_role, status, notes, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    const now = new Date().toISOString();
+    insertTask.run(
+      "task_001",
+      "Order 40 bags of Royal Supreme Basmati Rice (25kg Bag)",
+      "Stock is critically down to 12 bags. Please place an emergency reorder with Gujarat Agro Mills or raise PO #1002 immediately.",
+      "urgent",
+      "stock_order",
+      "prod_001",
+      "Royal Supreme Basmati Rice (25kg Bag)",
+      "usr_admin_1",
+      "Store Administrator",
+      "manager",
+      "pending",
+      "Contact Gujarat Agro Mills rep at +91 98251 22334",
+      now
+    );
+
+    insertTask.run(
+      "task_002",
+      "Audit physical count of Groundnut Oil tins in Rack B-4",
+      "System shows 90 tins on hand. Please verify physical batch count against invoice #INV-8821.",
+      "normal",
+      "shelf_audit",
+      "prod_009",
+      "Filtered Groundnut Oil (15L Tin)",
+      "usr_admin_1",
+      "Store Administrator",
+      "manager",
+      "pending",
+      "Match with physical stock register",
+      now
+    );
+
+    insertTask.run(
+      "task_003",
+      "Prepare 10 cartons of Kashmiri Chilli Powder for Patel General Stores dispatch",
+      "Customer requested urgent morning delivery. Please pack and keep near dock 1.",
+      "normal",
+      "customer_order",
+      "prod_012",
+      "Kashmiri Red Chilli Powder (1kg x 20 Pack Carton)",
+      "usr_admin_1",
+      "Store Administrator",
+      "manager",
+      "completed",
+      "Packed and staged by dock 1",
+      now
+    );
   }
 }
 

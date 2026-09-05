@@ -21,6 +21,8 @@ import {
   BookOpen,
   BarChart3,
   Award,
+  MessageSquare,
+  Send,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -43,6 +45,7 @@ interface DashboardViewProps {
   onNavigateToPOS?: () => void;
   onNavigateToPO?: () => void;
   onNavigateToKhata?: () => void;
+  onOpenTasksModal?: (productId?: string, productName?: string) => void;
   onQuickStockAdjust: (productId: string) => void;
   isLoading: boolean;
 }
@@ -57,6 +60,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onNavigateToPOS,
   onNavigateToPO,
   onNavigateToKhata,
+  onOpenTasksModal,
   onQuickStockAdjust,
   isLoading,
 }) => {
@@ -151,6 +155,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               >
                 <BookOpen className="w-4 h-4" />
                 Khata Ledger
+              </button>
+            )}
+
+            {onOpenTasksModal && (
+              <button
+                onClick={() => onOpenTasksModal()}
+                className="px-3.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold border border-blue-200 transition flex items-center gap-1.5"
+                title="Dispatch direct work orders, reorders or audit tasks to floor manager"
+              >
+                <MessageSquare className="w-4 h-4 text-blue-600" />
+                {isAdmin ? "Dispatch to Manager" : "Work Orders"}
               </button>
             )}
           </div>
@@ -470,12 +485,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       >
                         {item.stock_quantity <= 0 ? "OUT OF STOCK" : `${item.stock_quantity} left`}
                       </span>
-                      <button
-                        onClick={() => onQuickStockAdjust(item.id)}
-                        className="block mt-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700"
-                      >
-                        + Restock
-                      </button>
+                      <div className="flex items-center justify-end gap-2 mt-1">
+                        {onOpenTasksModal && (
+                          <button
+                            onClick={() => onOpenTasksModal(item.id, item.name)}
+                            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5"
+                            title="Instruct manager to reorder or audit"
+                          >
+                            <Send className="w-3 h-3" />
+                            Instruct
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onQuickStockAdjust(item.id)}
+                          className="text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+                        >
+                          + Restock
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))

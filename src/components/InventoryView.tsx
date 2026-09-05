@@ -18,6 +18,7 @@ import {
   ArrowUpDown,
   ScanBarcode,
   Package,
+  MessageSquare,
 } from "lucide-react";
 import { Product, ProductFilters, User } from "@/lib/types";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
@@ -30,6 +31,7 @@ interface InventoryViewProps {
   onOpenBulkUpload: () => void;
   onOpenBarcodeScanner?: () => void;
   onOpenRecycleBin?: () => void;
+  onOpenTasksModal?: (productId?: string, productName?: string) => void;
   initialFilterStatus?: string;
 }
 
@@ -41,6 +43,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   onOpenBulkUpload,
   onOpenBarcodeScanner,
   onOpenRecycleBin,
+  onOpenTasksModal,
   initialFilterStatus,
 }) => {
   const isAdmin = user.role === "admin";
@@ -687,6 +690,16 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
+
+                          {onOpenTasksModal && (
+                            <button
+                              onClick={() => onOpenTasksModal(p.id, p.name)}
+                              className="p-1.5 bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 rounded-lg transition"
+                              title="Dispatch Work Order / Instruction for this item"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                            </button>
+                          )}
 
                           {isAdmin && (
                             <button

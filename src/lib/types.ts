@@ -231,3 +231,29 @@ export interface KhataTransaction {
   created_at: string;
 }
 
+// ----------------------------------------------------
+// Shopfloor Dispatch & Admin-to-Manager Messages
+// ----------------------------------------------------
+export type TaskPriority = "urgent" | "normal" | "low";
+export type TaskStatus = "pending" | "in_progress" | "completed";
+export type TaskCategory = "stock_order" | "shelf_audit" | "customer_order" | "general_work";
+
+export interface ShopfloorTask {
+  id: string;
+  title: string;
+  description?: string;
+  priority: TaskPriority;
+  category: TaskCategory;
+  related_product_id?: string | null;
+  related_product_name?: string | null;
+  from_user_id: string;
+  from_user_name: string;
+  to_role: UserRole | "all";
+  status: TaskStatus;
+  notes?: string | null;
+  created_at: string;
+  completed_at?: string | null;
+  completed_by_name?: string | null;
+}
+
+
