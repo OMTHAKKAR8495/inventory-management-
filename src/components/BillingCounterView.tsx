@@ -93,6 +93,10 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // WhatsApp Reminder Modal State for Saved Bills
+  const [whatsappModalBill, setWhatsappModalBill] = useState<SavedBill | null>(null);
+  const [whatsappTargetPhone, setWhatsappTargetPhone] = useState<string>("");
+
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Load products & customers from the real database API (Single Source of Truth)
@@ -404,6 +408,88 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
       console.error("Failed to print draft estimate:", e);
       setFeedback({ type: "error", text: "Failed to generate print preview." });
     }
+  };
+
+  // Handle Send WhatsApp Reminder for a Saved Bill
+  const handleSendWhatsAppReminder = async (bill: SavedBill, phoneToSend: string) => {
+    let rawDigits = phoneToSend.trim().replace(/[^0-9]/g, "");
+    let formattedPhone = "";
+    if (rawDigits.length === 10) {
+      formattedPhone = `91${rawDigits}`;
+    } else if (rawDigits.length === 11 && rawDigits.startsWith("0")) {
+      formattedPhone = `91${rawDigits.slice(1)}`;
+    } else if (rawDigits.length === 12 && rawDigits.startsWith("91")) {
+      formattedPhone = rawDigits;
+    } else if (rawDigits.length > 0) {
+      formattedPhone = rawDigits;
+    }
+
+    // Generate PDF copy of draft estimate
+    try {
+      const draftInvoiceData = {
+        invoice_number: bill.billNumber,
+        customer_name: bill.customerName,
+        customer_phone: bill.customerPhone || phoneToSend,
+        payment_method: `${bill.paymentMethod.toUpperCase()} (ESTIMATE DRAFT)`,
+        items: bill.cart,
+        subtotal: bill.subtotal,
+        discountAmount: bill.discountAmount,
+        taxAmount: bill.taxAmount,
+        taxPercent: bill.taxPercent,
+        grand_total: bill.grandTotal,
+        notes: bill.notes || "Draft / Quotation Estimate",
+        created_at: bill.savedAt,
+      };
+      const doc = generateInvoicePDF(draftInvoiceData);
+      doc.save(`Estimate_${bill.billNumber}.pdf`);
+    } catch (err) {}
+
+    // Items list for WhatsApp message
+    const itemsText = bill.cart
+      .map(
+        (it, idx) =>
+          `${idx + 1}. *${it.product.name}*\n   Qty: ${it.quantity} ${it.product.unit} × Rs. ${it.unit_price} = *Rs. ${it.total_price.toLocaleString("en-IN")}*`
+      )
+      .join("\n\n");
+
+    const messageText =
+      `*PROVISION SMART WHOLESALE STORE*\n` +
+      `APMC Wholesale Market Yard • Phone: +91 98250 12345\n` +
+      `------------------------------------\n` +
+      `📑 *DRAFT BILL / ESTIMATE REMINDER*\n` +
+      `*Hold Token:* #${bill.billNumber}\n` +
+      `*Customer:* ${bill.customerName}\n` +
+      `*Date:* ${new Date(bill.savedAt).toLocaleString("en-IN")}\n` +
+      `------------------------------------\n` +
+      `🛒 *Items Reserved in Order:*\n` +
+      `${itemsText}\n` +
+      `------------------------------------\n` +
+      `*Subtotal:* Rs. ${bill.subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}\n` +
+      (bill.discountAmount > 0
+        ? `*Discount Savings:* - Rs. ${bill.discountAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}\n`
+        : ``) +
+      (bill.taxAmount > 0
+        ? `*GST Tax (${bill.taxPercent}%):* + Rs. ${bill.taxAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}\n`
+        : ``) +
+      `💰 *TOTAL PAYABLE:* *Rs. ${bill.grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}*\n` +
+      `💳 *Payment Mode:* ${bill.paymentMethod.toUpperCase()}\n` +
+      (bill.notes ? `📝 *Note:* ${bill.notes}\n` : ``) +
+      `------------------------------------\n` +
+      `⏳ *Status:* Your order is currently on HOLD at Counter.\n` +
+      `Please visit our shopfloor billing counter or reply to this message to confirm dispatch.\n` +
+      `Thank you!`;
+
+    const encoded = encodeURIComponent(messageText);
+    const whatsappUrl = formattedPhone
+      ? `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encoded}`
+      : `https://api.whatsapp.com/send?text=${encoded}`;
+
+    window.open(whatsappUrl, "_blank");
+    setWhatsappModalBill(null);
+    setFeedback({
+      type: "success",
+      text: `WhatsApp reminder dispatched for Draft Bill #${bill.billNumber}!`,
+    });
   };
 
   // Filtered & Sorted Saved Bills List
@@ -1318,8 +1404,24 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                     </div>
 
                     {/* Card Actions Footer */}
-                    <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <div className="p-3 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            setWhatsappModalBill(bill);
+                            setWhatsappTargetPhone(
+                              bill.customerPhone
+                                ? bill.customerPhone.replace(/^(\+91|91)/, "").trim()
+                                : ""
+                            );
+                          }}
+                          className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-emerald-300 shadow-2xs"
+                          title="Remind customer on WhatsApp"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          Remind on WhatsApp
+                        </button>
+
                         <button
                           onClick={() => handlePrintDraftBill(bill)}
                           className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-slate-200 shadow-2xs"
@@ -1612,6 +1714,92 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
               >
                 New Sale
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp Reminder Modal for Saved Bills */}
+      {whatsappModalBill && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-emerald-600 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold">Remind Customer on WhatsApp</h3>
+                  <p className="text-[11px] text-emerald-100">Draft Bill #{whatsappModalBill.billNumber}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setWhatsappModalBill(null)}
+                className="text-white hover:text-emerald-200 text-xs font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4 text-xs">
+              {/* Draft Info Card */}
+              <div className="p-3.5 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-1">
+                <div className="flex justify-between font-bold text-slate-900">
+                  <span>Customer:</span>
+                  <span>{whatsappModalBill.customerName}</span>
+                </div>
+                <div className="flex justify-between text-slate-600 font-medium">
+                  <span>Items:</span>
+                  <span>{whatsappModalBill.cart.length} Products</span>
+                </div>
+                <div className="flex justify-between text-slate-900 font-bold pt-1 border-t border-emerald-200">
+                  <span>Total Payable:</span>
+                  <span className="text-sm font-black text-emerald-800 font-mono">
+                    ₹{whatsappModalBill.grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+
+              {/* Phone Input */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+                  Customer WhatsApp Mobile Number:
+                </label>
+                <div className="flex items-center bg-white border border-slate-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-500">
+                  <span className="px-3 py-2 bg-slate-100 text-slate-700 font-bold text-xs border-r border-slate-200 select-none">
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    value={whatsappTargetPhone}
+                    onChange={(e) => setWhatsappTargetPhone(e.target.value)}
+                    placeholder="10-digit mobile number"
+                    autoFocus
+                    className="w-full px-3 py-2 text-xs font-bold text-slate-900 outline-hidden placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setWhatsappModalBill(null)}
+                  className="w-1/3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendWhatsAppReminder(whatsappModalBill, whatsappTargetPhone)}
+                  className="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Send WhatsApp Reminder
+                </button>
+              </div>
             </div>
           </div>
         </div>
