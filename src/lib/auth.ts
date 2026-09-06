@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
-import { db } from "./db";
+import { queryOne } from "./cloudDb";
 import { User, UserRole } from "./types";
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -42,15 +42,17 @@ export async function getCurrentUser(): Promise<User | null> {
     const payload = await verifyToken(tokenCookie.value);
     if (!payload?.userId) return null;
 
-    const user = db
-      .prepare("SELECT id, name, email, role, status, created_at FROM users WHERE id = ? AND status = 'active'")
-      .get(payload.userId) as User | undefined;
+    const user = await queryOne<User>(
+      "SELECT id, name, email, role, status, created_at FROM users WHERE id = ? AND status = 'active'",
+      [payload.userId]
+    );
 
     return user || null;
   } catch (err) {
     return null;
   }
 }
+
 
 export function setAuthCookie(token: string) {
   // In Next.js route handlers, return cookie in response headers or set via cookieStore

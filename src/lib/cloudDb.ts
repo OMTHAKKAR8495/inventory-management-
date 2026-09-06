@@ -1,5 +1,4 @@
-import { Pool, PoolClient } from "pg";
-import Database from "better-sqlite3";
+import { Pool } from "pg";
 import path from "path";
 import fs from "fs";
 
@@ -13,7 +12,7 @@ const isPostgres = Boolean(databaseUrl && databaseUrl.startsWith("postgres"));
 // Global singleton for connection pool
 const globalForPg = globalThis as unknown as {
   pgPool: Pool | undefined;
-  sqliteDb: Database.Database | undefined;
+  sqliteDb: any | undefined;
 };
 
 export const pool =
@@ -36,13 +35,14 @@ if (process.env.NODE_ENV !== "production" && pool) {
 const dataDir = path.join(process.cwd(), "data");
 const dbPath = path.join(dataDir, "inventory.db");
 
-function getSqlite(): Database.Database {
+function getSqlite(): any {
   if (!globalForPg.sqliteDb) {
     if (!fs.existsSync(dataDir)) {
       try {
         fs.mkdirSync(dataDir, { recursive: true });
       } catch (e) {}
     }
+    const Database = require("better-sqlite3");
     globalForPg.sqliteDb = new Database(dbPath, { timeout: 10000 });
     try {
       globalForPg.sqliteDb.pragma("journal_mode = WAL");
@@ -57,6 +57,7 @@ export function convertPlaceholders(sql: string): string {
   let paramIndex = 1;
   return sql.replace(/\?/g, () => `$${paramIndex++}`);
 }
+
 
 // Helper: Normalize PostgreSQL numeric string values to JS Numbers
 function normalizeRow(row: any): any {
