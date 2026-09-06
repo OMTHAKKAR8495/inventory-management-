@@ -440,7 +440,9 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
       formattedPhone = rawDigits;
     }
 
-    // Generate PDF copy of draft estimate
+    // 1. Generate clean official PDF Draft Estimate
+    let pdfFile: File | null = null;
+    let doc: any = null;
     try {
       const draftInvoiceData = {
         invoice_number: bill.billNumber,
@@ -456,11 +458,15 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
         notes: bill.notes || "Draft / Quotation Estimate",
         created_at: bill.savedAt,
       };
-      const doc = generateInvoicePDF(draftInvoiceData);
-      doc.save(`Estimate_${bill.billNumber}.pdf`);
-    } catch (err) {}
+      doc = generateInvoicePDF(draftInvoiceData);
+      const pdfBlob = doc.output("blob");
+      const pdfFilename = `Estimate_${bill.billNumber}.pdf`;
+      pdfFile = new File([pdfBlob], pdfFilename, { type: "application/pdf" });
+    } catch (err) {
+      console.error("PDF generation error:", err);
+    }
 
-    // Items list for WhatsApp message
+    // 2. Items list text for WhatsApp message
     const itemsText = bill.cart
       .map(
         (it, idx) =>
@@ -495,6 +501,30 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
       `Please visit our shopfloor billing counter or reply to this message to confirm dispatch.\n` +
       `Thank you!`;
 
+    // 3. Try Native Web Share API first (attaches actual PDF directly on Mobile / macOS)
+    if (pdfFile && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+      try {
+        await navigator.share({
+          files: [pdfFile],
+          title: `Draft Estimate #${bill.billNumber}`,
+          text: messageText,
+        });
+        setWhatsappModalBill(null);
+        setFeedback({
+          type: "success",
+          text: `PDF Estimate #${bill.billNumber} shared directly to WhatsApp!`,
+        });
+        return;
+      } catch (err) {
+        // User cancelled share or fallback to Web WhatsApp
+      }
+    }
+
+    // 4. Desktop Web Fallback: Download PDF copy and open WhatsApp chat
+    if (doc) {
+      doc.save(`Estimate_${bill.billNumber}.pdf`);
+    }
+
     const encoded = encodeURIComponent(messageText);
     const whatsappUrl = formattedPhone
       ? `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encoded}`
@@ -504,7 +534,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
     setWhatsappModalBill(null);
     setFeedback({
       type: "success",
-      text: `WhatsApp reminder dispatched for Draft Bill #${bill.billNumber}!`,
+      text: `Estimate #${bill.billNumber} PDF downloaded and WhatsApp chat opened!`,
     });
   };
 
