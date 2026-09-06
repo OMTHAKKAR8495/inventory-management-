@@ -39,8 +39,10 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
   const adjustQty = parseInt(quantity, 10) || 0;
   const newQty = type === "stock_in" ? currentQty + adjustQty : Math.max(0, currentQty - adjustQty);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.SyntheticEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     if (adjustQty <= 0) {
       setErrorMsg("Quantity must be greater than zero.");
       return;
@@ -86,9 +88,13 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleSubmit}
+              onClick={(e) => handleSubmit(e)}
               disabled={isSubmitting}
-              className="px-3.5 py-1.5 bg-white text-emerald-800 hover:bg-emerald-50 rounded-xl text-xs font-black shadow-xs transition flex items-center gap-1.5 disabled:opacity-50"
+              className={`px-3.5 py-1.5 bg-white rounded-xl text-xs font-black shadow-xs transition flex items-center gap-1.5 disabled:opacity-50 ${
+                type === "stock_in"
+                  ? "text-emerald-800 hover:bg-emerald-50"
+                  : "text-red-800 hover:bg-red-50"
+              }`}
             >
               <Check className="w-3.5 h-3.5" />
               {isSubmitting ? "Saving..." : "Save Changes"}

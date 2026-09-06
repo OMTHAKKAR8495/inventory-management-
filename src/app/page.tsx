@@ -20,12 +20,41 @@ import { ShopfloorTasksModal } from "@/components/ShopfloorTasksModal";
 import { LoginView } from "@/components/LoginView";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 
+type TabType = "dashboard" | "inventory" | "pos" | "procurement" | "khata" | "bulk" | "audit";
+const VALID_TABS: TabType[] = ["dashboard", "inventory", "pos", "procurement", "khata", "bulk", "audit"];
+
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "inventory" | "pos" | "procurement" | "khata" | "bulk" | "audit">("dashboard");
+  const [activeTab, setActiveTabState] = useState<TabType>("dashboard");
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [isMetricsLoading, setIsMetricsLoading] = useState(true);
+
+  // Restore and maintain active tab across browser page refreshes
+  const setActiveTab = (tab: TabType) => {
+    setActiveTabState(tab);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("provisionsmart_active_tab", tab);
+        window.location.hash = tab;
+      } catch (e) {}
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash.replace("#", "").toLowerCase() as TabType;
+      const saved = localStorage.getItem("provisionsmart_active_tab") as TabType;
+      
+      let initialTab: TabType = "dashboard";
+      if (VALID_TABS.includes(hash)) {
+        initialTab = hash;
+      } else if (VALID_TABS.includes(saved)) {
+        initialTab = saved;
+      }
+      setActiveTabState(initialTab);
+    }
+  }, []);
 
   // Modals state
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -360,6 +389,7 @@ export default function Home() {
         {activeTab === "inventory" && (
           <InventoryView
             user={user}
+            catalogVersion={catalogVersion}
             initialFilterStatus={inventoryStatusFilter}
             onOpenAddModal={() => {
               setEditingProduct(null);
@@ -374,6 +404,8 @@ export default function Home() {
               setIsStockAdjustModalOpen(true);
             }}
             onOpenBulkUpload={() => setActiveTab("bulk")}
+            onOpenBarcodeScanner={() => setIsBarcodeScannerOpen(true)}
+            onOpenRecycleBin={() => setIsRecycleBinModalOpen(true)}
             onOpenTasksModal={(pId?: string, pName?: string) => {
               setTaskTargetProductId(pId || null);
               setTaskTargetProductName(pName || null);

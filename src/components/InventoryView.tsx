@@ -25,6 +25,7 @@ import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 
 interface InventoryViewProps {
   user: User;
+  catalogVersion?: number;
   onOpenAddModal: () => void;
   onOpenEditModal: (product: Product) => void;
   onOpenStockAdjustModal: (product: Product) => void;
@@ -37,6 +38,7 @@ interface InventoryViewProps {
 
 export const InventoryView: React.FC<InventoryViewProps> = ({
   user,
+  catalogVersion = 0,
   onOpenAddModal,
   onOpenEditModal,
   onOpenStockAdjustModal,
@@ -134,6 +136,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
     sortOrder,
     page,
     limit,
+    catalogVersion,
   ]);
 
   const handleClearFilters = () => {
@@ -252,6 +255,17 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           )}
 
           <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block" />
+
+          {/* Refresh Button */}
+          <button
+            onClick={() => fetchProducts()}
+            disabled={isLoading}
+            className="px-3.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-blue-200"
+            title="Refresh Inventory Products"
+          >
+            <RotateCcw className={`w-4 h-4 ${isLoading ? "animate-spin text-blue-600" : ""}`} />
+            {isLoading ? "Refreshing..." : "Refresh"}
+          </button>
 
           {/* Export Buttons */}
           <button
