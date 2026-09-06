@@ -73,26 +73,26 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand Logo & Name */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-              <Store className="w-5 h-5" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs">
+              <Store className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base font-bold tracking-tight text-slate-900 leading-tight">
+                <h1 className="text-sm sm:text-base font-black tracking-tight text-slate-900 leading-tight">
                   PROVISION<span className="text-blue-600">SMART</span>
                 </h1>
                 <span
-                  className={`text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full border ${
+                  className={`text-[9px] sm:text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border ${
                     isAdmin
                       ? "bg-purple-50 text-purple-700 border-purple-200"
                       : "bg-emerald-50 text-emerald-700 border-emerald-200"
                   }`}
                 >
-                  {isAdmin ? "Admin Portal" : "Inventory Staff"}
+                  {isAdmin ? "Admin" : "Staff"}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 hidden sm:block">Wholesale Goods & Provision Inventory (₹)</p>
+              <p className="text-[11px] text-slate-400 hidden sm:block font-medium">Wholesale Provision System (₹)</p>
             </div>
           </div>
 

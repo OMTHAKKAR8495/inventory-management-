@@ -55,13 +55,58 @@ body {
   animation: pulseSubtle 2s infinite ease-in-out;
 }
 
-/* Print styles for reports */
+/* Print styles for 1-page perfect receipt printing */
 @media print {
-  body {
-    background: white !important;
-    color: black !important;
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
   }
-  .no-print {
+
+  /* Hide everything on the page by default */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Only make the printable receipt and its children visible */
+  #printable-receipt,
+  #printable-receipt * {
+    visibility: visible !important;
+  }
+
+  #printable-receipt {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 16px 24px !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: none !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Hide navigation, buttons, toast, backdrop and modal chrome */
+  header,
+  nav,
+  footer,
+  button,
+  .no-print,
+  .fixed.inset-0.bg-slate-900\/60,
+  .fixed.bottom-6.right-6 {
     display: none !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 8mm 12mm 8mm 12mm;
   }
 }

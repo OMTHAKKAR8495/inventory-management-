@@ -21,6 +21,8 @@ import {
   Receipt,
   RotateCcw,
   Sparkles,
+  MessageSquare,
+  Phone,
 } from "lucide-react";
 import { Product, Customer, CartItem, PaymentMethod } from "@/lib/types";
 
@@ -620,12 +622,12 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
         </div>
       </div>
 
-      {/* Completed Invoice Printable Modal */}
+      {/* Completed Invoice Printable Modal & WhatsApp Dispatch */}
       {showReceiptModal && completedInvoice && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-fade-in my-8 text-slate-900">
-            {/* Header */}
-            <div className="px-6 py-4 bg-gradient-to-r from-blue-700 to-indigo-700 text-white flex items-center justify-between">
+          <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-fade-in my-8 text-slate-900 flex flex-col max-h-[90vh]">
+            {/* Header (Hidden on Print) */}
+            <div className="no-print px-6 py-4 bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 text-white flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-6 h-6 text-emerald-400" />
                 <div>
@@ -641,95 +643,201 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
               </button>
             </div>
 
-            {/* Printable Receipt Body */}
-            <div id="printable-receipt" className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-              <div className="text-center pb-3 border-b border-dashed border-slate-300">
-                <h4 className="text-lg font-black tracking-tight text-slate-900">PROVISION SMART</h4>
-                <p className="text-xs text-slate-500">Wholesale Goods & General Provision Store</p>
-                <p className="text-[11px] text-slate-400">APMC Wholesale Market Yard • GSTIN: 24AAACP1234F1Z5</p>
-                <div className="mt-2 text-xs font-mono font-bold text-slate-700">
-                  Invoice: #{completedInvoice.invoice_number} • {new Date().toLocaleString()}
+            {/* WhatsApp Phone Quick Dispatch Bar (Hidden on Print) */}
+            <div className="no-print px-6 py-3 bg-emerald-50 border-b border-emerald-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-emerald-900">
+                <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Send Bill to Customer via WhatsApp:</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Phone className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="tel"
+                    defaultValue={completedInvoice.customer_phone || ""}
+                    id="whatsapp-phone-input"
+                    placeholder="Mobile number..."
+                    className="pl-8 pr-3 py-1.5 bg-white border border-emerald-300 rounded-xl text-xs font-semibold text-slate-900 outline-hidden w-36 sm:w-44 focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    const input = document.getElementById("whatsapp-phone-input") as HTMLInputElement;
+                    const phone = (input?.value || completedInvoice.customer_phone || "").replace(/[^0-9]/g, "");
+
+                    const itemsList = completedInvoice.items
+                      .map(
+                        (it: any, idx: number) =>
+                          `${idx + 1}. *${it.product.name}*\n   ${it.quantity} ${it.product.unit} × ₹${it.unit_price} = *₹${it.total_price.toLocaleString("en-IN")}*`
+                      )
+                      .join("\n");
+
+                    const message = encodeURIComponent(
+                      `🧾 *PROVISION SMART WHOLESALE STORE*\n` +
+                      `📍 APMC Wholesale Market Yard\n` +
+                      `GSTIN: 24AAACP1234F1Z5\n` +
+                      `━━━━━━━━━━━━━━━━━━━━\n` +
+                      `📄 *TAX INVOICE / CASH BILL*\n` +
+                      `*Invoice No:* #${completedInvoice.invoice_number}\n` +
+                      `*Date:* ${new Date().toLocaleString("en-IN")}\n` +
+                      `*Billed To:* ${completedInvoice.customer_name}\n` +
+                      `*Payment Mode:* ${completedInvoice.payment_method?.toUpperCase()} (PAID)\n` +
+                      `━━━━━━━━━━━━━━━━━━━━\n` +
+                      `*PURCHASED ITEMS:*\n${itemsList}\n` +
+                      `━━━━━━━━━━━━━━━━━━━━\n` +
+                      `*Subtotal:* ₹${completedInvoice.subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}\n` +
+                      (completedInvoice.discountAmount > 0
+                        ? `*Discount Savings:* -₹${completedInvoice.discountAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}\n`
+                        : "") +
+                      (completedInvoice.taxAmount > 0
+                        ? `*GST (${completedInvoice.taxPercent || 0}%):* +₹${completedInvoice.taxAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}\n`
+                        : "") +
+                      `*GRAND TOTAL:* *₹${completedInvoice.grand_total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}*\n` +
+                      `━━━━━━━━━━━━━━━━━━━━\n` +
+                      `🙏 *Thank you for your business!*\n` +
+                      `_This is a computer generated bill._`
+                    );
+
+                    const url = phone ? `https://wa.me/${phone}?text=${message}` : `https://wa.me/?text=${message}`;
+                    window.open(url, "_blank");
+                  }}
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs shrink-0"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  Send WhatsApp
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Receipt Body (Pure 1-Page Layout) */}
+            <div id="printable-receipt" className="p-6 space-y-4 overflow-y-auto flex-1 bg-white text-slate-900">
+              {/* Header */}
+              <div className="text-center pb-3 border-b-2 border-slate-900">
+                <h2 className="text-xl font-black tracking-tight text-slate-900 uppercase">
+                  PROVISION SMART
+                </h2>
+                <p className="text-xs font-bold text-slate-700">Wholesale Goods & General Provision Store</p>
+                <p className="text-[11px] text-slate-600 font-medium">
+                  APMC Wholesale Market Yard • GSTIN: 24AAACP1234F1Z5 • Phone: +91 98250 12345
+                </p>
+                <div className="mt-2 inline-block px-3 py-0.5 bg-slate-100 rounded-full text-[11px] font-black uppercase tracking-wider text-slate-800 border border-slate-300">
+                  TAX INVOICE / CASH MEMO
                 </div>
               </div>
 
-              <div className="text-xs text-slate-700 flex justify-between">
+              {/* Invoice Meta Grid */}
+              <div className="grid grid-cols-2 gap-2 text-xs py-2 border-b border-dashed border-slate-300">
                 <div>
-                  <span className="text-slate-400">Billed To:</span>{" "}
-                  <strong className="text-slate-900">{completedInvoice.customer_name}</strong>
+                  <span className="text-slate-500 block text-[10px] uppercase font-bold">Invoice Number</span>
+                  <strong className="font-mono text-sm text-slate-900 font-black">#{completedInvoice.invoice_number}</strong>
+                </div>
+                <div className="text-right">
+                  <span className="text-slate-500 block text-[10px] uppercase font-bold">Date & Time</span>
+                  <span className="font-semibold text-slate-800">{new Date().toLocaleString("en-IN")}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400">Mode:</span>{" "}
-                  <strong className="uppercase text-blue-700">{completedInvoice.payment_method}</strong>
+                  <span className="text-slate-500 block text-[10px] uppercase font-bold">Customer Name</span>
+                  <strong className="text-slate-900 font-bold">{completedInvoice.customer_name}</strong>
+                  {completedInvoice.customer_phone && (
+                    <span className="block text-[11px] text-slate-600 font-mono">{completedInvoice.customer_phone}</span>
+                  )}
+                </div>
+                <div className="text-right">
+                  <span className="text-slate-500 block text-[10px] uppercase font-bold">Payment Method</span>
+                  <span className="font-black text-xs uppercase px-2 py-0.5 rounded-md bg-slate-100 text-slate-900 border border-slate-300 inline-block">
+                    {completedInvoice.payment_method} (PAID)
+                  </span>
                 </div>
               </div>
 
               {/* Items Table */}
-              <table className="w-full text-xs">
+              <table className="w-full text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-400 uppercase font-semibold text-[10px]">
-                    <th className="text-left py-1.5">Item</th>
-                    <th className="text-center py-1.5">Qty</th>
-                    <th className="text-right py-1.5">Rate</th>
-                    <th className="text-right py-1.5">Amount</th>
+                  <tr className="border-b-2 border-slate-900 text-slate-900 uppercase font-black text-[10px]">
+                    <th className="text-left py-2 font-black">Item Description</th>
+                    <th className="text-center py-2 font-black">Qty</th>
+                    <th className="text-right py-2 font-black">Unit Rate (₹)</th>
+                    <th className="text-right py-2 font-black">Amount (₹)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
+                <tbody className="divide-y divide-slate-200 font-medium text-slate-800">
                   {completedInvoice.items.map((it: any) => (
                     <tr key={it.product.id}>
-                      <td className="py-2 pr-2">
-                        <div className="font-bold">{it.product.name}</div>
-                        <span className="text-[10px] text-slate-400 font-mono">{it.product.sku}</span>
+                      <td className="py-2.5 pr-2">
+                        <div className="font-bold text-slate-900">{it.product.name}</div>
+                        <span className="text-[10px] text-slate-500 font-mono">SKU: {it.product.sku}</span>
                       </td>
-                      <td className="text-center py-2 font-bold">{it.quantity} {it.product.unit}</td>
-                      <td className="text-right py-2">₹{it.unit_price}</td>
-                      <td className="text-right py-2 font-bold">₹{it.total_price.toLocaleString("en-IN")}</td>
+                      <td className="text-center py-2.5 font-bold text-slate-900">
+                        {it.quantity} {it.product.unit}
+                      </td>
+                      <td className="text-right py-2.5 font-mono">
+                        ₹{it.unit_price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="text-right py-2.5 font-bold font-mono text-slate-900">
+                        ₹{it.total_price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
 
               {/* Total calculations */}
-              <div className="pt-3 border-t border-dashed border-slate-300 space-y-1 text-xs">
-                <div className="flex justify-between text-slate-600">
-                  <span>Subtotal:</span>
-                  <span>₹{completedInvoice.subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+              <div className="pt-3 border-t-2 border-slate-900 space-y-1.5 text-xs">
+                <div className="flex justify-between text-slate-700">
+                  <span>Subtotal ({completedInvoice.items.length} items):</span>
+                  <span className="font-mono font-bold">
+                    ₹{completedInvoice.subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  </span>
                 </div>
                 {completedInvoice.discountAmount > 0 && (
-                  <div className="flex justify-between text-emerald-700 font-bold">
+                  <div className="flex justify-between text-emerald-800 font-bold">
                     <span>Discount Savings:</span>
-                    <span>- ₹{completedInvoice.discountAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                    <span className="font-mono">
+                      - ₹{completedInvoice.discountAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </span>
                   </div>
                 )}
                 {completedInvoice.taxAmount > 0 && (
-                  <div className="flex justify-between text-slate-600">
-                    <span>GST:</span>
-                    <span>+ ₹{completedInvoice.taxAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                  <div className="flex justify-between text-slate-700">
+                    <span>GST Tax ({completedInvoice.taxPercent || 0}%):</span>
+                    <span className="font-mono font-bold">
+                      + ₹{completedInvoice.taxAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    </span>
                   </div>
                 )}
-                <div className="pt-2 border-t border-slate-300 flex justify-between items-center text-sm font-black text-slate-900">
-                  <span>Grand Total:</span>
-                  <span className="text-lg text-blue-700">₹{completedInvoice.grand_total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                <div className="pt-2 border-t border-slate-900 flex justify-between items-center text-sm font-black text-slate-900">
+                  <span className="text-base uppercase">Grand Total:</span>
+                  <span className="text-xl font-black font-mono text-slate-900">
+                    ₹{completedInvoice.grand_total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  </span>
                 </div>
               </div>
 
-              <div className="text-center pt-3 text-[11px] text-slate-400">
-                Thank you for shopping with us! Stock automatically updated.
+              {/* Computer Generated Notice & Terms */}
+              <div className="pt-4 mt-2 border-t border-dashed border-slate-300 text-center space-y-1">
+                <p className="text-[11px] font-bold text-slate-800 uppercase tracking-wider">
+                  *** This is a Computer Generated Bill. No signature required. ***
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  Goods once sold can be exchanged within 7 days with original invoice. Thank you for your business!
+                </p>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+            {/* Action Buttons (Hidden on Print) */}
+            <div className="no-print p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
               <button
                 onClick={() => window.print()}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-2"
+                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs"
               >
                 <Printer className="w-4 h-4" />
-                Print Tax Receipt
+                Print Tax Receipt (1 Page)
               </button>
 
               <button
                 onClick={() => setShowReceiptModal(false)}
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition"
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-xs"
               >
                 New Sale
               </button>
