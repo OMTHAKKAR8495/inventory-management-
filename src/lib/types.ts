@@ -170,6 +170,23 @@ export interface CartItem {
   total_price: number;
 }
 
+export interface SavedBill {
+  id: string;
+  billNumber: string;
+  customer: Customer | null;
+  customerName: string;
+  customerPhone: string;
+  cart: CartItem[];
+  discountAmount: number;
+  taxPercent: number;
+  taxAmount: number;
+  subtotal: number;
+  grandTotal: number;
+  paymentMethod: PaymentMethod;
+  notes: string;
+  savedAt: string;
+}
+
 // ----------------------------------------------------
 // Procurement & Purchase Orders (PO)
 // ----------------------------------------------------
