@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { createDatabaseBackup } from "@/lib/db";
+import { createDatabaseBackup, backupDir } from "@/lib/db";
 import fs from "fs";
 import path from "path";
 
@@ -16,7 +16,6 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const downloadFilename = searchParams.get("download");
 
-    const backupDir = path.join(process.cwd(), "data", "backups");
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir, { recursive: true });
     }

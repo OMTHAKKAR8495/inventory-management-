@@ -122,7 +122,7 @@ export async function GET() {
     try {
       const fs = await import("fs");
       const path = await import("path");
-      const backupDir = path.join(process.cwd(), "data", "backups");
+      const { backupDir } = await import("@/lib/db");
       if (fs.existsSync(backupDir)) {
         const files = fs.readdirSync(backupDir).filter((f) => f.endsWith(".db"));
         if (files.length > 0) {

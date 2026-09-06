@@ -3,22 +3,45 @@ import path from "path";
 import fs from "fs";
 import bcrypt from "bcryptjs";
 
-// Ensure data, backup, and uploads directories exist
-const dataDir = path.join(process.cwd(), "data");
-const backupDir = path.join(dataDir, "backups");
-const uploadsDir = path.join(dataDir, "uploads");
+const isServerless = Boolean(
+  process.env.VERCEL ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.LAMBDA_TASK_ROOT ||
+  process.env.NOW_REGION
+);
 
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-if (!fs.existsSync(backupDir)) {
-  fs.mkdirSync(backupDir, { recursive: true });
-}
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+// Ensure data, backup, and uploads directories exist (use /tmp on Vercel/Lambda)
+export const dataDir = isServerless ? path.join("/tmp", "data") : path.join(process.cwd(), "data");
+export const backupDir = path.join(dataDir, "backups");
+export const uploadsDir = path.join(dataDir, "uploads");
+
+try {
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+  if (!fs.existsSync(backupDir)) {
+    fs.mkdirSync(backupDir, { recursive: true });
+  }
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (e) {
+  console.error("Directory initialization error:", e);
 }
 
 const dbPath = path.join(dataDir, "inventory.db");
+
+// If running in serverless /tmp and bundled db exists in workspace, copy it over on cold start
+if (isServerless) {
+  const bundledDbPath = path.join(process.cwd(), "data", "inventory.db");
+  try {
+    if (fs.existsSync(bundledDbPath) && !fs.existsSync(dbPath)) {
+      fs.copyFileSync(bundledDbPath, dbPath);
+    }
+  } catch (e) {
+    console.error("Failed to copy bundled db to /tmp:", e);
+  }
+}
 
 // Use global singleton pattern
 const globalForDb = globalThis as unknown as {

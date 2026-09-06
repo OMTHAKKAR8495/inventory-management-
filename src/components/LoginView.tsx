@@ -42,7 +42,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         body: JSON.stringify({ email: targetEmail, password: targetPassword }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        throw new Error(
+          res.status >= 500
+            ? "Server error while authenticating. Database is initializing."
+            : "Invalid response from server. Please try again."
+        );
+      }
+
       if (!res.ok) throw new Error(data.error || "Login failed");
 
       onLoginSuccess(data.user);
