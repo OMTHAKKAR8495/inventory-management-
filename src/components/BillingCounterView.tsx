@@ -774,7 +774,16 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   <h3 className="text-sm font-bold text-slate-900">Billing Cart ({cart.length} items)</h3>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("saved_bills")}
+                    className="text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-xl border border-indigo-200 transition flex items-center gap-1 shadow-2xs"
+                    title="View held & saved bills"
+                  >
+                    <Bookmark className="w-3.5 h-3.5" />
+                    Saved Bills ({savedBills.length})
+                  </button>
+                  <span className="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-200">
                     ₹{grandTotal.toLocaleString("en-IN")}
                   </span>
                 </div>
@@ -837,10 +846,20 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
               {/* Cart Items List */}
               <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-2xl">
                 {cart.length === 0 ? (
-                  <div className="p-8 text-center text-slate-400 space-y-1">
+                  <div className="p-6 text-center text-slate-400 space-y-2">
                     <ShoppingCart className="w-8 h-8 text-slate-300 mx-auto" />
                     <p className="text-xs font-semibold text-slate-500">Cart is empty</p>
                     <p className="text-[11px] text-slate-400">Click products from the catalog to add items</p>
+                    {savedBills.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setViewMode("saved_bills")}
+                        className="mt-2 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 border border-indigo-200"
+                      >
+                        <Bookmark className="w-3.5 h-3.5" />
+                        View {savedBills.length} Saved Hold Bills
+                      </button>
+                    )}
                   </div>
                 ) : (
                   cart.map((item) => (
