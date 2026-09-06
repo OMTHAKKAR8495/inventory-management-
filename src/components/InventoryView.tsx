@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Product, ProductFilters, User } from "@/lib/types";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
+import { applyStockOverrides } from "@/lib/storageUtils";
 
 interface InventoryViewProps {
   user: User;
@@ -127,7 +128,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       if (!res.ok) throw new Error("Failed to load inventory");
       const data = await res.json();
 
-      setProducts(data.products || []);
+      const itemsWithOverrides = applyStockOverrides(data.products || []);
+      setProducts(itemsWithOverrides);
       setTotalCount(data.total || 0);
       if (data.categories) setCategories(data.categories);
       if (data.suppliers) setSuppliers(data.suppliers);

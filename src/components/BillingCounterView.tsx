@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { Product, Customer, CartItem, PaymentMethod } from "@/lib/types";
 import { generateInvoicePDF } from "@/lib/exportUtils";
+import { applyStockOverrides, setLocalStockOverride } from "@/lib/storageUtils";
 
 interface BillingCounterViewProps {
   user: any;
@@ -72,7 +73,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
       if (prodRes.ok) {
         const prodData = await prodRes.json();
-        setProducts(prodData.products || []);
+        const itemsWithOverrides = applyStockOverrides(prodData.products || []);
+        setProducts(itemsWithOverrides);
       }
       if (custRes.ok) {
         const custData = await custRes.json();
@@ -235,6 +237,12 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
         taxPercent,
         notes,
       });
+
+      // Update local stock overrides for each item sold
+      for (const item of cart) {
+        const remaining = Math.max(0, item.product.stock_quantity - item.quantity);
+        setLocalStockOverride(item.product.id, remaining);
+      }
 
       setShowReceiptModal(true);
       clearCart();
