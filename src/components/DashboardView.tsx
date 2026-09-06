@@ -352,7 +352,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
                   contentStyle={{ backgroundColor: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "12px" }}
                 />
-                <Bar dataKey="units" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="units" fill="#3b82f6" radius={[6, 6, 0, 0]} isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -380,6 +380,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   innerRadius={50}
                   outerRadius={80}
                   paddingAngle={3}
+                  isAnimationActive={false}
                 >
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />

@@ -84,18 +84,22 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
     loadData();
   }, []);
 
-  // Filtered product catalog for counter
-  const filteredProducts = products.filter((p) => {
-    const matchesSearch =
-      !searchTerm ||
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.barcode && p.barcode.includes(searchTerm));
-    const matchesCat = selectedCategory === "all" || p.category === selectedCategory;
-    return matchesSearch && matchesCat;
-  });
+  // Filtered product catalog for counter (memoized for instantaneous UI response)
+  const filteredProducts = React.useMemo(() => {
+    return products.filter((p) => {
+      const matchesSearch =
+        !searchTerm ||
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.barcode && p.barcode.includes(searchTerm));
+      const matchesCat = selectedCategory === "all" || p.category === selectedCategory;
+      return matchesSearch && matchesCat;
+    });
+  }, [products, searchTerm, selectedCategory]);
 
-  const categories = Array.from(new Set(products.map((p) => p.category)));
+  const categories = React.useMemo(() => {
+    return Array.from(new Set(products.map((p) => p.category)));
+  }, [products]);
 
   // Add to cart
   const addToCart = (product: Product) => {

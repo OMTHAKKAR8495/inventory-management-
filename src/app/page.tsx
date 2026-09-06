@@ -80,12 +80,21 @@ export default function Home() {
     });
   };
 
-  // Inactivity auto-logout (30 minutes of idle time)
+  // Inactivity auto-logout (30 minutes of idle time - throttled to eliminate event lag)
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastActivityRef = useRef<number>(Date.now());
+
   useEffect(() => {
     if (!user) return;
 
     const resetIdleTimer = () => {
+      const now = Date.now();
+      // Throttle event handling to once every 30 seconds
+      if (now - lastActivityRef.current < 30000 && idleTimerRef.current) {
+        return;
+      }
+      lastActivityRef.current = now;
+
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       idleTimerRef.current = setTimeout(() => {
         handleLogout();
@@ -93,8 +102,8 @@ export default function Home() {
       }, 30 * 60 * 1000);
     };
 
-    const activityEvents = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
-    activityEvents.forEach((evt) => window.addEventListener(evt, resetIdleTimer));
+    const activityEvents = ["click", "keydown", "scroll", "touchstart"];
+    activityEvents.forEach((evt) => window.addEventListener(evt, resetIdleTimer, { passive: true }));
     resetIdleTimer();
 
     return () => {
