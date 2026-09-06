@@ -23,30 +23,36 @@ export async function POST(req: Request) {
     const cleanEmail = email.trim().toLowerCase();
     const now = new Date();
 
-    // Check rate limit / lockout
-    const attemptRecord = await queryOne<{
-      attempts: number;
-      last_attempt: string;
-      locked_until: string | null;
-    }>(
-      "SELECT attempts, last_attempt, locked_until FROM login_attempts WHERE ip_or_email = ?",
-      [cleanEmail]
-    );
+    // Check rate limit / lockout safely
+    let attemptRecord: { attempts: number; last_attempt: string; locked_until: string | null } | null = null;
+    try {
+      attemptRecord = await queryOne<{
+        attempts: number;
+        last_attempt: string;
+        locked_until: string | null;
+      }>(
+        "SELECT attempts, last_attempt, locked_until FROM public.login_attempts WHERE ip_or_email = ?",
+        [cleanEmail]
+      );
 
-    if (attemptRecord?.locked_until && new Date(attemptRecord.locked_until) > now) {
-      const remainingMinutes = Math.ceil(
-        (new Date(attemptRecord.locked_until).getTime() - now.getTime()) / 60000
-      );
-      return NextResponse.json(
-        {
-          error: `Too many failed login attempts. Account temporarily locked for security. Please try again in ${remainingMinutes} minute(s).`,
-        },
-        { status: 429 }
-      );
+      if (attemptRecord?.locked_until && new Date(attemptRecord.locked_until) > now) {
+        const remainingMinutes = Math.ceil(
+          (new Date(attemptRecord.locked_until).getTime() - now.getTime()) / 60000
+        );
+        return NextResponse.json(
+          {
+            error: `Too many failed login attempts. Account temporarily locked for security. Please try again in ${remainingMinutes} minute(s).`,
+          },
+          { status: 429 }
+        );
+      }
+    } catch (rateErr) {
+      console.warn("Non-fatal login_attempts check error:", rateErr);
     }
 
+    // Query user by email
     const row = await queryOne<User & { password_hash: string }>(
-      "SELECT id, name, email, password_hash, role, status, created_at FROM users WHERE email = ?",
+      "SELECT id, name, email, password_hash, role, status, created_at FROM public.users WHERE email = ?",
       [cleanEmail]
     );
 
@@ -81,8 +87,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // Reset failed attempts on success
-    await execute("DELETE FROM login_attempts WHERE ip_or_email = ?", [cleanEmail]);
+    // Reset failed attempts on success safely
+    try {
+      await execute("DELETE FROM public.login_attempts WHERE ip_or_email = ?", [cleanEmail]);
+    } catch (e) {
+      // Non-fatal
+    }
 
     const token = await signToken({
       userId: row.id,
@@ -111,9 +121,12 @@ export async function POST(req: Request) {
 
     return response;
   } catch (error: any) {
-    console.error("Login error:", error);
+    console.error("Login fatal error:", error);
     return NextResponse.json(
-      { error: "Internal server error occurred during login." },
+      {
+        error: "Internal server error occurred during login.",
+        details: process.env.NODE_ENV !== "production" ? error.message : undefined,
+      },
       { status: 500 }
     );
   }
@@ -130,18 +143,23 @@ async function recordFailedAttempt(
       ? new Date(now.getTime() + LOCKOUT_DURATION_MS).toISOString()
       : null;
 
-  await execute(
-    `
-    INSERT INTO login_attempts (ip_or_email, attempts, last_attempt, locked_until)
-    VALUES (?, ?, ?, ?)
-    ON CONFLICT(ip_or_email) DO UPDATE SET
-      attempts = excluded.attempts,
-      last_attempt = excluded.last_attempt,
-      locked_until = excluded.locked_until
-  `,
-    [key, attempts, now.toISOString(), lockedUntil]
-  );
+  try {
+    await execute(
+      `
+      INSERT INTO public.login_attempts (ip_or_email, attempts, last_attempt, locked_until)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(ip_or_email) DO UPDATE SET
+        attempts = excluded.attempts,
+        last_attempt = excluded.last_attempt,
+        locked_until = excluded.locked_until
+    `,
+      [key, attempts, now.toISOString(), lockedUntil]
+    );
+  } catch (err) {
+    console.warn("Failed to record failed attempt:", err);
+  }
 
   return attempts;
 }
+
 

@@ -2,11 +2,26 @@ import { Pool } from "pg";
 import path from "path";
 import fs from "fs";
 
-// Detect if Supabase / PostgreSQL is configured via DATABASE_URL
-const databaseUrl =
-  process.env.DATABASE_URL ||
-  "postgresql://postgres:9558413347%40Om@db.jedhlmpafnwhjrnkaomb.supabase.co:5432/postgres";
+// Helper: Convert direct Supabase connection URL (IPv6 only on free tier) to IPv4 pooler URL
+function normalizeDatabaseUrl(rawUrl?: string): string {
+  const defaultUrl =
+    "postgresql://postgres.jedhlmpafnwhjrnkaomb:9558413347%40Om@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres";
 
+  const url = rawUrl || defaultUrl;
+
+  // If URL uses direct db.<ref>.supabase.co, automatically translate to IPv4 pooler for Vercel/Lambda compatibility
+  const directMatch = url.match(/postgresql:\/\/([^:]+):([^@]+)@db\.([a-zA-Z0-9_-]+)\.supabase\.co(?::\d+)?(\/.*)?/);
+  if (directMatch) {
+    const [, user, pass, projectRef, pathAndQuery] = directMatch;
+    const poolerUser = user.includes(".") ? user : `${user}.${projectRef}`;
+    const cleanPath = pathAndQuery || "/postgres";
+    return `postgresql://${poolerUser}:${pass}@aws-0-ap-southeast-1.pooler.supabase.com:5432${cleanPath}`;
+  }
+
+  return url;
+}
+
+const databaseUrl = normalizeDatabaseUrl(process.env.DATABASE_URL);
 const isPostgres = Boolean(databaseUrl && databaseUrl.startsWith("postgres"));
 
 // Global singleton for connection pool
@@ -21,7 +36,7 @@ export const pool =
     ? new Pool({
         connectionString: databaseUrl,
         ssl: { rejectUnauthorized: false },
-        max: 20,
+        max: 15,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 10000,
       })
@@ -57,6 +72,7 @@ export function convertPlaceholders(sql: string): string {
   let paramIndex = 1;
   return sql.replace(/\?/g, () => `$${paramIndex++}`);
 }
+
 
 
 // Helper: Normalize PostgreSQL numeric string values to JS Numbers
