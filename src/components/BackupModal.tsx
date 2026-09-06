@@ -127,9 +127,19 @@ export const BackupModal: React.FC<BackupModalProps> = ({ isOpen, onClose }) => 
                       </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                    Verified
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      Verified
+                    </span>
+                    <a
+                      href={`/api/backup?download=${encodeURIComponent(b.filename)}`}
+                      className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition flex items-center gap-1"
+                      title="Download backup file"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Save
+                    </a>
+                  </div>
                 </div>
               ))
             )}

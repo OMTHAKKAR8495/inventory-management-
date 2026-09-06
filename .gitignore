@@ -36,11 +36,13 @@ yarn-error.log*
 # vercel
 .vercel
 
-# sqlite database
+# sqlite database and storage
 data/*.db*
 data/backups/*
 !data/.gitkeep
 !data/backups/.gitkeep
+data/uploads/*
+!data/uploads/.gitkeep
 
 # typescript
 *.tsbuildinfo

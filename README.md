@@ -1,84 +1,120 @@
-# ProvisionSmart — Smart Inventory Management System (Wholesale Provisions)
+# ProvisionSmart — Commercial Wholesale Provision & Inventory Management System
 
-**ProvisionSmart** is a modern, high-performance, and responsive web application designed specifically for wholesale provision, grocery, and general goods stores. Built for both desktop command centers and shopfloor tablets.
-
----
-
-## 🌟 Key Features
-
-### 1. Dual-Role Authentication & Access Control (RBAC)
-- **Store Administrator** (`admin@provision.store` / `admin123`): Full access to cost prices, profit margins, inventory financial valuation in ₹, staff account management, soft-delete, recycle bin restoration, and database snapshots.
-- **Inventory Manager** (`manager@provision.store` / `manager123`): Operational access for stock counting, quick Stock-In / Stock-Out, bulk uploads, and catalog searching. *Sensitive financial figures (cost price, margins) and deletion privileges are securely masked and blocked at the backend.*
-- **Security**: Password hashing with `bcrypt`, JWT cookies (`jose`), 15-minute brute-force lockout after 5 failed attempts, and 30-minute inactivity auto-logout.
-
-### 2. Live Analytics Dashboard (All in ₹ INR)
-- **Financial Valuation**: Total Cost Valuation (₹), Potential Sales Revenue (₹), and Projected Gross Margin (₹) for Admins.
-- **Stock Health**: Real-time stock status ratios (*In Stock*, *Low Stock*, *Out of Stock*).
-- **Department Breakdown**: Stock distribution chart by category.
-- **Urgent Alerts**: Immediate notification for critical low stock and near-expiry goods.
-- **Recent Movement Feed**: Live audit feed of recent inventory adjustments.
-
-### 3. Bulk Upload Studio & Spreadsheet Grid
-- **3-Step CSV/Excel Upload**: Download standardized CSV template $\rightarrow$ Upload $\rightarrow$ Live Validation Preview with inline cell correction $\rightarrow$ Batch Transactional Commit.
-- **Interactive Spreadsheet Grid**: Excel-like on-screen editable table with *Add Row* and live markup calculator in ₹.
-- **Single Product Modal**: Complete single-item creation with SKU auto-generation, bulk pack sizing, and markup calculation.
-
-### 4. Advanced Catalog & Shopfloor Operations
-- **Live Debounced Search**: Search across Product Name, SKU, and Barcode.
-- **Multi-Facet Filters**: Filter by Category, Stock Status, Price Range (₹), Supplier, and Expiry Horizon (7, 30, 90 days).
-- **Quick Stock-In / Stock-Out**: 1-click counter adjustment with preset audit reasons (*Restock*, *Sale*, *Damaged*, *Returned*).
-- **Barcode / SKU Scanner**: Shopfloor barcode dialog with 1-click test simulation.
-
-### 5. Formatted Reports & Export
-- **Export to CSV**: Filter-aware CSV export with role-based column masking.
-- **Export to PDF**: Beautifully styled PDF reports using `jspdf` and `jspdf-autotable` with store branding, timestamp, valuation metrics, and tabular layouts.
-
-### 6. Reliability & Data Safety
-- **Soft Delete & Recycle Bin**: Deleted items are moved to the safety bin (`deleted_at`); Admins can restore or permanently purge.
-- **Database Backup Snapshots**: 1-click database snapshots created in `./data/backups/`.
-- **Full Audit Logging**: Every addition, edit, stock adjustment, and deletion is recorded with user identity and timestamp.
-- **Dark Mode**: Persistent light/dark mode switch.
+**ProvisionSmart** is a commercial-grade, full-stack inventory management, POS billing, procurement, and B2B trade credit system built specifically for wholesale provision, grocery, and FMCG distributor businesses.
 
 ---
 
-## 🛠️ Technology Stack
+## 📁 Project Architecture & Directory Layout
 
-- **Framework**: Next.js 16 (App Router) & React 19
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS & Lucide Icons
-- **Database**: SQLite (`better-sqlite3`) with WAL mode & busy timeout handling
-- **Authentication**: JWT (`jose`) & `bcryptjs`
-- **Data Export & Parsing**: `papaparse` (CSV), `jspdf` & `jspdf-autotable` (PDF)
+```
+inventory-management-/
+├── data/                               # 🗄️ Database & Storage Layer (Persistent SQLite)
+│   ├── inventory.db                    # Primary SQLite relational database
+│   ├── backups/                        # 💾 Dedicated snapshot backup storage (.db files)
+│   │   ├── .gitkeep
+│   │   └── inventory_backup_*.db       # Timestamped full-state DB snapshots
+│   └── uploads/                        # 📥 Bulk CSV/Excel staging directory
+│       └── .gitkeep
+│
+├── src/
+│   ├── app/                            # 🚀 Next.js App Router (Frontend Pages & Backend APIs)
+│   │   ├── api/                        # ⚙️ BACKEND API LAYER
+│   │   │   ├── audit-logs/             # Movement logs & staff action histories
+│   │   │   ├── auth/                   # Login, logout, session check, password reset
+│   │   │   ├── backup/                 # Snapshot creation, listing & file downloads
+│   │   │   ├── dashboard/metrics/      # Financial KPIs (INR ₹), stock ratios & alerts
+│   │   │   ├── khata/                  # Customer credit directory & payment settlement
+│   │   │   ├── pos/                    # Real-time counter checkout & invoice generation
+│   │   │   ├── procurement/            # Low-stock scanner & supplier PO generator
+│   │   │   ├── products/               # CRUD, multi-filters, stock adjust & bulk batching
+│   │   │   ├── tasks/                  # Admin-to-Manager work order dispatching
+│   │   │   └── users/                  # RBAC user account management
+│   │   ├── globals.css                 # Clean professional theme styling
+│   │   ├── layout.tsx                  # Root HTML metadata & font providers
+│   │   └── page.tsx                    # Main multi-view application router
+│   │
+│   ├── components/                     # 🎨 FRONTEND UI LAYER (Responsive React Components)
+│   │   ├── Navbar.tsx                  # Navigation tabs, role switcher & alerts
+│   │   ├── DashboardView.tsx           # Recharts visual analytics & financial KPIs
+│   │   ├── InventoryView.tsx           # Multi-filter catalog, PDF/CSV export & actions
+│   │   ├── BillingCounterView.tsx      # Shopfloor Counter POS & Printable Tax Invoices
+│   │   ├── PurchaseOrdersView.tsx      # Supplier PO generator & 1-click inward restock
+│   │   ├── KhataLedgerView.tsx         # B2B Trade credit directory & WhatsApp reminders
+│   │   ├── BulkUploadStudio.tsx        # 3-step CSV upload & manual spreadsheet table
+│   │   ├── AuditLogsView.tsx           # Chronological stock log history & user activity
+│   │   ├── ShopfloorTasksModal.tsx     # Admin-to-Manager dispatch & work orders modal
+│   │   ├── ProductFormModal.tsx        # Single-product creation & edit dialog
+│   │   ├── StockAdjustModal.tsx        # Inline stock-in/stock-out adjustment
+│   │   ├── UsersModal.tsx              # Staff user account management (Admin only)
+│   │   ├── RecycleBinModal.tsx         # Soft-deleted inventory recovery
+│   │   ├── BackupModal.tsx             # Database snapshot studio & download links
+│   │   ├── BarcodeScannerModal.tsx     # 2D/1D barcode scanner dialog
+│   │   └── LoginView.tsx               # Secure role-based login portal
+│   │
+│   └── lib/                            # 🧰 CORE BUSINESS LOGIC & HELPERS
+│       ├── auth.ts                     # JWT signing, cookie verification & role checks
+│       ├── db.ts                       # SQLite schemas, indexes, migrations & seeds
+│       ├── exportUtils.ts              # PDF and CSV generator with role column masking
+│       └── types.ts                    # TypeScript models, DTOs & state interfaces
+```
 
 ---
 
-## 🚀 Getting Started
+## 🌟 The 6 Core Enterprise Modules
 
-### 1. Install Dependencies
+1. **🏬 Smart Catalog & Multi-Filter Engine (`Catalog`)**:
+   - Live debounced search across Name, SKU, and Barcode.
+   - Filters for Category, Stock Status (In/Low/Out of Stock), Price Range (₹), Supplier, and Expiry date.
+   - Export to CSV or formatted Printable PDF with store branding.
+   - Soft-delete with Recycle Bin restoration.
+
+2. **📊 Executive Stock Valuation & Visual Analytics (`Overview`)**:
+   - Financial KPIs in Indian Rupees (₹): Total Stock Cost Valuation, Potential Sales Revenue, and Projected Margin (Admin only).
+   - Recharts Stock Units Bar Chart and Category Asset Valuation Donut Chart.
+
+3. **📥 Bulk Upload & Spreadsheet Studio (`Bulk Add`)**:
+   - 3-Step CSV/Excel uploader with downloadable template and inline cell error correction.
+   - Manual Spreadsheet Table Grid for fast row-by-row keyboard data entry.
+
+4. **🛒 Shopfloor Counter POS & Live Billing (`Counter POS`)**:
+   - Fast item scanner / product selector with stock ceiling validation.
+   - Live discount, GST slab calculation (0%, 5%, 12%, 18%), and multi-payment modes (Cash, UPI, Khata, Card).
+   - Atomic stock deduction and printable Tax Invoice modal (`window.print()`).
+
+5. **🚚 Supplier Auto-Procurement & Purchase Orders (`Supplier POs`)**:
+   - 1-Click scan of low-stock items auto-grouped by miller/supplier.
+   - 1-Click "Receive & Stock" inward delivery button that restocks the live catalog.
+
+6. **📖 Customer Khata & B2B Trade Credit Ledger (`Khata Ledger`)**:
+   - Credit limit tracking and outstanding balance directory for retail store clients.
+   - Chronological debit/credit transaction ledger.
+   - 1-Click WhatsApp payment reminders with exact pending ₹ balance.
+
+7. **📬 Admin-to-Manager Direct Work Orders & Messaging**:
+   - Admin can dispatch priority-coded tasks and reorders directly to shopfloor staff.
+   - Manager receives live badge alerts with 1-click status progression (`Pending` ➔ `In Progress` ➔ `Completed`).
+
+---
+
+## 🔐 Default Access Credentials
+
+| Role | Email | Password | Access Level |
+| :--- | :--- | :--- | :--- |
+| **Store Administrator** | `admin@provision.store` | `admin123` | Full access (Valuation in ₹, Users, POs, Backups, Recycle Bin) |
+| **Shopfloor Manager** | `manager@provision.store` | `manager123` | Operational access (POS, Stock Adjustments, Khata, Bulk Upload) |
+
+---
+
+## 🚀 Running Locally
+
 ```bash
+# 1. Install dependencies
 npm install
-```
 
-### 2. Run Development Server
-```bash
+# 2. Start development server
 npm run dev
+
+# 3. Open in browser
+http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### 3. Build for Production
-```bash
-npm run build
-npm start
-```
-
----
-
-## 🔐 Default Demo Accounts
-
-| Role | Email | Password |
-| :--- | :--- | :--- |
-| **Admin** | `admin@provision.store` | `admin123` |
-| **Manager** | `manager@provision.store` | `manager123` |
-
-*Use the quick role switcher on the navigation bar to toggle between roles instantly.*

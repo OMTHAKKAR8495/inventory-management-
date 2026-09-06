@@ -6,16 +6,37 @@ import path from "path";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const user = await getCurrentUser();
     if (!user || user.role !== "admin") {
       return NextResponse.json({ error: "Forbidden: Admin access required." }, { status: 403 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const downloadFilename = searchParams.get("download");
+
     const backupDir = path.join(process.cwd(), "data", "backups");
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir, { recursive: true });
+    }
+
+    if (downloadFilename) {
+      // Validate filename to prevent directory traversal
+      const safeFilename = path.basename(downloadFilename);
+      const filePath = path.join(backupDir, safeFilename);
+
+      if (!fs.existsSync(filePath)) {
+        return NextResponse.json({ error: "Backup file not found" }, { status: 404 });
+      }
+
+      const fileBuffer = fs.readFileSync(filePath);
+      return new NextResponse(fileBuffer, {
+        headers: {
+          "Content-Disposition": `attachment; filename="${safeFilename}"`,
+          "Content-Type": "application/x-sqlite3",
+        },
+      });
     }
 
     const files = fs.readdirSync(backupDir)
