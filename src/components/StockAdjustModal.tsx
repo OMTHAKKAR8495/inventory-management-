@@ -67,7 +67,7 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-fade-in my-8">
-        {/* Header */}
+        {/* Header with quick Save Changes action */}
         <div className={`px-6 py-4 text-white flex items-center justify-between ${
           type === "stock_in" ? "bg-emerald-700" : "bg-red-700"
         } transition-colors`}>
@@ -82,12 +82,24 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
               <p className="text-xs text-white/80 truncate max-w-xs">{product.name}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="px-3.5 py-1.5 bg-white text-emerald-800 hover:bg-emerald-50 rounded-xl text-xs font-black shadow-xs transition flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <Check className="w-3.5 h-3.5" />
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </button>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {errorMsg && (
@@ -216,14 +228,14 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`px-5 py-2 text-xs font-bold text-white rounded-xl shadow-sm transition flex items-center gap-2 ${
+              className={`px-6 py-2.5 text-xs font-black text-white rounded-xl shadow-sm transition flex items-center gap-2 ${
                 type === "stock_in"
-                  ? "bg-emerald-600 hover:bg-emerald-700"
-                  : "bg-red-600 hover:bg-red-700"
+                  ? "bg-emerald-600 hover:bg-emerald-700 active:scale-95"
+                  : "bg-red-600 hover:bg-red-700 active:scale-95"
               } disabled:opacity-50`}
             >
               <Check className="w-4 h-4" />
-              {isSubmitting ? "Updating..." : `Confirm ${type === "stock_in" ? "Stock-In" : "Stock-Out"}`}
+              {isSubmitting ? "Saving & Syncing to POS..." : `Save Changes (${type === "stock_in" ? "+ Stock-In" : "- Stock-Out"})`}
             </button>
           </div>
         </form>

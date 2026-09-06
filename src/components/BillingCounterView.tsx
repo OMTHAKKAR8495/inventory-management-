@@ -25,16 +25,18 @@ import {
   Phone,
   FileDown,
   Share2,
+  RotateCw,
 } from "lucide-react";
 import { Product, Customer, CartItem, PaymentMethod } from "@/lib/types";
 import { generateInvoicePDF } from "@/lib/exportUtils";
 
 interface BillingCounterViewProps {
   user: any;
+  catalogVersion?: number;
   onSaleCompleted?: () => void;
 }
 
-export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, onSaleCompleted }) => {
+export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, catalogVersion = 0, onSaleCompleted }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,7 +66,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
     setIsSearching(true);
     try {
       const [prodRes, custRes] = await Promise.all([
-        fetch("/api/products?limit=100"),
+        fetch("/api/products?limit=200"),
         fetch("/api/khata"),
       ]);
 
@@ -83,9 +85,10 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
     }
   };
 
+  // Automatically refresh products when stock is adjusted anywhere or when catalogVersion increments
   useEffect(() => {
     loadData();
-  }, []);
+  }, [catalogVersion]);
 
   // Filtered product catalog for counter (memoized for instantaneous UI response)
   const filteredProducts = React.useMemo(() => {
@@ -261,7 +264,17 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
           </h2>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => loadData()}
+            disabled={isSearching}
+            className="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-blue-200"
+            title="Sync latest live stock quantities without refreshing page"
+          >
+            <RotateCw className={`w-3.5 h-3.5 ${isSearching ? "animate-spin text-blue-600" : ""}`} />
+            {isSearching ? "Syncing..." : "Sync Stock"}
+          </button>
+
           <button
             onClick={clearCart}
             className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5"

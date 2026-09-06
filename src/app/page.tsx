@@ -46,6 +46,9 @@ export default function Home() {
   // Dark Mode
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  // Live Catalog Version for real-time synchronization across views
+  const [catalogVersion, setCatalogVersion] = useState(0);
+
   // Filter shortcut from dashboard
   const [inventoryStatusFilter, setInventoryStatusFilter] = useState<string>("all");
 
@@ -221,6 +224,7 @@ export default function Home() {
 
       showToast(data.message || (isEditing ? "Product updated" : "Product created"));
       fetchMetrics();
+      setCatalogVersion((v) => v + 1);
       return true;
     } catch (err: any) {
       showToast(err.message || "Failed to save product", "error");
@@ -247,6 +251,7 @@ export default function Home() {
 
       showToast(data.message || "Stock quantity updated successfully");
       fetchMetrics();
+      setCatalogVersion((v) => v + 1);
       return true;
     } catch (err: any) {
       showToast(err.message || "Failed to adjust stock", "error");
@@ -380,8 +385,10 @@ export default function Home() {
         {activeTab === "pos" && (
           <BillingCounterView
             user={user}
+            catalogVersion={catalogVersion}
             onSaleCompleted={() => {
               fetchMetrics();
+              setCatalogVersion((v) => v + 1);
               showToast("Sale completed & stock updated in real time!");
             }}
           />
@@ -392,6 +399,7 @@ export default function Home() {
             user={user}
             onRestocked={() => {
               fetchMetrics();
+              setCatalogVersion((v) => v + 1);
               showToast("Inward goods received and inventory catalog restocked!");
             }}
           />
@@ -420,6 +428,7 @@ export default function Home() {
             onSuccessNavigateToInventory={() => {
               setActiveTab("inventory");
               fetchMetrics();
+              setCatalogVersion((v) => v + 1);
             }}
           />
         )}
