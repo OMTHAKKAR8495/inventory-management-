@@ -23,8 +23,11 @@ import {
   Sparkles,
   MessageSquare,
   Phone,
+  FileDown,
+  Share2,
 } from "lucide-react";
 import { Product, Customer, CartItem, PaymentMethod } from "@/lib/types";
+import { generateInvoicePDF } from "@/lib/exportUtils";
 
 interface BillingCounterViewProps {
   user: any;
@@ -651,7 +654,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
             <div className="no-print px-6 py-3.5 bg-emerald-50 border-b border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs font-bold text-emerald-900">
                 <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Send Bill to Customer via WhatsApp:</span>
+                <span>Send PDF Bill to Customer on WhatsApp:</span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -672,7 +675,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
                   />
                 </div>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const input = document.getElementById("whatsapp-phone-input") as HTMLInputElement;
                     let rawPhone = (input?.value || completedInvoice.customer_phone || "").trim().replace(/[^0-9]/g, "");
 
@@ -688,37 +691,41 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
                       formattedPhone = rawPhone;
                     }
 
-                    const itemsList = completedInvoice.items
-                      .map(
-                        (it: any, idx: number) =>
-                          `${idx + 1}. *${it.product.name}*\n   ${it.quantity} ${it.product.unit} × ₹${it.unit_price} = *₹${it.total_price.toLocaleString("en-IN")}*`
-                      )
-                      .join("\n");
+                    // 1. Generate clean official PDF Invoice
+                    const doc = generateInvoicePDF(completedInvoice);
+                    const pdfBlob = doc.output("blob");
+                    const pdfFilename = `Invoice_${completedInvoice.invoice_number}.pdf`;
+                    const pdfFile = new File([pdfBlob], pdfFilename, { type: "application/pdf" });
 
+                    // 2. Download the PDF copy immediately to the device
+                    doc.save(pdfFilename);
+
+                    // 3. Try Native Web Share API if device supports sharing files directly to WhatsApp
+                    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                      try {
+                        await navigator.share({
+                          files: [pdfFile],
+                          title: `Tax Invoice #${completedInvoice.invoice_number}`,
+                          text: `Tax Invoice #${completedInvoice.invoice_number} from PROVISION SMART (Grand Total: Rs. ${completedInvoice.grand_total})`,
+                        });
+                        return;
+                      } catch (err) {
+                        // fallback to web chat URL
+                      }
+                    }
+
+                    // 4. Open WhatsApp chat with clean notice
                     const messageText =
-                      `🧾 *PROVISION SMART WHOLESALE STORE*\n` +
-                      `📍 APMC Wholesale Market Yard\n` +
-                      `GSTIN: 24AAACP1234F1Z5 • Phone: +91 98250 12345\n` +
-                      `━━━━━━━━━━━━━━━━━━━━\n` +
-                      `📄 *TAX INVOICE / CASH BILL*\n` +
-                      `*Invoice No:* #${completedInvoice.invoice_number}\n` +
-                      `*Date:* ${new Date().toLocaleString("en-IN")}\n` +
-                      `*Billed To:* ${completedInvoice.customer_name}\n` +
-                      `*Payment Mode:* ${completedInvoice.payment_method?.toUpperCase()} (PAID)\n` +
-                      `━━━━━━━━━━━━━━━━━━━━\n` +
-                      `*PURCHASED ITEMS:*\n${itemsList}\n` +
-                      `━━━━━━━━━━━━━━━━━━━━\n` +
-                      `*Subtotal:* ₹${completedInvoice.subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}\n` +
-                      (completedInvoice.discountAmount > 0
-                        ? `*Discount Savings:* -₹${completedInvoice.discountAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}\n`
-                        : "") +
-                      (completedInvoice.taxAmount > 0
-                        ? `*GST (${completedInvoice.taxPercent || 0}%):* +₹${completedInvoice.taxAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}\n`
-                        : "") +
-                      `*GRAND TOTAL:* *₹${completedInvoice.grand_total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}*\n` +
-                      `━━━━━━━━━━━━━━━━━━━━\n` +
-                      `🙏 *Thank you for your business!*\n` +
-                      `_*** This is a Computer Generated Bill. No signature required. ***_`;
+                      `PROVISION SMART WHOLESALE STORE\n` +
+                      `APMC Wholesale Market Yard • GSTIN: 24AAACP1234F1Z5\n` +
+                      `------------------------------------\n` +
+                      `TAX INVOICE / BILL: #${completedInvoice.invoice_number}\n` +
+                      `Customer: ${completedInvoice.customer_name}\n` +
+                      `Date: ${new Date().toLocaleString("en-IN")}\n` +
+                      `Grand Total: Rs. ${completedInvoice.grand_total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}\n` +
+                      `------------------------------------\n` +
+                      `Attached: Official Tax Invoice PDF (${pdfFilename})\n` +
+                      `*** This is a Computer Generated Bill. No signature required. ***`;
 
                     const encodedMessage = encodeURIComponent(messageText);
                     const whatsappUrl = formattedPhone
@@ -729,8 +736,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
                   }}
                   className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0"
                 >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  Send WhatsApp
+                  <FileDown className="w-3.5 h-3.5" />
+                  Send PDF on WhatsApp
                 </button>
               </div>
             </div>
@@ -852,13 +859,26 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
 
             {/* Action Buttons (Hidden on Print) */}
             <div className="no-print p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-              <button
-                onClick={() => window.print()}
-                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs"
-              >
-                <Printer className="w-4 h-4" />
-                Print Tax Receipt (1 Page)
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs"
+                >
+                  <Printer className="w-4 h-4" />
+                  Print Tax Receipt (1 Page)
+                </button>
+
+                <button
+                  onClick={() => {
+                    const doc = generateInvoicePDF(completedInvoice);
+                    doc.save(`Invoice_${completedInvoice.invoice_number}.pdf`);
+                  }}
+                  className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs"
+                >
+                  <FileDown className="w-4 h-4" />
+                  Download PDF Copy
+                </button>
+              </div>
 
               <button
                 onClick={() => setShowReceiptModal(false)}

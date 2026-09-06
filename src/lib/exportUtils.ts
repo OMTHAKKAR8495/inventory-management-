@@ -248,3 +248,156 @@ export function downloadSampleCSVTemplate() {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+
+export function generateInvoicePDF(invoice: any): jsPDF {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  // Header Banner
+  doc.setFillColor(37, 99, 235); // Royal Blue
+  doc.rect(0, 0, 210, 26, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("PROVISION SMART", 14, 12);
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text("Wholesale Goods & General Provision Store", 14, 18);
+  doc.text("APMC Wholesale Market Yard • GSTIN: 24AAACP1234F1Z5 • Phone: +91 98250 12345", 14, 23);
+
+  // Invoice Title Box
+  doc.setFillColor(241, 245, 249);
+  doc.roundedRect(140, 6, 56, 14, 2, 2, "F");
+  doc.setTextColor(30, 41, 59);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("TAX INVOICE / BILL", 168, 15, { align: "center" });
+
+  // Invoice Meta Section
+  doc.setTextColor(51, 65, 85);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+
+  // Left Meta (Invoice & Date)
+  doc.text("Invoice Number:", 14, 34);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(15, 23, 42);
+  doc.text(`#${invoice.invoice_number}`, 42, 34);
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(51, 65, 85);
+  doc.text("Date & Time:", 14, 40);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(15, 23, 42);
+  doc.text(new Date().toLocaleString("en-IN"), 42, 40);
+
+  // Right Meta (Customer & Payment)
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(51, 65, 85);
+  doc.text("Billed To:", 120, 34);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(15, 23, 42);
+  doc.text(invoice.customer_name || "Walk-in Customer", 145, 34);
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(51, 65, 85);
+  doc.text("Payment Mode:", 120, 40);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(15, 23, 42);
+  doc.text(`${(invoice.payment_method || "CASH").toUpperCase()} (PAID)`, 145, 40);
+
+  // Divider
+  doc.setDrawColor(226, 232, 240);
+  doc.line(14, 44, 196, 44);
+
+  // Items Table
+  const tableHeaders = ["#", "Item Description", "SKU", "Qty", "Unit Rate (Rs.)", "Amount (Rs.)"];
+  const tableData = invoice.items.map((it: any, idx: number) => [
+    (idx + 1).toString(),
+    it.product.name,
+    it.product.sku,
+    `${it.quantity} ${it.product.unit}`,
+    `Rs. ${Number(it.unit_price).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+    `Rs. ${Number(it.total_price).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+  ]);
+
+  autoTable(doc, {
+    head: [tableHeaders],
+    body: tableData,
+    startY: 48,
+    styles: {
+      fontSize: 8.5,
+      cellPadding: 2.5,
+      lineColor: [226, 232, 240],
+      lineWidth: 0.1,
+    },
+    headStyles: {
+      fillColor: [15, 23, 42],
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+    },
+    alternateRowStyles: {
+      fillColor: [248, 250, 252],
+    },
+    columnStyles: {
+      0: { cellWidth: 10, halign: "center" },
+      3: { cellWidth: 24, halign: "center" },
+      4: { cellWidth: 32, halign: "right" },
+      5: { cellWidth: 32, halign: "right", fontStyle: "bold" },
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  const finalY = (doc as any).lastAutoTable.finalY + 6;
+
+  // Calculation Summary Box
+  const summaryBoxY = Math.min(finalY, 235);
+  doc.setFillColor(248, 250, 252);
+  doc.roundedRect(110, summaryBoxY, 86, 36, 2, 2, "F");
+  doc.setDrawColor(226, 232, 240);
+  doc.roundedRect(110, summaryBoxY, 86, 36, 2, 2, "S");
+
+  doc.setFontSize(8.5);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(71, 85, 105);
+
+  doc.text("Subtotal:", 114, summaryBoxY + 7);
+  doc.text(`Rs. ${Number(invoice.subtotal).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, 192, summaryBoxY + 7, { align: "right" });
+
+  let offset = 14;
+  if (invoice.discountAmount > 0) {
+    doc.setTextColor(22, 101, 52);
+    doc.text("Discount Savings:", 114, summaryBoxY + offset);
+    doc.text(`- Rs. ${Number(invoice.discountAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, 192, summaryBoxY + offset, { align: "right" });
+    offset += 7;
+  }
+
+  if (invoice.taxAmount > 0) {
+    doc.setTextColor(71, 85, 105);
+    doc.text(`GST Tax (${invoice.taxPercent || 0}%):`, 114, summaryBoxY + offset);
+    doc.text(`+ Rs. ${Number(invoice.taxAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, 192, summaryBoxY + offset, { align: "right" });
+  }
+
+  // Grand Total Line
+  doc.setFillColor(37, 99, 235);
+  doc.roundedRect(110, summaryBoxY + 26, 86, 10, 0, 0, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text("GRAND TOTAL:", 114, summaryBoxY + 32.5);
+  doc.text(`Rs. ${Number(invoice.grand_total).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`, 192, summaryBoxY + 32.5, { align: "right" });
+
+  // Computer Generated Declaration Footer
+  doc.setTextColor(100, 116, 139);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.text("*** This is a Computer Generated Bill. No signature required. ***", 105, 282, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.text("Goods once sold can be exchanged within 7 days with original invoice. Thank you for your business!", 105, 287, { align: "center" });
+
+  return doc;
+}
+
