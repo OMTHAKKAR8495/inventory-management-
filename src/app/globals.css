@@ -66,26 +66,45 @@ body {
     overflow: visible !important;
   }
 
-  /* Hide everything on the page by default */
-  body * {
-    visibility: hidden !important;
+  /* Hide app header, nav, dashboard, notifications and non-receipt buttons */
+  header,
+  nav,
+  footer,
+  button,
+  .no-print {
+    display: none !important;
   }
 
-  /* Only make the printable receipt and its children visible */
-  #printable-receipt,
-  #printable-receipt * {
-    visibility: visible !important;
+  /* Reset modal overlay styles on print */
+  .receipt-modal-overlay {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .receipt-modal-container {
+    position: static !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    max-height: none !important;
   }
 
   #printable-receipt {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
     width: 100% !important;
     max-width: 100% !important;
-    max-height: none !important;
-    overflow: visible !important;
-    padding: 16px 24px !important;
+    padding: 10mm 15mm !important;
     margin: 0 !important;
     background: #ffffff !important;
     color: #000000 !important;
@@ -94,19 +113,13 @@ body {
     page-break-inside: avoid !important;
   }
 
-  /* Hide navigation, buttons, toast, backdrop and modal chrome */
-  header,
-  nav,
-  footer,
-  button,
-  .no-print,
-  .fixed.inset-0.bg-slate-900\/60,
-  .fixed.bottom-6.right-6 {
-    display: none !important;
+  #printable-receipt * {
+    visibility: visible !important;
+    color: #000000 !important;
   }
 
   @page {
     size: A4 portrait;
-    margin: 8mm 12mm 8mm 12mm;
+    margin: 0;
   }
 }

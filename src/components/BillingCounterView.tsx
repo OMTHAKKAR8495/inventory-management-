@@ -631,8 +631,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
 
       {/* Completed Invoice Printable Modal & WhatsApp Dispatch */}
       {showReceiptModal && completedInvoice && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-fade-in my-8 text-slate-900 flex flex-col max-h-[90vh]">
+        <div className="receipt-modal-overlay fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="receipt-modal-container bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-fade-in my-8 text-slate-900 flex flex-col max-h-[90vh]">
             {/* Header (Hidden on Print) */}
             <div className="no-print px-6 py-4 bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 text-white flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -861,8 +861,17 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
             <div className="no-print p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => window.print()}
-                  className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs"
+                  onClick={() => {
+                    try {
+                      const doc = generateInvoicePDF(completedInvoice);
+                      doc.autoPrint();
+                      const blobUrl = doc.output("bloburl");
+                      window.open(blobUrl, "_blank");
+                    } catch (e) {
+                      window.print();
+                    }
+                  }}
+                  className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs"
                 >
                   <Printer className="w-4 h-4" />
                   Print Tax Receipt (1 Page)
@@ -873,7 +882,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
                     const doc = generateInvoicePDF(completedInvoice);
                     doc.save(`Invoice_${completedInvoice.invoice_number}.pdf`);
                   }}
-                  className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs"
+                  className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs"
                 >
                   <FileDown className="w-4 h-4" />
                   Download PDF Copy
