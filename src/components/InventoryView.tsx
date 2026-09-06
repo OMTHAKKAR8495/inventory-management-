@@ -112,7 +112,6 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       const params = new URLSearchParams();
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (selectedCategory && selectedCategory !== "all") params.set("category", selectedCategory);
-      if (selectedStatus && selectedStatus !== "all") params.set("status", selectedStatus);
       if (selectedSupplier && selectedSupplier !== "all") params.set("supplier", selectedSupplier);
       if (selectedExpiry && selectedExpiry !== "all") params.set("expiry", selectedExpiry);
       if (minPrice) params.set("min_price", minPrice);
@@ -121,16 +120,24 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       if (endDate) params.set("end_date", endDate);
       params.set("sort_by", sortBy);
       params.set("sort_order", sortOrder);
-      params.set("page", page.toString());
-      params.set("limit", limit.toString());
+      params.set("limit", "200");
 
       const res = await fetch(`/api/products?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to load inventory");
       const data = await res.json();
 
-      const itemsWithOverrides = applyStockOverrides(data.products || []);
+      let itemsWithOverrides = applyStockOverrides(data.products || []);
+
+      if (selectedStatus === "out_of_stock") {
+        itemsWithOverrides = itemsWithOverrides.filter((p) => p.stock_quantity <= 0);
+      } else if (selectedStatus === "low_stock") {
+        itemsWithOverrides = itemsWithOverrides.filter((p) => p.stock_quantity > 0 && p.stock_quantity <= p.reorder_level);
+      } else if (selectedStatus === "in_stock") {
+        itemsWithOverrides = itemsWithOverrides.filter((p) => p.stock_quantity > p.reorder_level);
+      }
+
       setProducts(itemsWithOverrides);
-      setTotalCount(data.total || 0);
+      setTotalCount(itemsWithOverrides.length);
       if (data.categories) setCategories(data.categories);
       if (data.suppliers) setSuppliers(data.suppliers);
     } catch (err) {
