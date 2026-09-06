@@ -648,27 +648,45 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
             </div>
 
             {/* WhatsApp Phone Quick Dispatch Bar (Hidden on Print) */}
-            <div className="no-print px-6 py-3 bg-emerald-50 border-b border-emerald-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="no-print px-6 py-3.5 bg-emerald-50 border-b border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-xs font-bold text-emerald-900">
                 <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>Send Bill to Customer via WhatsApp:</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Phone className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <div className="flex items-center bg-white border border-emerald-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-500">
+                  <span className="px-2.5 py-1.5 bg-emerald-100/60 text-emerald-900 font-bold text-xs border-r border-emerald-200 select-none">
+                    +91
+                  </span>
                   <input
                     type="tel"
-                    defaultValue={completedInvoice.customer_phone || ""}
+                    defaultValue={
+                      completedInvoice.customer_phone
+                        ? completedInvoice.customer_phone.replace(/^(\+91|91)/, "").trim()
+                        : ""
+                    }
                     id="whatsapp-phone-input"
-                    placeholder="Mobile number..."
-                    className="pl-8 pr-3 py-1.5 bg-white border border-emerald-300 rounded-xl text-xs font-semibold text-slate-900 outline-hidden w-36 sm:w-44 focus:ring-1 focus:ring-emerald-500"
+                    placeholder="10-digit mobile number"
+                    className="px-3 py-1.5 text-xs font-semibold text-slate-900 outline-hidden w-36 sm:w-44 placeholder:text-slate-400"
                   />
                 </div>
                 <button
                   onClick={() => {
                     const input = document.getElementById("whatsapp-phone-input") as HTMLInputElement;
-                    const phone = (input?.value || completedInvoice.customer_phone || "").replace(/[^0-9]/g, "");
+                    let rawPhone = (input?.value || completedInvoice.customer_phone || "").trim().replace(/[^0-9]/g, "");
+
+                    // Automatic Indian country code normalization
+                    let formattedPhone = "";
+                    if (rawPhone.length === 10) {
+                      formattedPhone = `91${rawPhone}`;
+                    } else if (rawPhone.length === 11 && rawPhone.startsWith("0")) {
+                      formattedPhone = `91${rawPhone.slice(1)}`;
+                    } else if (rawPhone.length === 12 && rawPhone.startsWith("91")) {
+                      formattedPhone = rawPhone;
+                    } else if (rawPhone.length > 0) {
+                      formattedPhone = rawPhone;
+                    }
 
                     const itemsList = completedInvoice.items
                       .map(
@@ -677,10 +695,10 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
                       )
                       .join("\n");
 
-                    const message = encodeURIComponent(
+                    const messageText =
                       `🧾 *PROVISION SMART WHOLESALE STORE*\n` +
                       `📍 APMC Wholesale Market Yard\n` +
-                      `GSTIN: 24AAACP1234F1Z5\n` +
+                      `GSTIN: 24AAACP1234F1Z5 • Phone: +91 98250 12345\n` +
                       `━━━━━━━━━━━━━━━━━━━━\n` +
                       `📄 *TAX INVOICE / CASH BILL*\n` +
                       `*Invoice No:* #${completedInvoice.invoice_number}\n` +
@@ -700,13 +718,16 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, on
                       `*GRAND TOTAL:* *₹${completedInvoice.grand_total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}*\n` +
                       `━━━━━━━━━━━━━━━━━━━━\n` +
                       `🙏 *Thank you for your business!*\n` +
-                      `_This is a computer generated bill._`
-                    );
+                      `_*** This is a Computer Generated Bill. No signature required. ***_`;
 
-                    const url = phone ? `https://wa.me/${phone}?text=${message}` : `https://wa.me/?text=${message}`;
-                    window.open(url, "_blank");
+                    const encodedMessage = encodeURIComponent(messageText);
+                    const whatsappUrl = formattedPhone
+                      ? `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodedMessage}`
+                      : `https://api.whatsapp.com/send?text=${encodedMessage}`;
+
+                    window.open(whatsappUrl, "_blank");
                   }}
-                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs shrink-0"
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   Send WhatsApp
