@@ -148,7 +148,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </button>
             )}
 
-            {onNavigateToKhata && (
+            {isAdmin && onNavigateToKhata && (
               <button
                 onClick={onNavigateToKhata}
                 className="px-3.5 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-bold border border-purple-200 transition flex items-center gap-1.5"
@@ -332,8 +332,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* Visual Charts: Recharts Bar & Pie breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left (7 cols): Bar Chart of Units */}
-        <div className="lg:col-span-7 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+        {/* Left: Bar Chart of Units */}
+        <div className={`${isAdmin ? "lg:col-span-7" : "lg:col-span-12"} bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4`}>
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
             <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-blue-600" />
@@ -358,42 +358,44 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Right (5 cols): Donut Chart of Valuation */}
-        <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-            <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <PieIcon className="w-4 h-4 text-indigo-600" />
-              Inventory Valuation Share (₹)
-            </h4>
-            <span className="text-xs text-slate-400 font-medium">Department Split</span>
-          </div>
+        {/* Right (5 cols - Admin Confidential): Donut Chart of Valuation */}
+        {isAdmin && (
+          <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <PieIcon className="w-4 h-4 text-indigo-600" />
+                Inventory Valuation Share (₹)
+              </h4>
+              <span className="text-xs text-slate-400 font-medium">Department Split</span>
+            </div>
 
-          <div className="h-64 w-full flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  dataKey="value"
-                  nameKey="fullName"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={3}
-                  isAnimationActive={false}
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value: any) => [`₹${Number(value).toLocaleString("en-IN")}`, "Valuation"]}
-                  contentStyle={{ backgroundColor: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "12px" }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="h-64 w-full flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    dataKey="value"
+                    nameKey="fullName"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={3}
+                    isAnimationActive={false}
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: any) => [`₹${Number(value).toLocaleString("en-IN")}`, "Valuation"]}
+                    contentStyle={{ backgroundColor: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "12px" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Stock Health Bar & Urgent Attention */}

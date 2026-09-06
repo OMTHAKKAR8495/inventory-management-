@@ -142,17 +142,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Truck className="w-3.5 h-3.5" />
               Supplier POs
             </button>
-            <button
-              onClick={() => setActiveTab("khata")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === "khata"
-                  ? "bg-white text-purple-700 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              Khata Ledger
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setActiveTab("khata")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === "khata"
+                    ? "bg-white text-purple-700 shadow-xs"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                Khata Ledger
+              </button>
+            )}
             <button
               onClick={() => setActiveTab("bulk")}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
@@ -455,15 +457,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Truck className="w-3.5 h-3.5" />
             Supplier POs
           </button>
-          <button
-            onClick={() => setActiveTab("khata")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition ${
-              activeTab === "khata" ? "bg-purple-50 text-purple-700 font-bold border border-purple-200" : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            Khata
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setActiveTab("khata")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition ${
+                activeTab === "khata" ? "bg-purple-50 text-purple-700 font-bold border border-purple-200" : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              Khata
+            </button>
+          )}
           <button
             onClick={() => setActiveTab("bulk")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition ${
