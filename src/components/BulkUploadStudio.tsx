@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { User } from "@/lib/types";
 import { downloadSampleCSVTemplate } from "@/lib/exportUtils";
-import { setBulkStockOverrides } from "@/lib/storageUtils";
 
 interface BulkUploadStudioProps {
   user: User;
@@ -281,12 +280,6 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to commit upload");
 
-      setBulkStockOverrides(validRows.map((r) => ({
-        sku: r.sku,
-        name: r.name,
-        stock_quantity: r.stock_quantity,
-      })));
-
       setUploadSummary({
         inserted: data.insertedCount || 0,
         updated: data.updatedCount || 0,
@@ -361,12 +354,6 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save products");
-
-      setBulkStockOverrides(filledRows.map((r) => ({
-        sku: r.sku,
-        name: r.name,
-        stock_quantity: r.stock_quantity,
-      })));
 
       confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
       alert(`Success! Added ${data.insertedCount || 0} and updated ${data.updatedCount || 0} products.`);

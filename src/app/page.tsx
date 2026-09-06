@@ -19,7 +19,6 @@ import { BarcodeScannerModal } from "@/components/BarcodeScannerModal";
 import { ShopfloorTasksModal } from "@/components/ShopfloorTasksModal";
 import { LoginView } from "@/components/LoginView";
 import { CheckCircle2, AlertCircle } from "lucide-react";
-import { setLocalStockOverride } from "@/lib/storageUtils";
 
 type TabType = "dashboard" | "inventory" | "pos" | "procurement" | "khata" | "bulk" | "audit";
 const VALID_TABS: TabType[] = ["dashboard", "inventory", "pos", "procurement", "khata", "bulk", "audit"];
@@ -252,10 +251,6 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save product");
 
-      if (data.product && typeof data.product.stock_quantity === "number") {
-        setLocalStockOverride(data.product.id, data.product.stock_quantity);
-      }
-
       showToast(data.message || (isEditing ? "Product updated" : "Product created"));
       fetchMetrics();
       setCatalogVersion((v) => v + 1);
@@ -282,14 +277,6 @@ export default function Home() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to adjust stock");
-
-      if (data.product && typeof data.product.stock_quantity === "number") {
-        setLocalStockOverride(productId, data.product.stock_quantity);
-      } else if (adjustingProduct) {
-        const delta = type === "stock_in" ? quantity : -quantity;
-        const newStock = Math.max(0, adjustingProduct.stock_quantity + delta);
-        setLocalStockOverride(productId, newStock);
-      }
 
       showToast(data.message || "Stock quantity updated successfully");
       fetchMetrics();

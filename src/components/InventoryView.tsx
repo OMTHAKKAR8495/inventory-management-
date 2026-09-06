@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import { Product, ProductFilters, User } from "@/lib/types";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
-import { applyStockOverrides } from "@/lib/storageUtils";
 
 interface InventoryViewProps {
   user: User;
@@ -125,19 +124,9 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       const res = await fetch(`/api/products?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to load inventory");
       const data = await res.json();
-
-      let itemsWithOverrides = applyStockOverrides(data.products || []);
-
-      if (selectedStatus === "out_of_stock") {
-        itemsWithOverrides = itemsWithOverrides.filter((p) => p.stock_quantity <= 0);
-      } else if (selectedStatus === "low_stock") {
-        itemsWithOverrides = itemsWithOverrides.filter((p) => p.stock_quantity > 0 && p.stock_quantity <= p.reorder_level);
-      } else if (selectedStatus === "in_stock") {
-        itemsWithOverrides = itemsWithOverrides.filter((p) => p.stock_quantity > p.reorder_level);
-      }
-
-      setProducts(itemsWithOverrides);
-      setTotalCount(itemsWithOverrides.length);
+      const productList = data.products || [];
+      setProducts(productList);
+      setTotalCount(data.total !== undefined ? data.total : productList.length);
       if (data.categories) setCategories(data.categories);
       if (data.suppliers) setSuppliers(data.suppliers);
     } catch (err) {

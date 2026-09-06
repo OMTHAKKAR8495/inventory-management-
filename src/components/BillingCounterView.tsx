@@ -26,13 +26,9 @@ import {
   SlidersHorizontal,
   Calendar,
   Wallet,
-  Tag,
-  FileCheck,
-  Sparkles,
 } from "lucide-react";
 import { Product, Customer, CartItem, PaymentMethod, SavedBill } from "@/lib/types";
 import { generateInvoicePDF } from "@/lib/exportUtils";
-import { applyStockOverrides, setLocalStockOverride } from "@/lib/storageUtils";
 
 interface BillingCounterViewProps {
   user: any;
@@ -99,7 +95,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Load products & customers
+  // Load products & customers from the real database API (Single Source of Truth)
   const loadData = async () => {
     setIsSearching(true);
     try {
@@ -110,15 +106,46 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
       if (prodRes.ok) {
         const prodData = await prodRes.json();
-        const itemsWithOverrides = applyStockOverrides(prodData.products || []);
-        setProducts(itemsWithOverrides);
+        const prodList: Product[] = prodData.products || [];
+        setProducts(prodList);
+
+        // Reconcile active cart against fresh live stock
+        setCart((prevCart) => {
+          if (prevCart.length === 0) return prevCart;
+          const reconciledCart: CartItem[] = [];
+          for (const item of prevCart) {
+            const liveProd = prodList.find((p) => p.id === item.product.id);
+            if (!liveProd || liveProd.stock_quantity <= 0) {
+              setFeedback({
+                type: "error",
+                text: `"${item.product.name}" is now OUT OF STOCK (0 available) and was removed from your cart.`,
+              });
+            } else {
+              const clampedQty = Math.min(item.quantity, liveProd.stock_quantity);
+              if (clampedQty < item.quantity) {
+                setFeedback({
+                  type: "error",
+                  text: `Available stock for "${liveProd.name}" reduced to ${liveProd.stock_quantity} ${liveProd.unit}. Cart quantity was adjusted.`,
+                });
+              }
+              reconciledCart.push({
+                ...item,
+                product: liveProd,
+                quantity: clampedQty,
+                unit_price: liveProd.selling_price,
+                total_price: clampedQty * liveProd.selling_price,
+              });
+            }
+          }
+          return reconciledCart;
+        });
       }
       if (custRes.ok) {
         const custData = await custRes.json();
         setCustomers(custData.customers || []);
       }
     } catch (e) {
-      console.error(e);
+      console.error("Failed to load POS data:", e);
     } finally {
       setIsSearching(false);
     }
@@ -146,56 +173,80 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
     return Array.from(new Set(products.map((p) => p.category)));
   }, [products]);
 
-  // Add to cart
+  // Add to cart with strict real-time stock boundary enforcement
   const addToCart = (product: Product) => {
-    if (product.stock_quantity <= 0) {
-      setFeedback({ type: "error", text: `"${product.name}" is OUT OF STOCK!` });
+    // 1. Check live available stock
+    const currentLiveProd = products.find((p) => p.id === product.id) || product;
+    const availableStock = currentLiveProd.stock_quantity;
+
+    if (availableStock <= 0) {
+      setFeedback({
+        type: "error",
+        text: `Cannot add "${product.name}" — product is OUT OF STOCK (0 ${product.unit} available).`,
+      });
       return;
     }
 
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
-        if (existing.quantity >= product.stock_quantity) {
-          setFeedback({ type: "error", text: `Max available stock for "${product.name}" is ${product.stock_quantity}` });
-          return prev;
+        if (existing.quantity >= availableStock) {
+          setFeedback({
+            type: "error",
+            text: `Cannot add more. Maximum available stock for "${product.name}" is ${availableStock} ${product.unit}.`,
+          });
+          return prev; // Block increment
         }
+        setFeedback(null);
         return prev.map((item) =>
           item.product.id === product.id
             ? {
                 ...item,
+                product: currentLiveProd,
                 quantity: item.quantity + 1,
-                total_price: (item.quantity + 1) * item.unit_price,
+                total_price: (item.quantity + 1) * currentLiveProd.selling_price,
               }
             : item
         );
       } else {
+        setFeedback(null);
         return [
           ...prev,
           {
-            product,
+            product: currentLiveProd,
             quantity: 1,
-            unit_price: product.selling_price,
-            total_price: product.selling_price,
+            unit_price: currentLiveProd.selling_price,
+            total_price: currentLiveProd.selling_price,
           },
         ];
       }
     });
-
-    setFeedback(null);
   };
 
-  // Update quantity in cart
+  // Update quantity in cart with strict bounds checking
   const updateQuantity = (productId: string, newQty: number) => {
     if (newQty <= 0) {
       removeFromCart(productId);
       return;
     }
 
+    const currentLiveProd = products.find((p) => p.id === productId);
+    const maxStock = currentLiveProd ? currentLiveProd.stock_quantity : 999999;
+
+    if (newQty > maxStock) {
+      setFeedback({
+        type: "error",
+        text: `Requested quantity (${newQty}) exceeds available stock of ${maxStock} ${currentLiveProd?.unit || "units"}. Adjusted to maximum available.`,
+      });
+      newQty = maxStock;
+    } else {
+      setFeedback(null);
+    }
+
     setCart((prev) =>
       prev.map((item) => {
         if (item.product.id === productId) {
-          const clamped = Math.min(newQty, item.product.stock_quantity);
+          const clamped = Math.min(newQty, maxStock);
           return {
             ...item,
             quantity: clamped,
@@ -221,8 +272,9 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
     setNotes("");
   };
 
-  // Calculations
-  const subtotal = cart.reduce((sum, item) => sum + item.total_price, 0);
+  // Calculations derived strictly from valid cart items
+  const validCartItems = cart.filter((item) => item.quantity > 0 && item.product.stock_quantity > 0);
+  const subtotal = validCartItems.reduce((sum, item) => sum + item.total_price, 0);
   const taxAmount = Number(((subtotal - discountAmount) * (taxPercent / 100)).toFixed(2));
   const grandTotal = Math.max(0, Number((subtotal - discountAmount + taxAmount).toFixed(2)));
 
@@ -269,7 +321,28 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
       if (!confirmReplace) return;
     }
 
-    setCart(bill.cart);
+    // Reconcile saved bill items against current live inventory
+    const reconciledCart: CartItem[] = [];
+    let hasAdjustments = false;
+
+    for (const item of bill.cart) {
+      const liveProd = products.find((p) => p.id === item.product.id);
+      if (!liveProd || liveProd.stock_quantity <= 0) {
+        hasAdjustments = true;
+      } else {
+        const clampedQty = Math.min(item.quantity, liveProd.stock_quantity);
+        if (clampedQty < item.quantity) hasAdjustments = true;
+        reconciledCart.push({
+          ...item,
+          product: liveProd,
+          quantity: clampedQty,
+          unit_price: liveProd.selling_price,
+          total_price: clampedQty * liveProd.selling_price,
+        });
+      }
+    }
+
+    setCart(reconciledCart);
     setSelectedCustomer(bill.customer || null);
     setCustomerName(bill.customerName || "Walk-in Customer");
     setCustomerPhone(bill.customerPhone || "");
@@ -284,8 +357,10 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
     setViewMode("counter");
     setFeedback({
-      type: "success",
-      text: `Loaded Saved Bill #${bill.billNumber} into active Billing Cart. Ready to checkout!`,
+      type: hasAdjustments ? "error" : "success",
+      text: hasAdjustments
+        ? `Loaded Saved Bill #${bill.billNumber}. Note: Some item quantities were adjusted to match current live stock levels.`
+        : `Loaded Saved Bill #${bill.billNumber} into active Billing Cart. Ready to checkout!`,
     });
   };
 
@@ -335,7 +410,6 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
   const filteredSavedBills = React.useMemo(() => {
     let list = [...savedBills];
 
-    // Search query filter
     if (savedBillsSearch.trim()) {
       const q = savedBillsSearch.toLowerCase().trim();
       list = list.filter(
@@ -352,7 +426,6 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
       );
     }
 
-    // Status / Category filter
     const todayStr = new Date().toISOString().split("T")[0];
     if (savedBillsFilter === "today") {
       list = list.filter((b) => b.savedAt.startsWith(todayStr));
@@ -366,7 +439,6 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
       list = list.filter((b) => b.paymentMethod === "upi");
     }
 
-    // Sorting
     list.sort((a, b) => {
       if (savedBillsSort === "newest") {
         return new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime();
@@ -392,11 +464,32 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
   ).length;
   const khataSavedCount = savedBills.filter((b) => b.paymentMethod === "khata").length;
 
-  // Handle Checkout
+  // Handle Checkout with strict pre-validation & server synchronization
   const handleCheckout = async () => {
     if (cart.length === 0) {
       setFeedback({ type: "error", text: "Cart is empty. Please select products to bill." });
       return;
+    }
+
+    // Pre-flight check: ensure no items exceed available stock
+    for (const item of cart) {
+      const liveProd = products.find((p) => p.id === item.product.id) || item.product;
+      if (liveProd.stock_quantity <= 0) {
+        setFeedback({
+          type: "error",
+          text: `Cannot complete sale: "${liveProd.name}" is OUT OF STOCK. Please remove it from cart.`,
+        });
+        loadData();
+        return;
+      }
+      if (item.quantity > liveProd.stock_quantity) {
+        setFeedback({
+          type: "error",
+          text: `Cannot complete sale: "${liveProd.name}" exceeds available stock (${liveProd.stock_quantity} ${liveProd.unit} available, ${item.quantity} in cart).`,
+        });
+        loadData();
+        return;
+      }
     }
 
     if (paymentMethod === "khata" && !selectedCustomer) {
@@ -429,7 +522,11 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Checkout failed");
+      if (!res.ok) {
+        // If server rejected due to insufficient stock, reload live data immediately to reconcile cart
+        await loadData();
+        throw new Error(data.error || "Checkout failed");
+      }
 
       setCompletedInvoice({
         ...data.invoice,
@@ -441,15 +538,9 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
         notes,
       });
 
-      // Update local stock overrides for each item sold
-      for (const item of cart) {
-        const remaining = Math.max(0, item.product.stock_quantity - item.quantity);
-        setLocalStockOverride(item.product.id, remaining);
-      }
-
       setShowReceiptModal(true);
       clearCart();
-      loadData();
+      await loadData();
       if (onSaleCompleted) onSaleCompleted();
     } catch (e: any) {
       setFeedback({ type: "error", text: e.message || "Checkout failed. Please try again." });
@@ -532,7 +623,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
             onClick={() => loadData()}
             disabled={isSearching}
             className="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-blue-200"
-            title="Sync latest live stock quantities without refreshing page"
+            title="Sync latest live stock quantities directly from database"
           >
             <RotateCw className={`w-3.5 h-3.5 ${isSearching ? "animate-spin text-blue-600" : ""}`} />
             {isSearching ? "Syncing..." : "Sync Stock"}
@@ -758,6 +849,9 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                         <h5 className="text-xs font-bold text-slate-900 truncate">{item.product.name}</h5>
                         <p className="text-[11px] text-slate-500 font-mono">
                           ₹{item.unit_price} × {item.quantity} = ₹{item.total_price.toLocaleString("en-IN")}
+                          <span className="ml-2 text-[10px] text-slate-400">
+                            (Stock: {item.product.stock_quantity})
+                          </span>
                         </p>
                       </div>
 
