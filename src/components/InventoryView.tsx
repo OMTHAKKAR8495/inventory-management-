@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Search,
   Filter,
@@ -77,6 +77,14 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Sync initialFilterStatus if provided from parent
+  useEffect(() => {
+    if (initialFilterStatus) {
+      setSelectedStatus(initialFilterStatus);
+      setPage(1);
+    }
+  }, [initialFilterStatus]);
+
   // Debounce search input by 300ms
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -85,6 +93,16 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
     }, 300);
     return () => clearTimeout(handler);
   }, [search]);
+
+  const handleSortHeader = (col: string) => {
+    if (sortBy === col) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(col);
+      setSortOrder("asc");
+    }
+    setPage(1);
+  };
 
   // Fetch Products
   const fetchProducts = async () => {
@@ -120,6 +138,18 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
     }
   };
 
+  // Auto-switch to 'all' if an out-of-stock item was restocked so user sees the change immediately
+  const prevCatalogVer = useRef(catalogVersion);
+  useEffect(() => {
+    if (prevCatalogVer.current !== catalogVersion) {
+      prevCatalogVer.current = catalogVersion;
+      if (selectedStatus === "out_of_stock") {
+        setSelectedStatus("all");
+      }
+      fetchProducts();
+    }
+  }, [catalogVersion]);
+
   useEffect(() => {
     fetchProducts();
   }, [
@@ -136,7 +166,6 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
     sortOrder,
     page,
     limit,
-    catalogVersion,
   ]);
 
   const handleClearFilters = () => {
@@ -517,16 +546,58 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           <table className="w-full text-left text-xs border-collapse">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="p-3.5 pl-6 min-w-[220px]">Product & SKU / Barcode</th>
+                <th
+                  onClick={() => handleSortHeader("name")}
+                  className="p-3.5 pl-6 min-w-[220px] cursor-pointer hover:bg-slate-100 transition select-none"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Product & SKU / Barcode</span>
+                    <ArrowUpDown className={`w-3.5 h-3.5 ${sortBy === "name" ? "text-blue-600 font-bold" : "text-slate-400 opacity-60"}`} />
+                  </div>
+                </th>
                 <th className="p-3.5 min-w-[130px]">Category</th>
                 <th className="p-3.5 min-w-[90px]">Unit / Pack</th>
-                <th className="p-3.5 min-w-[140px]">Stock Level</th>
+                <th
+                  onClick={() => handleSortHeader("stock_quantity")}
+                  className="p-3.5 min-w-[140px] cursor-pointer hover:bg-slate-100 transition select-none"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Stock Level</span>
+                    <ArrowUpDown className={`w-3.5 h-3.5 ${sortBy === "stock_quantity" ? "text-blue-600 font-bold" : "text-slate-400 opacity-60"}`} />
+                  </div>
+                </th>
                 <th className="p-3.5 min-w-[110px]">Stock Status</th>
-                <th className="p-3.5 min-w-[100px]">Selling Price</th>
-                {isAdmin && <th className="p-3.5 min-w-[90px]">Cost Price</th>}
+                <th
+                  onClick={() => handleSortHeader("selling_price")}
+                  className="p-3.5 min-w-[100px] cursor-pointer hover:bg-slate-100 transition select-none"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Selling Price</span>
+                    <ArrowUpDown className={`w-3.5 h-3.5 ${sortBy === "selling_price" ? "text-blue-600 font-bold" : "text-slate-400 opacity-60"}`} />
+                  </div>
+                </th>
+                {isAdmin && (
+                  <th
+                    onClick={() => handleSortHeader("cost_price")}
+                    className="p-3.5 min-w-[90px] cursor-pointer hover:bg-slate-100 transition select-none"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>Cost Price</span>
+                      <ArrowUpDown className={`w-3.5 h-3.5 ${sortBy === "cost_price" ? "text-blue-600 font-bold" : "text-slate-400 opacity-60"}`} />
+                    </div>
+                  </th>
+                )}
                 {isAdmin && <th className="p-3.5 min-w-[100px]">Margin (₹ / %)</th>}
                 {isAdmin && <th className="p-3.5 min-w-[110px]">Stock Value</th>}
-                <th className="p-3.5 min-w-[120px]">Supplier & Expiry</th>
+                <th
+                  onClick={() => handleSortHeader("updated_at")}
+                  className="p-3.5 min-w-[120px] cursor-pointer hover:bg-slate-100 transition select-none"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>Supplier & Expiry</span>
+                    <ArrowUpDown className={`w-3.5 h-3.5 ${sortBy === "updated_at" ? "text-blue-600 font-bold" : "text-slate-400 opacity-60"}`} />
+                  </div>
+                </th>
                 <th className="p-3.5 pr-6 text-right min-w-[150px]">Shopfloor Actions</th>
               </tr>
             </thead>
