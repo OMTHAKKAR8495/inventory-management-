@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { queryAll } from "@/lib/cloudDb";
 import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,8 @@ export async function GET(req: Request) {
     const params: any[] = [];
 
     if (search) {
-      query += " AND (LOWER(product_name) LIKE ? OR LOWER(user_name) LIKE ? OR LOWER(COALESCE(reason, '')) LIKE ?)";
+      query +=
+        " AND (LOWER(product_name) LIKE ? OR LOWER(user_name) LIKE ? OR LOWER(COALESCE(reason, '')) LIKE ?)";
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
@@ -32,7 +33,7 @@ export async function GET(req: Request) {
 
     query += " ORDER BY created_at DESC";
 
-    const allLogs = db.prepare(query).all(...params) as any[];
+    const allLogs = await queryAll(query, params);
     const total = allLogs.length;
     const startIndex = (page - 1) * limit;
     const logs = allLogs.slice(startIndex, startIndex + limit);
@@ -48,3 +49,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Failed to fetch audit logs" }, { status: 500 });
   }
 }
+

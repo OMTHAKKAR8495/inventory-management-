@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { queryAll, queryOne, execute, withTransaction } from "@/lib/cloudDb";
 import { getCurrentUser } from "@/lib/auth";
 import { Product, StockStatus } from "@/lib/types";
 
@@ -110,7 +110,7 @@ export async function GET(req: Request) {
     const sortColumn = allowedSortCols[sortBy] || "updated_at";
     query += ` ORDER BY ${sortColumn} ${sortOrder}`;
 
-    const rawRows = db.prepare(query).all(...params) as Product[];
+    const rawRows = await queryAll<Product>(query, params);
 
     // Compute status and margins in ₹
     const processedProducts: Product[] = rawRows.map((p) => {
@@ -141,15 +141,15 @@ export async function GET(req: Request) {
 
     const totalCount = processedProducts.length;
 
-    const categories = db
-      .prepare("SELECT DISTINCT category FROM products WHERE deleted_at IS NULL ORDER BY category ASC")
-      .all()
-      .map((row: any) => row.category);
+    const catRows = await queryAll<{ category: string }>(
+      "SELECT DISTINCT category FROM products WHERE deleted_at IS NULL ORDER BY category ASC"
+    );
+    const categories = catRows.map((row) => row.category);
 
-    const suppliers = db
-      .prepare("SELECT DISTINCT supplier FROM products WHERE deleted_at IS NULL AND supplier IS NOT NULL AND supplier != '' ORDER BY supplier ASC")
-      .all()
-      .map((row: any) => row.supplier);
+    const suppRows = await queryAll<{ supplier: string }>(
+      "SELECT DISTINCT supplier FROM products WHERE deleted_at IS NULL AND supplier IS NOT NULL AND supplier != '' ORDER BY supplier ASC"
+    );
+    const suppliers = suppRows.map((row) => row.supplier);
 
     if (isAll) {
       return NextResponse.json({
@@ -218,7 +218,7 @@ export async function POST(req: Request) {
       finalSku = `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`;
     }
 
-    const existingSku = db.prepare("SELECT id FROM products WHERE sku = ?").get(finalSku);
+    const existingSku = await queryOne("SELECT id FROM products WHERE sku = ?", [finalSku]);
     if (existingSku) {
       return NextResponse.json(
         { error: `SKU '${finalSku}' already exists. Please provide a unique SKU or leave blank to auto-generate.` },
@@ -232,9 +232,9 @@ export async function POST(req: Request) {
     const costVal = parseFloat(cost_price || "0");
     const sellVal = parseFloat(selling_price || "0");
 
-    const insertTx = db.transaction(() => {
-      db.prepare(`
-        INSERT INTO products (
+    await withTransaction(async (tx) => {
+      await tx.execute(
+        `INSERT INTO products (
           id, sku, barcode, name, category, sub_category, unit, bulk_pack_size,
           cost_price, selling_price, stock_quantity, reorder_level,
           supplier, expiry_date, deleted_at, created_at, updated_at
@@ -242,57 +242,58 @@ export async function POST(req: Request) {
           ?, ?, ?, ?, ?, ?, ?, ?,
           ?, ?, ?, ?,
           ?, ?, NULL, ?, ?
-        )
-      `).run(
-        newId,
-        finalSku,
-        barcode?.trim() || null,
-        name.trim(),
-        category.trim(),
-        sub_category?.trim() || null,
-        unit.trim(),
-        parseInt(bulk_pack_size || "1", 10) || 1,
-        costVal,
-        sellVal,
-        initialQty,
-        parseInt(reorder_level || "10", 10) || 10,
-        supplier?.trim() || null,
-        expiry_date || null,
-        now,
-        now
+        )`,
+        [
+          newId,
+          finalSku,
+          barcode?.trim() || null,
+          name.trim(),
+          category.trim(),
+          sub_category?.trim() || null,
+          unit.trim(),
+          parseInt(bulk_pack_size || "1", 10) || 1,
+          costVal,
+          sellVal,
+          initialQty,
+          parseInt(reorder_level || "10", 10) || 10,
+          supplier?.trim() || null,
+          expiry_date || null,
+          now,
+          now,
+        ]
       );
 
-      db.prepare(`
-        INSERT INTO stock_logs (
+      await tx.execute(
+        `INSERT INTO stock_logs (
           id, product_id, product_name, user_id, user_name,
           change_type, quantity_delta, previous_quantity, new_quantity, reason, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        "log_" + Math.random().toString(36).substring(2, 9),
-        newId,
-        name.trim(),
-        user.id,
-        user.name,
-        "product_created",
-        initialQty,
-        0,
-        initialQty,
-        `Added new wholesale product by ${user.role}: ${name.trim()}`,
-        now
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          "log_" + Math.random().toString(36).substring(2, 9),
+          newId,
+          name.trim(),
+          user.id,
+          user.name,
+          "product_created",
+          initialQty,
+          0,
+          initialQty,
+          `Added new wholesale product by ${user.role}: ${name.trim()}`,
+          now,
+        ]
       );
     });
 
-    insertTx();
-
-    const createdProduct = db.prepare("SELECT * FROM products WHERE id = ?").get(newId);
+    const createdProduct = await queryOne("SELECT * FROM products WHERE id = ?", [newId]);
 
     return NextResponse.json({
       success: true,
       product: createdProduct,
-      message: `Product '${name}' created successfully.`,
+      message: `Product '${name}' created successfully in Supabase.`,
     });
   } catch (error: any) {
     console.error("Create product error:", error);
     return NextResponse.json({ error: error.message || "Failed to create product" }, { status: 500 });
   }
 }
+

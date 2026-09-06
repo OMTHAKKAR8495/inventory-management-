@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { queryOne, withTransaction } from "@/lib/cloudDb";
 import { getCurrentUser } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
@@ -22,9 +24,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const product = db.prepare("SELECT * FROM products WHERE id = ?").get(productId) as any;
+    const product = await queryOne("SELECT * FROM products WHERE id = ?", [productId]);
     if (!product) {
-      return NextResponse.json({ error: `Product with ID '${productId}' not found in database.` }, { status: 404 });
+      return NextResponse.json(
+        { error: `Product with ID '${productId}' not found in database.` },
+        { status: 404 }
+      );
     }
 
     const delta = type === "stock_in" ? quantity : -quantity;
@@ -32,35 +37,44 @@ export async function POST(req: Request) {
     const newQty = Math.max(0, currentStock + delta);
     const now = new Date().toISOString();
 
-    const adjustTx = db.transaction(() => {
-      db.prepare("UPDATE products SET stock_quantity = ?, updated_at = ? WHERE id = ?").run(newQty, now, productId);
+    await withTransaction(async (tx) => {
+      await tx.execute("UPDATE products SET stock_quantity = ?, updated_at = ? WHERE id = ?", [
+        newQty,
+        now,
+        productId,
+      ]);
 
-      db.prepare(`
+      await tx.execute(
+        `
         INSERT INTO stock_logs (
           id, product_id, product_name, user_id, user_name,
           change_type, quantity_delta, previous_quantity, new_quantity, reason, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        "log_" + Math.random().toString(36).substring(2, 9),
-        productId,
-        product.name,
-        user.id,
-        user.name,
-        type === "stock_in" ? "stock_in" : "stock_out",
-        delta,
-        currentStock,
-        newQty,
-        reason || `${type === "stock_in" ? "Stock In (+)" : "Stock Out (-)"} adjustment by ${user.name}`,
-        now
+      `,
+        [
+          "log_" + Math.random().toString(36).substring(2, 9),
+          productId,
+          product.name,
+          user.id,
+          user.name,
+          type === "stock_in" ? "stock_in" : "stock_out",
+          delta,
+          currentStock,
+          newQty,
+          reason ||
+            `${type === "stock_in" ? "Stock In (+)" : "Stock Out (-)"} adjustment by ${user.name}`,
+          now,
+        ]
       );
     });
 
-    adjustTx();
+    const updatedProduct = await queryOne("SELECT * FROM products WHERE id = ?", [productId]);
+    console.log(
+      `[StockAdjust API] ✓ Successfully updated ${product.name} (ID: ${productId}): ${currentStock} -> ${newQty} (delta: ${delta})`
+    );
 
-    const updatedProduct = db.prepare("SELECT * FROM products WHERE id = ?").get(productId) as any;
-    console.log(`[StockAdjust API] ✓ Successfully updated ${product.name} (ID: ${productId}): ${currentStock} -> ${newQty} (delta: ${delta})`);
-
-    const derivedStatus = newQty <= 0 ? "out_of_stock" : newQty <= product.reorder_level ? "low_stock" : "in_stock";
+    const derivedStatus =
+      newQty <= 0 ? "out_of_stock" : newQty <= product.reorder_level ? "low_stock" : "in_stock";
 
     return NextResponse.json({
       success: true,
@@ -76,3 +90,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message || "Failed to adjust stock" }, { status: 500 });
   }
 }
+

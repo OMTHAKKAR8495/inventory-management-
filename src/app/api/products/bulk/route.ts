@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { withTransaction } from "@/lib/cloudDb";
 import { getCurrentUser } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
@@ -20,49 +22,13 @@ export async function POST(req: Request) {
     const errors: { row: number; item: string; error: string }[] = [];
     const now = new Date().toISOString();
 
-    const checkSkuStmt = db.prepare("SELECT id, name, stock_quantity, cost_price FROM products WHERE sku = ?");
-    const insertStmt = db.prepare(`
-      INSERT INTO products (
-        id, sku, name, category, sub_category, unit, bulk_pack_size,
-        cost_price, selling_price, stock_quantity, reorder_level,
-        supplier, expiry_date, created_at, updated_at
-      ) VALUES (
-        @id, @sku, @name, @category, @sub_category, @unit, @bulk_pack_size,
-        @cost_price, @selling_price, @stock_quantity, @reorder_level,
-        @supplier, @expiry_date, @created_at, @updated_at
-      )
-    `);
-
-    const updateStmt = db.prepare(`
-      UPDATE products SET
-        name = @name,
-        category = @category,
-        sub_category = @sub_category,
-        unit = @unit,
-        bulk_pack_size = @bulk_pack_size,
-        cost_price = @cost_price,
-        selling_price = @selling_price,
-        stock_quantity = stock_quantity + @stock_quantity,
-        reorder_level = @reorder_level,
-        supplier = @supplier,
-        expiry_date = @expiry_date,
-        updated_at = @updated_at
-      WHERE id = @id
-    `);
-
-    const logStmt = db.prepare(`
-      INSERT INTO stock_logs (
-        id, product_id, product_name, user_id, user_name,
-        change_type, quantity_delta, previous_quantity, new_quantity, reason, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const bulkTx = db.transaction(() => {
-      items.forEach((item: any, index: number) => {
+    await withTransaction(async (tx) => {
+      for (let index = 0; index < items.length; index++) {
+        const item = items[index];
         try {
           const name = item.name?.toString().trim();
-          const category = (item.category?.toString().trim()) || "General Provision";
-          const unit = (item.unit?.toString().trim()) || "Piece";
+          const category = item.category?.toString().trim() || "General Provision";
+          const unit = item.unit?.toString().trim() || "Piece";
           const subCategory = item.sub_category?.toString().trim() || null;
           const bulkPackSize = Math.max(1, parseInt(item.bulk_pack_size || "1", 10) || 1);
           const costPrice = Math.max(0, parseFloat(item.cost_price || "0") || 0);
@@ -74,7 +40,7 @@ export async function POST(req: Request) {
 
           if (!name) {
             errors.push({ row: index + 1, item: "Unnamed Row", error: "Product name is required." });
-            return;
+            continue;
           }
 
           let sku = item.sku?.toString().trim();
@@ -83,72 +49,118 @@ export async function POST(req: Request) {
             sku = `${prefix}-${Math.floor(10000 + Math.random() * 90000)}`;
           }
 
-          const existing = checkSkuStmt.get(sku) as any;
+          const existing = await tx.queryOne(
+            "SELECT id, name, stock_quantity, cost_price FROM products WHERE sku = ?",
+            [sku]
+          );
 
           if (existing) {
             // Update existing product and add stock
-            updateStmt.run({
-              id: existing.id,
-              name,
-              category,
-              sub_category: subCategory,
-              unit,
-              bulk_pack_size: bulkPackSize,
-              cost_price: user.role === "admin" ? costPrice : existing.cost_price,
-              selling_price: sellingPrice > 0 ? sellingPrice : existing.selling_price,
-              stock_quantity: stockQuantity,
-              reorder_level: reorderLevel,
-              supplier,
-              expiry_date: expiryDate,
-              updated_at: now,
-            });
+            await tx.execute(
+              `
+              UPDATE products SET
+                name = ?,
+                category = ?,
+                sub_category = ?,
+                unit = ?,
+                bulk_pack_size = ?,
+                cost_price = ?,
+                selling_price = ?,
+                stock_quantity = stock_quantity + ?,
+                reorder_level = ?,
+                supplier = ?,
+                expiry_date = ?,
+                updated_at = ?
+              WHERE id = ?
+            `,
+              [
+                name,
+                category,
+                subCategory,
+                unit,
+                bulkPackSize,
+                user.role === "admin" ? costPrice : existing.cost_price,
+                sellingPrice > 0 ? sellingPrice : existing.selling_price,
+                stockQuantity,
+                reorderLevel,
+                supplier,
+                expiryDate,
+                now,
+                existing.id,
+              ]
+            );
 
-            logStmt.run(
-              "log_" + Math.random().toString(36).substring(2, 9),
-              existing.id,
-              name,
-              user.id,
-              user.name,
-              "bulk_import",
-              stockQuantity,
-              existing.stock_quantity,
-              existing.stock_quantity + stockQuantity,
-              `Bulk upload update (+${stockQuantity} units)`,
-              now
+            await tx.execute(
+              `
+              INSERT INTO stock_logs (
+                id, product_id, product_name, user_id, user_name,
+                change_type, quantity_delta, previous_quantity, new_quantity, reason, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `,
+              [
+                "log_" + Math.random().toString(36).substring(2, 9),
+                existing.id,
+                name,
+                user.id,
+                user.name,
+                "bulk_import",
+                stockQuantity,
+                existing.stock_quantity,
+                existing.stock_quantity + stockQuantity,
+                `Bulk upload update (+${stockQuantity} units)`,
+                now,
+              ]
             );
             updatedCount++;
           } else {
             const newId = "prod_" + Math.random().toString(36).substring(2, 9);
-            insertStmt.run({
-              id: newId,
-              sku,
-              name,
-              category,
-              sub_category: subCategory,
-              unit,
-              bulk_pack_size: bulkPackSize,
-              cost_price: costPrice,
-              selling_price: sellingPrice,
-              stock_quantity: stockQuantity,
-              reorder_level: reorderLevel,
-              supplier,
-              expiry_date: expiryDate,
-              created_at: now,
-              updated_at: now,
-            });
+            await tx.execute(
+              `
+              INSERT INTO products (
+                id, sku, name, category, sub_category, unit, bulk_pack_size,
+                cost_price, selling_price, stock_quantity, reorder_level,
+                supplier, expiry_date, created_at, updated_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `,
+              [
+                newId,
+                sku,
+                name,
+                category,
+                subCategory,
+                unit,
+                bulkPackSize,
+                costPrice,
+                sellingPrice,
+                stockQuantity,
+                reorderLevel,
+                supplier,
+                expiryDate,
+                now,
+                now,
+              ]
+            );
 
-            logStmt.run(
-              "log_" + Math.random().toString(36).substring(2, 9),
-              newId,
-              name,
-              user.id,
-              user.name,
-              "bulk_import",
-              stockQuantity,
-              0,
-              stockQuantity,
-              `Bulk import created product (${stockQuantity} initial units)`,
-              now
+            await tx.execute(
+              `
+              INSERT INTO stock_logs (
+                id, product_id, product_name, user_id, user_name,
+                change_type, quantity_delta, previous_quantity, new_quantity, reason, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `,
+              [
+                "log_" + Math.random().toString(36).substring(2, 9),
+                newId,
+                name,
+                user.id,
+                user.name,
+                "bulk_import",
+                stockQuantity,
+                0,
+                stockQuantity,
+                `Bulk import created product (${stockQuantity} initial units)`,
+                now,
+              ]
             );
             insertedCount++;
           }
@@ -159,10 +171,8 @@ export async function POST(req: Request) {
             error: rowErr.message || "Invalid row format",
           });
         }
-      });
+      }
     });
-
-    bulkTx();
 
     return NextResponse.json({
       success: true,
@@ -170,10 +180,16 @@ export async function POST(req: Request) {
       updatedCount,
       totalProcessed: items.length,
       errors,
-      message: `Bulk processing completed. ${insertedCount} added, ${updatedCount} updated${errors.length > 0 ? `, ${errors.length} failed` : ""}.`,
+      message: `Bulk processing completed. ${insertedCount} added, ${updatedCount} updated${
+        errors.length > 0 ? `, ${errors.length} failed` : ""
+      }.`,
     });
   } catch (error: any) {
     console.error("Bulk upload error:", error);
-    return NextResponse.json({ error: error.message || "Failed to process bulk upload" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Failed to process bulk upload" },
+      { status: 500 }
+    );
   }
 }
+

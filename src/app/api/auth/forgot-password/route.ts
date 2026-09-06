@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { queryOne, execute } from "@/lib/cloudDb";
 import crypto from "crypto";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
@@ -9,7 +11,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email is required." }, { status: 400 });
     }
 
-    const user = db.prepare("SELECT id, email, name FROM users WHERE email = ?").get(email.trim().toLowerCase()) as any;
+    const user = await queryOne<{ id: string; email: string; name: string }>(
+      "SELECT id, email, name FROM users WHERE email = ?",
+      [email.trim().toLowerCase()]
+    );
 
     if (!user) {
       // Return success to avoid email enumeration
@@ -22,18 +27,21 @@ export async function POST(req: Request) {
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60).toISOString(); // 1 hour
 
-    db.prepare(`
+    await execute(
+      `
       INSERT INTO password_resets (id, email, token, expires_at, used)
       VALUES (?, ?, ?, ?, 0)
-    `).run("reset_" + crypto.randomUUID(), user.email, token, expiresAt);
+    `,
+      ["reset_" + crypto.randomUUID(), user.email, token, expiresAt]
+    );
 
-    // In a production setup, we'd send an email. For demo/prototype, return simulated token instructions:
     return NextResponse.json({
       success: true,
       message: "Reset token generated successfully.",
-      resetToken: token, // Sent for instant testing and seamless store recovery
+      resetToken: token,
     });
   } catch (error) {
     return NextResponse.json({ error: "Failed to process request." }, { status: 500 });
   }
 }
+

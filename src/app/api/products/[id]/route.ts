@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { queryAll, queryOne, execute, withTransaction } from "@/lib/cloudDb";
 import { getCurrentUser } from "@/lib/auth";
 import { Product, StockStatus } from "@/lib/types";
 
@@ -13,15 +13,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     const { id } = await params;
-    const product = db.prepare("SELECT * FROM products WHERE id = ?").get(id) as Product | undefined;
+    const product = await queryOne<Product>("SELECT * FROM products WHERE id = ?", [id]);
 
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    const logs = db
-      .prepare("SELECT * FROM stock_logs WHERE product_id = ? ORDER BY created_at DESC LIMIT 20")
-      .all(id);
+    const logs = await queryAll(
+      "SELECT * FROM stock_logs WHERE product_id = ? ORDER BY created_at DESC LIMIT 20",
+      [id]
+    );
 
     const isAdmin = user.role === "admin";
     const profit = Number((product.selling_price - product.cost_price).toFixed(2));
@@ -56,7 +57,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     const { id } = await params;
-    const existing = db.prepare("SELECT * FROM products WHERE id = ?").get(id) as Product | undefined;
+    const existing = await queryOne<Product>("SELECT * FROM products WHERE id = ?", [id]);
 
     if (!existing) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
@@ -70,33 +71,32 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         return NextResponse.json({ error: "Forbidden: Admin access required to restore products." }, { status: 403 });
       }
 
-      const restoreTx = db.transaction(() => {
-        db.prepare("UPDATE products SET deleted_at = NULL, updated_at = ? WHERE id = ?").run(
+      await withTransaction(async (tx) => {
+        await tx.execute("UPDATE products SET deleted_at = NULL, updated_at = ? WHERE id = ?", [
           new Date().toISOString(),
-          id
-        );
+          id,
+        ]);
 
-        db.prepare(`
-          INSERT INTO stock_logs (
+        await tx.execute(
+          `INSERT INTO stock_logs (
             id, product_id, product_name, user_id, user_name,
             change_type, quantity_delta, previous_quantity, new_quantity, reason, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(
-          "log_" + Math.random().toString(36).substring(2, 9),
-          id,
-          existing.name,
-          user.id,
-          user.name,
-          "product_restored",
-          0,
-          existing.stock_quantity,
-          existing.stock_quantity,
-          `Restored product '${existing.name}' from Recycle Bin by ${user.name}`,
-          new Date().toISOString()
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            "log_" + Math.random().toString(36).substring(2, 9),
+            id,
+            existing.name,
+            user.id,
+            user.name,
+            "product_restored",
+            0,
+            existing.stock_quantity,
+            existing.stock_quantity,
+            `Restored product '${existing.name}' from Recycle Bin by ${user.name}`,
+            new Date().toISOString(),
+          ]
         );
       });
-
-      restoreTx();
 
       return NextResponse.json({
         success: true,
@@ -139,9 +139,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const newExpiry = expiry_date !== undefined ? expiry_date : existing.expiry_date;
     const now = new Date().toISOString();
 
-    const updateTx = db.transaction(() => {
-      db.prepare(`
-        UPDATE products SET
+    await withTransaction(async (tx) => {
+      await tx.execute(
+        `UPDATE products SET
           sku = ?,
           barcode = ?,
           name = ?,
@@ -156,72 +156,71 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
           supplier = ?,
           expiry_date = ?,
           updated_at = ?
-        WHERE id = ?
-      `).run(
-        newSku,
-        newBarcode,
-        newName,
-        newCategory,
-        newSubCategory,
-        newUnit,
-        newBulkPackSize,
-        newCostPrice,
-        newSellingPrice,
-        newStockQty,
-        newReorderLevel,
-        newSupplier,
-        newExpiry,
-        now,
-        id
+        WHERE id = ?`,
+        [
+          newSku,
+          newBarcode,
+          newName,
+          newCategory,
+          newSubCategory,
+          newUnit,
+          newBulkPackSize,
+          newCostPrice,
+          newSellingPrice,
+          newStockQty,
+          newReorderLevel,
+          newSupplier,
+          newExpiry,
+          now,
+          id,
+        ]
       );
 
       if (newStockQty !== existing.stock_quantity) {
         const delta = newStockQty - existing.stock_quantity;
-        db.prepare(`
-          INSERT INTO stock_logs (
+        await tx.execute(
+          `INSERT INTO stock_logs (
             id, product_id, product_name, user_id, user_name,
             change_type, quantity_delta, previous_quantity, new_quantity, reason, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(
-          "log_" + Math.random().toString(36).substring(2, 9),
-          id,
-          newName,
-          user.id,
-          user.name,
-          "manual_adjustment",
-          delta,
-          existing.stock_quantity,
-          newStockQty,
-          `Stock updated via edit form (${existing.stock_quantity} -> ${newStockQty})`,
-          now
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            "log_" + Math.random().toString(36).substring(2, 9),
+            id,
+            newName,
+            user.id,
+            user.name,
+            "manual_adjustment",
+            delta,
+            existing.stock_quantity,
+            newStockQty,
+            `Stock updated via edit form (${existing.stock_quantity} -> ${newStockQty})`,
+            now,
+          ]
         );
       } else {
-        db.prepare(`
-          INSERT INTO stock_logs (
+        await tx.execute(
+          `INSERT INTO stock_logs (
             id, product_id, product_name, user_id, user_name,
             change_type, quantity_delta, previous_quantity, new_quantity, reason, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(
-          "log_" + Math.random().toString(36).substring(2, 9),
-          id,
-          newName,
-          user.id,
-          user.name,
-          "product_edited",
-          0,
-          existing.stock_quantity,
-          newStockQty,
-          `Product specifications updated by ${user.name}`,
-          now
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            "log_" + Math.random().toString(36).substring(2, 9),
+            id,
+            newName,
+            user.id,
+            user.name,
+            "product_edited",
+            0,
+            existing.stock_quantity,
+            newStockQty,
+            `Product specifications updated by ${user.name}`,
+            now,
+          ]
         );
       }
     });
 
-    updateTx();
-
-    const updated = db.prepare("SELECT * FROM products WHERE id = ?").get(id) as any;
-    console.log(`[Products PUT API] ✓ Successfully saved product '${newName}' (ID: ${id}) with stock: ${newStockQty}`);
-
+    const updated = await queryOne<Product>("SELECT * FROM products WHERE id = ?", [id]);
     const derivedStatus = newStockQty <= 0 ? "out_of_stock" : newStockQty <= newReorderLevel ? "low_stock" : "in_stock";
 
     return NextResponse.json({
@@ -231,7 +230,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         stock_quantity: newStockQty,
         status: derivedStatus,
       },
-      message: `Product '${newName}' updated successfully.`,
+      message: `Product '${newName}' updated successfully in Supabase.`,
     });
   } catch (error: any) {
     console.error("Update product error:", error);
@@ -257,7 +256,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     const { searchParams } = new URL(req.url);
     const purge = searchParams.get("purge") === "true"; // permanent purge
 
-    const existing = db.prepare("SELECT * FROM products WHERE id = ?").get(id) as Product | undefined;
+    const existing = await queryOne<Product>("SELECT * FROM products WHERE id = ?", [id]);
 
     if (!existing) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
@@ -265,55 +264,55 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     const now = new Date().toISOString();
 
-    const deleteTx = db.transaction(() => {
+    await withTransaction(async (tx) => {
       if (purge) {
         // Permanent deletion from database
-        db.prepare(`
-          INSERT INTO stock_logs (
+        await tx.execute(
+          `INSERT INTO stock_logs (
             id, product_id, product_name, user_id, user_name,
             change_type, quantity_delta, previous_quantity, new_quantity, reason, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(
-          "log_" + Math.random().toString(36).substring(2, 9),
-          id,
-          existing.name,
-          user.id,
-          user.name,
-          "product_deleted",
-          -existing.stock_quantity,
-          existing.stock_quantity,
-          0,
-          `Permanently purged product '${existing.name}' by Administrator ${user.name}`,
-          now
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            "log_" + Math.random().toString(36).substring(2, 9),
+            id,
+            existing.name,
+            user.id,
+            user.name,
+            "product_deleted",
+            -existing.stock_quantity,
+            existing.stock_quantity,
+            0,
+            `Permanently purged product '${existing.name}' by Administrator ${user.name}`,
+            now,
+          ]
         );
 
-        db.prepare("DELETE FROM products WHERE id = ?").run(id);
+        await tx.execute("DELETE FROM products WHERE id = ?", [id]);
       } else {
         // Soft delete (moved to recycle bin)
-        db.prepare("UPDATE products SET deleted_at = ?, updated_at = ? WHERE id = ?").run(now, now, id);
+        await tx.execute("UPDATE products SET deleted_at = ?, updated_at = ? WHERE id = ?", [now, now, id]);
 
-        db.prepare(`
-          INSERT INTO stock_logs (
+        await tx.execute(
+          `INSERT INTO stock_logs (
             id, product_id, product_name, user_id, user_name,
             change_type, quantity_delta, previous_quantity, new_quantity, reason, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(
-          "log_" + Math.random().toString(36).substring(2, 9),
-          id,
-          existing.name,
-          user.id,
-          user.name,
-          "product_deleted",
-          0,
-          existing.stock_quantity,
-          existing.stock_quantity,
-          `Moved '${existing.name}' to Recycle Bin by ${user.name}`,
-          now
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            "log_" + Math.random().toString(36).substring(2, 9),
+            id,
+            existing.name,
+            user.id,
+            user.name,
+            "product_deleted",
+            0,
+            existing.stock_quantity,
+            existing.stock_quantity,
+            `Moved '${existing.name}' to Recycle Bin by ${user.name}`,
+            now,
+          ]
         );
       }
     });
-
-    deleteTx();
 
     return NextResponse.json({
       success: true,
@@ -326,3 +325,4 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     return NextResponse.json({ error: error.message || "Failed to delete product" }, { status: 500 });
   }
 }
+

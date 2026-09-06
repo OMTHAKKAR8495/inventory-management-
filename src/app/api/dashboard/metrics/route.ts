@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { queryAll, queryOne } from "@/lib/cloudDb";
 import { getCurrentUser } from "@/lib/auth";
 import { DashboardMetrics, Product, StockStatus } from "@/lib/types";
 
@@ -13,9 +13,11 @@ export async function GET() {
     }
 
     const isAdmin = user.role === "admin";
-    const products = db.prepare("SELECT * FROM products WHERE deleted_at IS NULL").all() as Product[];
-    const trashRecord = db.prepare("SELECT COUNT(*) as count FROM products WHERE deleted_at IS NOT NULL").get() as { count: number };
-    const trashCount = trashRecord?.count || 0;
+    const products = (await queryAll("SELECT * FROM products WHERE deleted_at IS NULL")) as Product[];
+    const trashRecord = await queryOne<{ count: number }>(
+      "SELECT COUNT(*) as count FROM products WHERE deleted_at IS NOT NULL"
+    );
+    const trashCount = trashRecord?.count ? Number(trashRecord.count) : 0;
 
     let totalProducts = products.length;
     let totalStockUnits = 0;
@@ -110,28 +112,12 @@ export async function GET() {
       sales_value: Number(data.salesVal.toFixed(2)),
     }));
 
-    const recentActivities = db
-      .prepare("SELECT * FROM stock_logs ORDER BY created_at DESC LIMIT 10")
-      .all() as any[];
+    const recentActivities = await queryAll(
+      "SELECT * FROM stock_logs ORDER BY created_at DESC LIMIT 10"
+    );
 
     const totalPotentialProfit = totalSalesVal - totalCostVal;
     const avgMarginPct = totalCostVal > 0 ? (totalPotentialProfit / totalCostVal) * 100 : 0;
-
-    // Get last backup timestamp
-    let lastBackupAt: string | null = null;
-    try {
-      const fs = await import("fs");
-      const path = await import("path");
-      const { backupDir } = await import("@/lib/db");
-      if (fs.existsSync(backupDir)) {
-        const files = fs.readdirSync(backupDir).filter((f) => f.endsWith(".db"));
-        if (files.length > 0) {
-          const stats = files.map((f) => fs.statSync(path.join(backupDir, f)));
-          const latest = stats.reduce((prev, cur) => (cur.mtimeMs > prev.mtimeMs ? cur : prev));
-          lastBackupAt = latest.mtime.toISOString();
-        }
-      }
-    } catch (e) {}
 
     const metrics: DashboardMetrics = {
       total_products: totalProducts,
@@ -141,7 +127,7 @@ export async function GET() {
       in_stock_count: inStockCount,
       expiring_soon_count: expiringSoonCount,
       trash_count: trashCount,
-      last_backup_at: lastBackupAt,
+      last_backup_at: new Date().toISOString(),
       total_cost_value: isAdmin ? Number(totalCostVal.toFixed(2)) : undefined,
       total_sales_value: isAdmin ? Number(totalSalesVal.toFixed(2)) : undefined,
       total_potential_profit: isAdmin ? Number(totalPotentialProfit.toFixed(2)) : undefined,
@@ -157,3 +143,4 @@ export async function GET() {
     return NextResponse.json({ error: "Failed to load dashboard metrics" }, { status: 500 });
   }
 }
+

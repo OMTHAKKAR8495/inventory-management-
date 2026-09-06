@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { queryOne, withTransaction } from "@/lib/cloudDb";
 import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -46,9 +46,10 @@ export async function POST(req: Request) {
 
     // Pre-validate all items and stock
     for (const item of items) {
-      const product = db
-        .prepare("SELECT * FROM products WHERE id = ? AND deleted_at IS NULL")
-        .get(item.productId) as any;
+      const product = await queryOne(
+        "SELECT * FROM products WHERE id = ? AND deleted_at IS NULL",
+        [item.productId]
+      );
 
       if (!product) {
         return NextResponse.json(
@@ -82,119 +83,125 @@ export async function POST(req: Request) {
     const paymentStatus = paymentMethod === "khata" ? "unpaid" : "paid";
 
     // Run transaction
-    const checkoutTransaction = db.transaction(() => {
+    await withTransaction(async (tx) => {
       // 1. Insert Invoice
-      db.prepare(`
+      await tx.execute(
+        `
         INSERT INTO invoices (
           id, invoice_number, customer_id, customer_name, customer_phone,
           subtotal, discount_amount, tax_amount, grand_total,
           payment_method, payment_status, notes, created_by_id, created_by_name, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        invoiceId,
-        invoiceNumber,
-        customerId || null,
-        customerName.trim(),
-        customerPhone?.trim() || null,
-        subtotal,
-        discountAmount,
-        taxAmount,
-        grandTotal,
-        paymentMethod,
-        paymentStatus,
-        notes?.trim() || null,
-        user.id,
-        user.name,
-        now
+      `,
+        [
+          invoiceId,
+          invoiceNumber,
+          customerId || null,
+          customerName.trim(),
+          customerPhone?.trim() || null,
+          subtotal,
+          discountAmount,
+          taxAmount,
+          grandTotal,
+          paymentMethod,
+          paymentStatus,
+          notes?.trim() || null,
+          user.id,
+          user.name,
+          now,
+        ]
       );
 
       // 2. Insert Invoice Items, Deduct Stock, and Log
-      const insertItem = db.prepare(`
-        INSERT INTO invoice_items (
-          id, invoice_id, product_id, product_name, sku, unit,
-          unit_price, cost_price, quantity, total_price
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      const updateStock = db.prepare(`
-        UPDATE products
-        SET stock_quantity = stock_quantity - ?, updated_at = ?
-        WHERE id = ?
-      `);
-
-      const insertStockLog = db.prepare(`
-        INSERT INTO stock_logs (
-          id, product_id, product_name, user_id, user_name,
-          change_type, quantity_delta, previous_quantity, new_quantity, reason, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
       for (const vi of validatedItems) {
         const itemId = `item_${Math.random().toString(36).substring(2, 10)}`;
-        insertItem.run(
-          itemId,
-          invoiceId,
-          vi.product.id,
-          vi.product.name,
-          vi.product.sku,
-          vi.product.unit,
-          vi.unitPrice,
-          vi.costPrice,
-          vi.quantity,
-          vi.totalPrice
+        await tx.execute(
+          `
+          INSERT INTO invoice_items (
+            id, invoice_id, product_id, product_name, sku, unit,
+            unit_price, cost_price, quantity, total_price
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+          [
+            itemId,
+            invoiceId,
+            vi.product.id,
+            vi.product.name,
+            vi.product.sku,
+            vi.product.unit,
+            vi.unitPrice,
+            vi.costPrice,
+            vi.quantity,
+            vi.totalPrice,
+          ]
         );
 
-        updateStock.run(vi.quantity, now, vi.product.id);
+        await tx.execute(
+          `
+          UPDATE products
+          SET stock_quantity = stock_quantity - ?, updated_at = ?
+          WHERE id = ?
+        `,
+          [vi.quantity, now, vi.product.id]
+        );
 
-        insertStockLog.run(
-          `log_${Math.random().toString(36).substring(2, 9)}`,
-          vi.product.id,
-          vi.product.name,
-          user.id,
-          user.name,
-          "stock_out",
-          -vi.quantity,
-          vi.product.stock_quantity,
-          vi.product.stock_quantity - vi.quantity,
-          `POS Sale #${invoiceNumber} (${customerName.trim()})`,
-          now
+        await tx.execute(
+          `
+          INSERT INTO stock_logs (
+            id, product_id, product_name, user_id, user_name,
+            change_type, quantity_delta, previous_quantity, new_quantity, reason, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+          [
+            `log_${Math.random().toString(36).substring(2, 9)}`,
+            vi.product.id,
+            vi.product.name,
+            user.id,
+            user.name,
+            "stock_out",
+            -vi.quantity,
+            vi.product.stock_quantity,
+            vi.product.stock_quantity - vi.quantity,
+            `POS Sale #${invoiceNumber} (${customerName.trim()})`,
+            now,
+          ]
         );
       }
 
       // 3. If Khata/Credit, update customer balance and ledger
       if (paymentMethod === "khata" && customerId) {
-        const customer = db.prepare("SELECT * FROM customers WHERE id = ?").get(customerId) as any;
+        const customer = await tx.queryOne("SELECT * FROM customers WHERE id = ?", [customerId]);
         if (customer) {
           const newBal = Number((customer.current_balance + grandTotal).toFixed(2));
-          db.prepare("UPDATE customers SET current_balance = ?, updated_at = ? WHERE id = ?").run(
-            newBal,
-            now,
-            customerId
+          await tx.execute(
+            "UPDATE customers SET current_balance = ?, updated_at = ? WHERE id = ?",
+            [newBal, now, customerId]
           );
 
-          db.prepare(`
+          await tx.execute(
+            `
             INSERT INTO khata_transactions (
               id, customer_id, invoice_id, type, amount, previous_balance, new_balance,
               payment_mode, notes, created_by_name, created_at
             ) VALUES (?, ?, ?, 'debit_purchase', ?, ?, ?, 'Credit / Khata', ?, ?, ?)
-          `).run(
-            `ktx_${Math.random().toString(36).substring(2, 9)}`,
-            customerId,
-            invoiceId,
-            grandTotal,
-            customer.current_balance,
-            newBal,
-            `Billed on Invoice #${invoiceNumber}`,
-            user.name,
-            now
+          `,
+            [
+              `ktx_${Math.random().toString(36).substring(2, 9)}`,
+              customerId,
+              invoiceId,
+              grandTotal,
+              customer.current_balance,
+              newBal,
+              `Billed on Invoice #${invoiceNumber}`,
+              user.name,
+              now,
+            ]
           );
         }
       }
     });
 
-    checkoutTransaction();
-
-      return NextResponse.json({
+    return NextResponse.json({
       success: true,
       message: `Invoice #${invoiceNumber} generated & inventory stock updated live!`,
       invoice: {
@@ -234,4 +241,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: err.message || "Failed to process sale" }, { status: 500 });
   }
 }
+
 

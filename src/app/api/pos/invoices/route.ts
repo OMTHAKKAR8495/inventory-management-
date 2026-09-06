@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { queryAll } from "@/lib/cloudDb";
 import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     const params: any[] = [];
 
     if (search) {
-      query += " AND (invoice_number LIKE ? OR customer_name LIKE ? OR customer_phone LIKE ?)";
+      query += " AND (invoice_number ILIKE ? OR customer_name ILIKE ? OR customer_phone ILIKE ?)";
       const term = `%${search}%`;
       params.push(term, term, term);
     }
@@ -33,13 +33,31 @@ export async function GET(req: Request) {
     query += " ORDER BY created_at DESC LIMIT ?";
     params.push(limit);
 
-    const invoices = db.prepare(query).all(...params) as any[];
+    const invoices = await queryAll(query, params);
 
-    // Attach items
-    const getItems = db.prepare("SELECT * FROM invoice_items WHERE invoice_id = ?");
+    if (invoices.length === 0) {
+      return NextResponse.json({ invoices: [] });
+    }
+
+    // Attach items for each invoice
+    const invoiceIds = invoices.map((inv) => inv.id);
+    const placeholders = invoiceIds.map(() => "?").join(",");
+    const allItems = await queryAll(
+      `SELECT * FROM invoice_items WHERE invoice_id IN (${placeholders}) ORDER BY id ASC`,
+      invoiceIds
+    );
+
+    const itemsByInvoiceId: Record<string, any[]> = {};
+    for (const item of allItems) {
+      if (!itemsByInvoiceId[item.invoice_id]) {
+        itemsByInvoiceId[item.invoice_id] = [];
+      }
+      itemsByInvoiceId[item.invoice_id].push(item);
+    }
+
     const result = invoices.map((inv) => ({
       ...inv,
-      items: getItems.all(inv.id),
+      items: itemsByInvoiceId[inv.id] || [],
     }));
 
     return NextResponse.json({ invoices: result });
@@ -48,3 +66,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Failed to fetch invoices" }, { status: 500 });
   }
 }
+

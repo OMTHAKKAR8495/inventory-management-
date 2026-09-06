@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { queryAll, queryOne, execute } from "@/lib/cloudDb";
 import { getCurrentUser } from "@/lib/auth";
 import bcrypt from "bcryptjs";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
@@ -10,7 +12,9 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden: Admin access required." }, { status: 403 });
     }
 
-    const users = db.prepare("SELECT id, name, email, role, status, created_at FROM users ORDER BY created_at DESC").all();
+    const users = await queryAll(
+      "SELECT id, name, email, role, status, created_at FROM users ORDER BY created_at DESC"
+    );
     return NextResponse.json({ users });
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch staff users" }, { status: 500 });
@@ -27,10 +31,15 @@ export async function POST(req: Request) {
     const { name, email, password, role } = await req.json();
 
     if (!name || !email || !password || !role) {
-      return NextResponse.json({ error: "All fields (name, email, password, role) are required." }, { status: 400 });
+      return NextResponse.json(
+        { error: "All fields (name, email, password, role) are required." },
+        { status: 400 }
+      );
     }
 
-    const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email.trim().toLowerCase());
+    const existing = await queryOne("SELECT id FROM users WHERE email = ?", [
+      email.trim().toLowerCase(),
+    ]);
     if (existing) {
       return NextResponse.json({ error: "A user with this email already exists." }, { status: 400 });
     }
@@ -39,10 +48,13 @@ export async function POST(req: Request) {
     const newId = "usr_" + Math.random().toString(36).substring(2, 9);
     const now = new Date().toISOString();
 
-    db.prepare(`
+    await execute(
+      `
       INSERT INTO users (id, name, email, password_hash, role, status, created_at)
       VALUES (?, ?, ?, ?, ?, 'active', ?)
-    `).run(newId, name.trim(), email.trim().toLowerCase(), hash, role, now);
+    `,
+      [newId, name.trim(), email.trim().toLowerCase(), hash, role, now]
+    );
 
     return NextResponse.json({
       success: true,
@@ -52,3 +64,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message || "Failed to create user" }, { status: 500 });
   }
 }
+

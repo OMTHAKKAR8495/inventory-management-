@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { queryOne, withTransaction } from "@/lib/cloudDb";
 import bcrypt from "bcryptjs";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
@@ -13,11 +15,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const resetRecord = db.prepare(`
+    const resetRecord = await queryOne<{
+      id: string;
+      email: string;
+      expires_at: string;
+      used: number;
+    }>(
+      `
       SELECT id, email, expires_at, used
       FROM password_resets
       WHERE token = ? AND used = 0
-    `).get(token) as { id: string; email: string; expires_at: string; used: number } | undefined;
+    `,
+      [token]
+    );
 
     if (!resetRecord) {
       return NextResponse.json({ error: "Invalid or expired reset token." }, { status: 400 });
@@ -29,12 +39,13 @@ export async function POST(req: Request) {
 
     const newHash = bcrypt.hashSync(newPassword, 10);
 
-    const updateTx = db.transaction(() => {
-      db.prepare("UPDATE users SET password_hash = ? WHERE email = ?").run(newHash, resetRecord.email);
-      db.prepare("UPDATE password_resets SET used = 1 WHERE id = ?").run(resetRecord.id);
+    await withTransaction(async (tx) => {
+      await tx.execute("UPDATE users SET password_hash = ? WHERE email = ?", [
+        newHash,
+        resetRecord.email,
+      ]);
+      await tx.execute("UPDATE password_resets SET used = 1 WHERE id = ?", [resetRecord.id]);
     });
-
-    updateTx();
 
     return NextResponse.json({
       success: true,
@@ -44,3 +55,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Failed to reset password." }, { status: 500 });
   }
 }
+

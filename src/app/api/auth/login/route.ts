@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { db } from "@/lib/db";
+import { queryOne, execute } from "@/lib/cloudDb";
 import { setAuthCookie, signToken } from "@/lib/auth";
 import { User } from "@/lib/types";
 
@@ -24,9 +24,14 @@ export async function POST(req: Request) {
     const now = new Date();
 
     // Check rate limit / lockout
-    const attemptRecord = db
-      .prepare("SELECT attempts, last_attempt, locked_until FROM login_attempts WHERE ip_or_email = ?")
-      .get(cleanEmail) as { attempts: number; last_attempt: string; locked_until: string | null } | undefined;
+    const attemptRecord = await queryOne<{
+      attempts: number;
+      last_attempt: string;
+      locked_until: string | null;
+    }>(
+      "SELECT attempts, last_attempt, locked_until FROM login_attempts WHERE ip_or_email = ?",
+      [cleanEmail]
+    );
 
     if (attemptRecord?.locked_until && new Date(attemptRecord.locked_until) > now) {
       const remainingMinutes = Math.ceil(
@@ -40,12 +45,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const row = db
-      .prepare("SELECT id, name, email, password_hash, role, status, created_at FROM users WHERE email = ?")
-      .get(cleanEmail) as (User & { password_hash: string }) | undefined;
+    const row = await queryOne<User & { password_hash: string }>(
+      "SELECT id, name, email, password_hash, role, status, created_at FROM users WHERE email = ?",
+      [cleanEmail]
+    );
 
     if (!row) {
-      recordFailedAttempt(cleanEmail, attemptRecord);
+      await recordFailedAttempt(cleanEmail, attemptRecord);
       return NextResponse.json(
         { error: "Invalid credentials. Please check your email and password." },
         { status: 401 }
@@ -61,7 +67,7 @@ export async function POST(req: Request) {
 
     const isValid = bcrypt.compareSync(password, row.password_hash);
     if (!isValid) {
-      const currentAttempts = recordFailedAttempt(cleanEmail, attemptRecord);
+      const currentAttempts = await recordFailedAttempt(cleanEmail, attemptRecord);
       const remaining = MAX_FAILED_ATTEMPTS - currentAttempts;
       return NextResponse.json(
         {
@@ -76,7 +82,7 @@ export async function POST(req: Request) {
     }
 
     // Reset failed attempts on success
-    db.prepare("DELETE FROM login_attempts WHERE ip_or_email = ?").run(cleanEmail);
+    await execute("DELETE FROM login_attempts WHERE ip_or_email = ?", [cleanEmail]);
 
     const token = await signToken({
       userId: row.id,
@@ -113,7 +119,10 @@ export async function POST(req: Request) {
   }
 }
 
-function recordFailedAttempt(key: string, existing?: { attempts: number; last_attempt: string; locked_until: string | null }): number {
+async function recordFailedAttempt(
+  key: string,
+  existing?: { attempts: number; last_attempt: string; locked_until: string | null } | null
+): Promise<number> {
   const now = new Date();
   const attempts = (existing?.attempts || 0) + 1;
   const lockedUntil =
@@ -121,14 +130,18 @@ function recordFailedAttempt(key: string, existing?: { attempts: number; last_at
       ? new Date(now.getTime() + LOCKOUT_DURATION_MS).toISOString()
       : null;
 
-  db.prepare(`
+  await execute(
+    `
     INSERT INTO login_attempts (ip_or_email, attempts, last_attempt, locked_until)
     VALUES (?, ?, ?, ?)
     ON CONFLICT(ip_or_email) DO UPDATE SET
       attempts = excluded.attempts,
       last_attempt = excluded.last_attempt,
       locked_until = excluded.locked_until
-  `).run(key, attempts, now.toISOString(), lockedUntil);
+  `,
+    [key, attempts, now.toISOString(), lockedUntil]
+  );
 
   return attempts;
 }
+
