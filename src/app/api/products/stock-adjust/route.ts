@@ -9,22 +9,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { productId, type, quantity, reason } = await req.json();
+    const reqBody = await req.json();
+    const productId = reqBody.productId?.toString().trim();
+    const type = reqBody.type === "stock_out" ? "stock_out" : "stock_in";
+    const quantity = Math.floor(Number(reqBody.quantity) || 0);
+    const reason = reqBody.reason?.toString().trim();
 
-    if (!productId || !type || !quantity || quantity <= 0) {
+    if (!productId || quantity <= 0) {
       return NextResponse.json(
-        { error: "Product ID, adjustment type (stock_in/stock_out), and positive quantity are required." },
+        { error: "Product ID and a positive quantity greater than 0 are required." },
         { status: 400 }
       );
     }
 
     const product = db.prepare("SELECT * FROM products WHERE id = ?").get(productId) as any;
     if (!product) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      return NextResponse.json({ error: `Product with ID '${productId}' not found in database.` }, { status: 404 });
     }
 
-    const delta = type === "stock_in" ? Math.abs(quantity) : -Math.abs(quantity);
-    const newQty = Math.max(0, product.stock_quantity + delta);
+    const delta = type === "stock_in" ? quantity : -quantity;
+    const currentStock = Math.max(0, Math.floor(Number(product.stock_quantity) || 0));
+    const newQty = Math.max(0, currentStock + delta);
     const now = new Date().toISOString();
 
     const adjustTx = db.transaction(() => {
@@ -43,21 +48,28 @@ export async function POST(req: Request) {
         user.name,
         type === "stock_in" ? "stock_in" : "stock_out",
         delta,
-        product.stock_quantity,
+        currentStock,
         newQty,
-        reason?.trim() || `${type === "stock_in" ? "Stock added" : "Stock removed"} by ${user.name}`,
+        reason || `${type === "stock_in" ? "Stock In (+)" : "Stock Out (-)"} adjustment by ${user.name}`,
         now
       );
     });
 
     adjustTx();
 
-    const updatedProduct = db.prepare("SELECT * FROM products WHERE id = ?").get(productId);
+    const updatedProduct = db.prepare("SELECT * FROM products WHERE id = ?").get(productId) as any;
+    console.log(`[StockAdjust API] ✓ Successfully updated ${product.name} (ID: ${productId}): ${currentStock} -> ${newQty} (delta: ${delta})`);
+
+    const derivedStatus = newQty <= 0 ? "out_of_stock" : newQty <= product.reorder_level ? "low_stock" : "in_stock";
 
     return NextResponse.json({
       success: true,
-      product: updatedProduct,
-      message: `Stock for '${product.name}' updated to ${newQty} units.`,
+      product: {
+        ...updatedProduct,
+        stock_quantity: newQty,
+        status: derivedStatus,
+      },
+      message: `Stock for '${product.name}' updated to ${newQty} units (${derivedStatus.replace(/_/g, " ").toUpperCase()}).`,
     });
   } catch (error: any) {
     console.error("Stock adjust error:", error);

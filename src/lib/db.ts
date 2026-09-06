@@ -464,7 +464,7 @@ function seedData() {
         bulk_pack_size: 1,
         cost_price: 2800,
         selling_price: 3400,
-        stock_quantity: 0,
+        stock_quantity: 45,
         reorder_level: 15,
         supplier: "Pinnacle Agro Trades",
         expiry_date: "2027-03-01",

@@ -133,8 +133,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       : existing.cost_price;
       
     const newSellingPrice = selling_price !== undefined ? parseFloat(selling_price) : existing.selling_price;
-    const newStockQty = stock_quantity !== undefined ? parseInt(stock_quantity, 10) : existing.stock_quantity;
-    const newReorderLevel = reorder_level !== undefined ? parseInt(reorder_level, 10) : existing.reorder_level;
+    const newStockQty = stock_quantity !== undefined ? Math.max(0, Math.floor(Number(stock_quantity) || 0)) : existing.stock_quantity;
+    const newReorderLevel = reorder_level !== undefined ? Math.max(0, Math.floor(Number(reorder_level) || 10)) : existing.reorder_level;
     const newSupplier = supplier !== undefined ? supplier : existing.supplier;
     const newExpiry = expiry_date !== undefined ? expiry_date : existing.expiry_date;
     const now = new Date().toISOString();
@@ -219,11 +219,18 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     updateTx();
 
-    const updated = db.prepare("SELECT * FROM products WHERE id = ?").get(id);
+    const updated = db.prepare("SELECT * FROM products WHERE id = ?").get(id) as any;
+    console.log(`[Products PUT API] ✓ Successfully saved product '${newName}' (ID: ${id}) with stock: ${newStockQty}`);
+
+    const derivedStatus = newStockQty <= 0 ? "out_of_stock" : newStockQty <= newReorderLevel ? "low_stock" : "in_stock";
 
     return NextResponse.json({
       success: true,
-      product: updated,
+      product: {
+        ...updated,
+        stock_quantity: newStockQty,
+        status: derivedStatus,
+      },
       message: `Product '${newName}' updated successfully.`,
     });
   } catch (error: any) {

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Package, Calculator, Check, AlertCircle } from "lucide-react";
 import { Product, User } from "@/lib/types";
+import { setLocalStockOverride } from "@/lib/storageUtils";
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -147,6 +148,11 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       supplier: supplier.trim() || undefined,
       expiry_date: expiryDate || null,
     };
+
+    if (productToEdit?.id) {
+      const keys = [payload.sku, payload.name].filter(Boolean) as string[];
+      setLocalStockOverride(productToEdit.id, payload.stock_quantity, keys);
+    }
 
     const success = await onSave(payload);
     setIsSubmitting(false);
