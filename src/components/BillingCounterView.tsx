@@ -160,6 +160,17 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
     loadData();
   }, [catalogVersion]);
 
+  // Calculate held / booked stock quantities across all active Saved Bills
+  const heldStockMap = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const bill of savedBills) {
+      for (const item of bill.cart) {
+        map[item.product.id] = (map[item.product.id] || 0) + item.quantity;
+      }
+    }
+    return map;
+  }, [savedBills]);
+
   // Filtered product catalog for counter
   const filteredProducts = React.useMemo(() => {
     return products.filter((p) => {
@@ -177,16 +188,18 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
     return Array.from(new Set(products.map((p) => p.category)));
   }, [products]);
 
-  // Add to cart with strict real-time stock boundary enforcement
+  // Add to cart with strict real-time stock boundary enforcement (accounting for held bookings)
   const addToCart = (product: Product) => {
-    // 1. Check live available stock
     const currentLiveProd = products.find((p) => p.id === product.id) || product;
-    const availableStock = currentLiveProd.stock_quantity;
+    const heldQty = heldStockMap[product.id] || 0;
+    const availableStock = Math.max(0, currentLiveProd.stock_quantity - heldQty);
 
     if (availableStock <= 0) {
       setFeedback({
         type: "error",
-        text: `Cannot add "${product.name}" — product is OUT OF STOCK (0 ${product.unit} available).`,
+        text: heldQty > 0
+          ? `Cannot add "${product.name}" — all ${currentLiveProd.stock_quantity} ${product.unit} are currently BOOKED in Saved Bills.`
+          : `Cannot add "${product.name}" — product is OUT OF STOCK (0 ${product.unit} available).`,
       });
       return;
     }
@@ -197,7 +210,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
         if (existing.quantity >= availableStock) {
           setFeedback({
             type: "error",
-            text: `Cannot add more. Maximum available stock for "${product.name}" is ${availableStock} ${product.unit}.`,
+            text: `Cannot add more. Maximum available stock for "${product.name}" is ${availableStock} ${product.unit}${heldQty > 0 ? ` (${heldQty} held in Saved Bills)` : ""}.`,
           });
           return prev; // Block increment
         }
@@ -235,12 +248,15 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
     }
 
     const currentLiveProd = products.find((p) => p.id === productId);
-    const maxStock = currentLiveProd ? currentLiveProd.stock_quantity : 999999;
+    const heldQty = heldStockMap[productId] || 0;
+    const maxStock = currentLiveProd
+      ? Math.max(0, currentLiveProd.stock_quantity - heldQty)
+      : 999999;
 
     if (newQty > maxStock) {
       setFeedback({
         type: "error",
-        text: `Requested quantity (${newQty}) exceeds available stock of ${maxStock} ${currentLiveProd?.unit || "units"}. Adjusted to maximum available.`,
+        text: `Requested quantity (${newQty}) exceeds available stock of ${maxStock} ${currentLiveProd?.unit || "units"}${heldQty > 0 ? ` (${heldQty} held in Saved Bills)` : ""}. Adjusted to maximum available.`,
       });
       newQty = maxStock;
     } else {
@@ -789,7 +805,9 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
               {/* Product Item Cards Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[560px] overflow-y-auto pr-1">
                 {filteredProducts.map((p) => {
-                  const isOutOfStock = p.stock_quantity <= 0;
+                  const heldQty = heldStockMap[p.id] || 0;
+                  const availableStock = Math.max(0, p.stock_quantity - heldQty);
+                  const isOutOfStock = availableStock <= 0;
                   const inCartQty = cart.find((i) => i.product.id === p.id)?.quantity || 0;
 
                   return (
@@ -825,17 +843,32 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                           <div className="text-sm font-black text-slate-900">
                             ₹{p.selling_price.toLocaleString("en-IN")}
                           </div>
-                          <span
-                            className={`text-[10px] font-semibold ${
-                              isOutOfStock
-                                ? "text-red-600 font-bold"
-                                : p.stock_quantity <= p.reorder_level
-                                ? "text-amber-600"
-                                : "text-emerald-600"
-                            }`}
-                          >
-                            {isOutOfStock ? "Out of Stock" : `${p.stock_quantity} ${p.unit}`}
-                          </span>
+                          {heldQty > 0 ? (
+                            <div className="flex flex-col mt-0.5">
+                              <span
+                                className={`text-[10px] font-black ${
+                                  isOutOfStock ? "text-red-600" : "text-emerald-600"
+                                }`}
+                              >
+                                {isOutOfStock ? "0 Available" : `${availableStock} ${p.unit} Available`}
+                              </span>
+                              <span className="text-[9px] text-amber-700 font-bold bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200 inline-block w-fit mt-0.5">
+                                {heldQty} in Saved Bills
+                              </span>
+                            </div>
+                          ) : (
+                            <span
+                              className={`text-[10px] font-semibold ${
+                                isOutOfStock
+                                  ? "text-red-600 font-bold"
+                                  : p.stock_quantity <= p.reorder_level
+                                  ? "text-amber-600"
+                                  : "text-emerald-600"
+                              }`}
+                            >
+                              {isOutOfStock ? "Out of Stock" : `${p.stock_quantity} ${p.unit}`}
+                            </span>
+                          )}
                         </div>
 
                         {!isOutOfStock && (
