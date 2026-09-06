@@ -194,9 +194,9 @@ export async function POST(req: Request) {
 
     checkoutTransaction();
 
-    return NextResponse.json({
+      return NextResponse.json({
       success: true,
-      message: `Invoice #${invoiceNumber} generated & inventory updated successfully!`,
+      message: `Invoice #${invoiceNumber} generated & inventory stock updated live!`,
       invoice: {
         id: invoiceId,
         invoice_number: invoiceNumber,
@@ -206,9 +206,32 @@ export async function POST(req: Request) {
         items_count: validatedItems.length,
         created_at: now,
       },
+      updatedStock: validatedItems.map((vi) => {
+        const remainingStock = vi.product.stock_quantity - vi.quantity;
+        const minStock = vi.product.min_stock_level ?? 10;
+        let status: "in_stock" | "low_stock" | "out_of_stock" = "in_stock";
+        if (remainingStock <= 0) {
+          status = "out_of_stock";
+        } else if (remainingStock <= minStock) {
+          status = "low_stock";
+        }
+
+        return {
+          productId: vi.product.id,
+          productName: vi.product.name,
+          sku: vi.product.sku,
+          unit: vi.product.unit,
+          quantitySold: vi.quantity,
+          previousStock: vi.product.stock_quantity,
+          remainingStock: remainingStock,
+          minStockLevel: minStock,
+          status,
+        };
+      }),
     });
   } catch (err: any) {
     console.error("POS Checkout error:", err);
     return NextResponse.json({ error: err.message || "Failed to process sale" }, { status: 500 });
   }
 }
+

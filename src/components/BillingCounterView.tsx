@@ -660,14 +660,41 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
         throw new Error(data.error || "Checkout failed");
       }
 
+      // Immediately update local product stock state so UI reflects new live stock without waiting
+      if (data.updatedStock && Array.isArray(data.updatedStock)) {
+        setProducts((prev) =>
+          prev.map((p) => {
+            const match = data.updatedStock.find((u: any) => u.productId === p.id);
+            if (match) {
+              return {
+                ...p,
+                stock_quantity: match.remainingStock,
+                stock_status: match.status,
+              };
+            }
+            return p;
+          })
+        );
+      }
+
       setCompletedInvoice({
         ...data.invoice,
         items: [...cart],
+        updatedStock: data.updatedStock || [],
         subtotal,
         discountAmount,
         taxAmount,
         taxPercent,
         notes,
+      });
+
+      const stockSummary = (data.updatedStock || [])
+        .map((s: any) => `${s.productName}: ${s.remainingStock} ${s.unit} left in Stock (${s.quantitySold} ${s.unit} Billed)`)
+        .join(" | ");
+
+      setFeedback({
+        type: "success",
+        text: `✓ Bill Passed! Invoice #${data.invoice.invoice_number} completed. Live Stock Remaining: ${stockSummary}`,
       });
 
       setShowReceiptModal(true);
@@ -1625,6 +1652,60 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
               </div>
             </div>
 
+            {/* Live Stock Calculation & Remaining Inventory Status (Non-Printable) */}
+            {completedInvoice.updatedStock && completedInvoice.updatedStock.length > 0 && (
+              <div className="no-print mx-6 mt-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                      Live Inventory Stock Status After Bill
+                    </h4>
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-500">
+                    {completedInvoice.updatedStock.length} Product(s) Deducted Live
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {completedInvoice.updatedStock.map((st: any) => (
+                    <div
+                      key={st.productId}
+                      className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between gap-2 shadow-2xs"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-900 truncate">{st.productName}</p>
+                        <p className="text-[10px] text-slate-500 font-mono">
+                          Billed: -{st.quantitySold} {st.unit} (Prev: {st.previousStock} {st.unit})
+                        </p>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded-lg text-xs font-black ${
+                            st.status === "out_of_stock" || st.remainingStock <= 0
+                              ? "bg-red-100 text-red-700 border border-red-200"
+                              : st.status === "low_stock"
+                              ? "bg-amber-100 text-amber-800 border border-amber-200"
+                              : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                          }`}
+                        >
+                          {st.remainingStock} {st.unit} Left
+                        </span>
+                        <span className="block text-[9px] text-slate-400 font-bold uppercase mt-0.5">
+                          {st.status === "out_of_stock" || st.remainingStock <= 0
+                            ? "Out of Stock"
+                            : st.status === "low_stock"
+                            ? "Low Stock Alert"
+                            : "Available in Stock"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Printable Receipt Body */}
             <div id="printable-receipt" className="p-6 space-y-4 overflow-y-auto flex-1 bg-white text-slate-900">
               <div className="text-center pb-3 border-b-2 border-slate-900">
@@ -1676,23 +1757,35 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 font-medium text-slate-800">
-                  {completedInvoice.items.map((it: any) => (
-                    <tr key={it.product.id}>
-                      <td className="py-2.5 pr-2">
-                        <div className="font-bold text-slate-900">{it.product.name}</div>
-                        <span className="text-[10px] text-slate-500 font-mono">SKU: {it.product.sku}</span>
-                      </td>
-                      <td className="text-center py-2.5 font-bold text-slate-900">
-                        {it.quantity} {it.product.unit}
-                      </td>
-                      <td className="text-right py-2.5 font-mono">
-                        ₹{it.unit_price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="text-right py-2.5 font-bold font-mono text-slate-900">
-                        ₹{it.total_price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                      </td>
-                    </tr>
-                  ))}
+                  {completedInvoice.items.map((it: any) => {
+                    const updatedMatch = completedInvoice.updatedStock?.find(
+                      (u: any) => u.productId === it.product.id
+                    );
+                    return (
+                      <tr key={it.product.id}>
+                        <td className="py-2.5 pr-2">
+                          <div className="font-bold text-slate-900">{it.product.name}</div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] text-slate-500 font-mono">SKU: {it.product.sku}</span>
+                            {updatedMatch && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                                Stock Left: {updatedMatch.remainingStock} {it.product.unit}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="text-center py-2.5 font-bold text-slate-900">
+                          {it.quantity} {it.product.unit}
+                        </td>
+                        <td className="text-right py-2.5 font-mono">
+                          ₹{it.unit_price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="text-right py-2.5 font-bold font-mono text-slate-900">
+                          ₹{it.total_price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
 
