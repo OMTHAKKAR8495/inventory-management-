@@ -261,7 +261,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
         {/* Security & System Info Footer */}
         <div className="text-center text-[11px] text-slate-400">
-          Role-Based Access Control • Local SQLite Storage • Wholesale Ready
+          Role-Based Access Control • Supabase Cloud PostgreSQL • Wholesale Ready
         </div>
       </div>
 
