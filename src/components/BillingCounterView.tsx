@@ -26,6 +26,10 @@ import {
   SlidersHorizontal,
   Calendar,
   Wallet,
+  FileText,
+  Eye,
+  Download,
+  Layers,
 } from "lucide-react";
 import { Product, Customer, CartItem, PaymentMethod, SavedBill } from "@/lib/types";
 import { generateInvoicePDF } from "@/lib/exportUtils";
@@ -44,14 +48,20 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // View Mode: "counter" (Live POS billing) vs "saved_bills" (Held/Draft bills column & board)
-  const [viewMode, setViewMode] = useState<"counter" | "saved_bills">("counter");
+  // View Mode: "counter" (Live POS billing) vs "saved_bills" (Held/Draft bills) vs "passed_bills" (Completed Invoices History)
+  const [viewMode, setViewMode] = useState<"counter" | "saved_bills" | "passed_bills">("counter");
 
   // Saved Bills State & Filters
   const [savedBills, setSavedBills] = useState<SavedBill[]>([]);
   const [savedBillsSearch, setSavedBillsSearch] = useState("");
   const [savedBillsFilter, setSavedBillsFilter] = useState<"all" | "today" | "high_value" | "khata" | "cash" | "upi">("all");
   const [savedBillsSort, setSavedBillsSort] = useState<"newest" | "oldest" | "amount_high" | "amount_low">("newest");
+
+  // Passed Bills (Completed Invoices History) State & Filters
+  const [passedInvoices, setPassedInvoices] = useState<any[]>([]);
+  const [isPassedInvoicesLoading, setIsPassedInvoicesLoading] = useState(false);
+  const [passedInvoicesSearch, setPassedInvoicesSearch] = useState("");
+  const [passedInvoicesFilter, setPassedInvoicesFilter] = useState<"all" | "today" | "cash" | "upi" | "khata" | "card">("all");
 
   // Load saved bills from localStorage on initial render
   useEffect(() => {
@@ -75,6 +85,22 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
       } catch (e) {
         console.error("Failed to persist saved bills:", e);
       }
+    }
+  };
+
+  // Load Passed Invoices History from real database
+  const loadPassedInvoices = async () => {
+    setIsPassedInvoicesLoading(true);
+    try {
+      const res = await fetch("/api/pos/invoices?limit=100");
+      if (res.ok) {
+        const data = await res.json();
+        setPassedInvoices(data.invoices || []);
+      }
+    } catch (e) {
+      console.error("Failed to load passed invoices:", e);
+    } finally {
+      setIsPassedInvoicesLoading(false);
     }
   };
 
@@ -107,6 +133,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
         fetch("/api/products?limit=200"),
         fetch("/api/khata"),
       ]);
+      loadPassedInvoices();
 
       if (prodRes.ok) {
         const prodData = await prodRes.json();
@@ -596,6 +623,96 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
   ).length;
   const khataSavedCount = savedBills.filter((b) => b.paymentMethod === "khata").length;
 
+  // Filtered Passed Invoices (Completed Invoices History)
+  const filteredPassedInvoices = React.useMemo(() => {
+    let list = [...passedInvoices];
+
+    if (passedInvoicesSearch.trim()) {
+      const q = passedInvoicesSearch.toLowerCase().trim();
+      list = list.filter((inv) =>
+        inv.invoice_number?.toLowerCase().includes(q) ||
+        inv.customer_name?.toLowerCase().includes(q) ||
+        inv.customer_phone?.toLowerCase().includes(q) ||
+        inv.created_by_name?.toLowerCase().includes(q) ||
+        inv.items?.some((it: any) =>
+          (it.product_name || it.product?.name || "").toLowerCase().includes(q) ||
+          (it.sku || it.product?.sku || "").toLowerCase().includes(q)
+        )
+      );
+    }
+
+    if (passedInvoicesFilter === "today") {
+      const today = new Date().toISOString().split("T")[0];
+      list = list.filter((inv) => inv.created_at?.startsWith(today));
+    } else if (passedInvoicesFilter !== "all") {
+      list = list.filter((inv) => inv.payment_method === passedInvoicesFilter);
+    }
+
+    return list;
+  }, [passedInvoices, passedInvoicesSearch, passedInvoicesFilter]);
+
+  const totalPassedRevenue = passedInvoices.reduce((sum, inv) => sum + (Number(inv.grand_total) || 0), 0);
+  const todayDateStr = new Date().toISOString().split("T")[0];
+  const todayPassedInvoices = passedInvoices.filter((inv) => inv.created_at?.startsWith(todayDateStr));
+  const todayPassedRevenue = todayPassedInvoices.reduce((sum, inv) => sum + (Number(inv.grand_total) || 0), 0);
+  const khataPassedCount = passedInvoices.filter((inv) => inv.payment_method === "khata").length;
+  const cashPassedRevenue = passedInvoices
+    .filter((inv) => inv.payment_method === "cash")
+    .reduce((sum, inv) => sum + (Number(inv.grand_total) || 0), 0);
+  const upiPassedRevenue = passedInvoices
+    .filter((inv) => inv.payment_method === "upi")
+    .reduce((sum, inv) => sum + (Number(inv.grand_total) || 0), 0);
+
+  // Helper: Open Completed Receipt Modal for any Passed Bill
+  const handleOpenPassedInvoiceModal = (inv: any) => {
+    const normalizedItems = (inv.items || []).map((it: any) => ({
+      product: {
+        id: it.product_id || it.product?.id || `p_${Math.random()}`,
+        name: it.product_name || it.product?.name || "Product Item",
+        sku: it.sku || it.product?.sku || "-",
+        unit: it.unit || it.product?.unit || "Unit",
+        selling_price: Number(it.unit_price ?? it.unitPrice ?? 0),
+        cost_price: Number(it.cost_price ?? 0),
+      },
+      quantity: Number(it.quantity || 1),
+      unit_price: Number(it.unit_price ?? it.unitPrice ?? 0),
+      total_price: Number(it.total_price ?? it.totalPrice ?? (it.quantity * (it.unit_price || 0))),
+    }));
+
+    setCompletedInvoice({
+      ...inv,
+      items: normalizedItems,
+      subtotal: Number(inv.subtotal || inv.grand_total || 0),
+      discountAmount: Number(inv.discount_amount ?? inv.discountAmount ?? 0),
+      taxAmount: Number(inv.tax_amount ?? inv.taxAmount ?? 0),
+      taxPercent: Number(inv.tax_percent ?? inv.taxPercent ?? 0),
+      notes: inv.notes || "",
+    });
+    setShowReceiptModal(true);
+  };
+
+  // Helper: Quick Print PDF for a Passed Bill
+  const handlePrintPassedInvoicePDF = (inv: any) => {
+    try {
+      const doc = generateInvoicePDF(inv);
+      doc.autoPrint();
+      const blobUrl = doc.output("bloburl");
+      window.open(blobUrl, "_blank");
+    } catch (e) {
+      handleOpenPassedInvoiceModal(inv);
+    }
+  };
+
+  // Helper: Direct Download PDF for a Passed Bill
+  const handleDownloadPassedInvoicePDF = (inv: any) => {
+    try {
+      const doc = generateInvoicePDF(inv);
+      doc.save(`Invoice_${inv.invoice_number}.pdf`);
+    } catch (e) {
+      console.error("Failed to download PDF:", e);
+    }
+  };
+
   // Handle Checkout with strict pre-validation & server synchronization
   const handleCheckout = async () => {
     if (cart.length === 0) {
@@ -725,10 +842,15 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                 <ShoppingCart className="w-6 h-6 text-blue-600" />
                 Shopfloor Quick Billing Counter
               </>
-            ) : (
+            ) : viewMode === "saved_bills" ? (
               <>
                 <Bookmark className="w-6 h-6 text-indigo-600" />
                 Saved Bills & Hold Invoices
+              </>
+            ) : (
+              <>
+                <FileText className="w-6 h-6 text-emerald-600" />
+                Passed Bills & Invoice Archive
               </>
             )}
           </h2>
@@ -773,6 +895,30 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                 }`}
               >
                 {savedBills.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                setViewMode("passed_bills");
+                loadPassedInvoices();
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                viewMode === "passed_bills"
+                  ? "bg-white text-emerald-700 shadow-xs border border-slate-200"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Passed Bills
+              <span
+                className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+                  passedInvoices.length > 0
+                    ? "bg-emerald-600 text-white"
+                    : "bg-slate-200 text-slate-600"
+                }`}
+              >
+                {passedInvoices.length}
               </span>
             </button>
           </div>
@@ -1536,6 +1682,363 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                       >
                         <ArrowRight className="w-3.5 h-3.5" />
                         Resume & Bill
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* VIEW 3: PASSED BILLS & INVOICES ARCHIVE */}
+      {viewMode === "passed_bills" && (
+        <div className="space-y-6 animate-fade-in">
+          {/* Summary Metrics Banner */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+                <Receipt className="w-6 h-6" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block truncate">
+                  Total Passed Bills
+                </span>
+                <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">
+                  {passedInvoices.length} Bills
+                </div>
+                <span className="text-[11px] text-emerald-700 font-bold">
+                  ₹{totalPassedRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2 })} Total
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                <Calendar className="w-6 h-6" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block truncate">
+                  Today's Passed Bills
+                </span>
+                <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">
+                  {todayPassedInvoices.length} Bills
+                </div>
+                <span className="text-[11px] text-blue-700 font-bold">
+                  ₹{todayPassedRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2 })} Today
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
+                <Smartphone className="w-6 h-6" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block truncate">
+                  Cash & UPI Sales
+                </span>
+                <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">
+                  ₹{(cashPassedRevenue + upiPassedRevenue).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </div>
+                <span className="text-[11px] text-indigo-700 font-bold">
+                  Instant Paid Collections
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100">
+                <BookOpen className="w-6 h-6" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block truncate">
+                  Khata Credit Bills
+                </span>
+                <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">
+                  {khataPassedCount} Bills
+                </div>
+                <span className="text-[11px] text-purple-700 font-bold">
+                  Tracked in Khata Ledger
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Search, Filter Bar & Refresh */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-4">
+            <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+              {/* Search Bar */}
+              <div className="relative flex-1 w-full">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={passedInvoicesSearch}
+                  onChange={(e) => setPassedInvoicesSearch(e.target.value)}
+                  placeholder="Search by Invoice # (e.g. 364576), customer name, mobile, item name, SKU..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-hidden"
+                />
+              </div>
+
+              {/* Filter Pills */}
+              <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                <button
+                  onClick={() => setPassedInvoicesFilter("all")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    passedInvoicesFilter === "all"
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  All ({passedInvoices.length})
+                </button>
+                <button
+                  onClick={() => setPassedInvoicesFilter("today")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    passedInvoicesFilter === "today"
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  Today ({todayPassedInvoices.length})
+                </button>
+                <button
+                  onClick={() => setPassedInvoicesFilter("cash")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    passedInvoicesFilter === "cash"
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  Cash
+                </button>
+                <button
+                  onClick={() => setPassedInvoicesFilter("upi")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    passedInvoicesFilter === "upi"
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  UPI
+                </button>
+                <button
+                  onClick={() => setPassedInvoicesFilter("khata")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    passedInvoicesFilter === "khata"
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  Khata ({khataPassedCount})
+                </button>
+
+                <button
+                  onClick={loadPassedInvoices}
+                  disabled={isPassedInvoicesLoading}
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-200"
+                  title="Reload latest passed invoices"
+                >
+                  <RotateCw className={`w-3.5 h-3.5 ${isPassedInvoicesLoading ? "animate-spin text-emerald-600" : ""}`} />
+                  {isPassedInvoicesLoading ? "Loading..." : "Sync Bills"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Passed Invoices Cards Grid */}
+          {filteredPassedInvoices.length === 0 ? (
+            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-3">
+              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-100">
+                <Receipt className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900">No Passed Bills Found</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                {passedInvoicesSearch || passedInvoicesFilter !== "all"
+                  ? "No passed bills match your current search or filters. Try adjusting your query."
+                  : "No bills have been completed yet. When you complete a sale in Counter POS, it will automatically be saved and archived here."}
+              </p>
+              <button
+                onClick={() => setViewMode("counter")}
+                className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-xs"
+              >
+                <ShoppingCart className="w-4 h-4" /> Go to Billing Counter
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredPassedInvoices.map((inv) => {
+                const dateObj = new Date(inv.created_at);
+                const timeStr = dateObj.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+                const dateStr = dateObj.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" });
+                const itemsList = inv.items || [];
+
+                return (
+                  <div
+                    key={inv.id}
+                    className="bg-white rounded-3xl border border-slate-200 hover:border-emerald-300 shadow-xs hover:shadow-md transition flex flex-col justify-between overflow-hidden group"
+                  >
+                    {/* Card Header */}
+                    <div className="p-5 space-y-3.5">
+                      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-sm font-black text-slate-900">
+                            #{inv.invoice_number}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            {inv.payment_method === "khata" ? "Khata Credit" : "Tax Invoice"}
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-slate-500 font-medium flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          {timeStr}, {dateStr}
+                        </span>
+                      </div>
+
+                      {/* Customer Info */}
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-bold text-slate-900 truncate">
+                            {inv.customer_name}
+                          </h4>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 uppercase">
+                            {inv.payment_method} ({inv.payment_status?.toUpperCase() || "PAID"})
+                          </span>
+                        </div>
+                        {inv.customer_phone && (
+                          <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                            📞 {inv.customer_phone}
+                          </p>
+                        )}
+                        {inv.created_by_name && (
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            Billed by: {inv.created_by_name}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Items List Breakdown */}
+                      <div className="space-y-1.5 bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 mb-1">
+                          <span>Items Billed ({itemsList.length})</span>
+                          <span>Qty / Rate</span>
+                        </div>
+                        <div className="max-h-28 overflow-y-auto divide-y divide-slate-100 pr-1 space-y-1">
+                          {itemsList.map((item: any, idx: number) => {
+                            const itemName = item.product_name || item.product?.name || "Item";
+                            const itemUnit = item.unit || item.product?.unit || "";
+                            const itemPrice = Number(item.unit_price ?? item.unitPrice ?? 0);
+                            const itemTotal = Number(item.total_price ?? item.totalPrice ?? (item.quantity * itemPrice));
+
+                            return (
+                              <div key={item.id || idx} className="pt-1 flex items-center justify-between text-slate-700">
+                                <div className="min-w-0 pr-2">
+                                  <p className="truncate font-medium text-xs text-slate-900">{itemName}</p>
+                                  <span className="text-[10px] text-slate-400 font-mono">{item.sku || ""}</span>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <span className="block font-mono font-bold text-slate-900 text-xs">
+                                    ₹{itemTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 font-mono">
+                                    {item.quantity} {itemUnit} × ₹{itemPrice}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Financial Totals */}
+                      <div className="pt-2 border-t border-slate-100 space-y-1 text-xs">
+                        {inv.discount_amount > 0 && (
+                          <div className="flex justify-between text-emerald-700 text-[11px] font-semibold">
+                            <span>Discount Savings:</span>
+                            <span className="font-mono">- ₹{Number(inv.discount_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        )}
+                        {inv.tax_amount > 0 && (
+                          <div className="flex justify-between text-slate-500 text-[11px]">
+                            <span>GST Tax:</span>
+                            <span className="font-mono">+ ₹{Number(inv.tax_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-baseline pt-1 border-t border-slate-100">
+                          <span className="text-xs font-bold text-slate-700">Grand Total:</span>
+                          <span className="text-base font-black font-mono text-slate-900">
+                            ₹{Number(inv.grand_total).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card Actions Bar */}
+                    <div className="p-3 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            const rawPhone = (inv.customer_phone || "").trim().replace(/[^0-9]/g, "");
+                            let formattedPhone = "";
+                            if (rawPhone.length === 10) formattedPhone = `91${rawPhone}`;
+                            else if (rawPhone.length === 11 && rawPhone.startsWith("0")) formattedPhone = `91${rawPhone.slice(1)}`;
+                            else if (rawPhone.length >= 12) formattedPhone = rawPhone;
+
+                            try {
+                              const doc = generateInvoicePDF(inv);
+                              const pdfFilename = `Invoice_${inv.invoice_number}.pdf`;
+                              doc.save(pdfFilename);
+                            } catch (e) {}
+
+                            const messageText =
+                              `PROVISION SMART WHOLESALE STORE\n` +
+                              `------------------------------------\n` +
+                              `TAX INVOICE / BILL: #${inv.invoice_number}\n` +
+                              `Customer: ${inv.customer_name}\n` +
+                              `Date: ${new Date(inv.created_at).toLocaleString("en-IN")}\n` +
+                              `Grand Total: Rs. ${Number(inv.grand_total).toLocaleString("en-IN", { minimumFractionDigits: 2 })}\n` +
+                              `Payment Mode: ${(inv.payment_method || "CASH").toUpperCase()} (${(inv.payment_status || "PAID").toUpperCase()})\n` +
+                              `------------------------------------\n` +
+                              `*** Attached: Official Tax Invoice PDF ***`;
+
+                            const encoded = encodeURIComponent(messageText);
+                            const url = formattedPhone
+                              ? `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encoded}`
+                              : `https://api.whatsapp.com/send?text=${encoded}`;
+                            window.open(url, "_blank");
+                          }}
+                          className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-emerald-300 shadow-2xs"
+                          title="Share Tax Invoice on WhatsApp"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          WhatsApp
+                        </button>
+
+                        <button
+                          onClick={() => handleDownloadPassedInvoicePDF(inv)}
+                          className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-slate-200 shadow-2xs"
+                          title="Download Official Tax Invoice PDF"
+                        >
+                          <Download className="w-3.5 h-3.5 text-slate-600" />
+                          PDF
+                        </button>
+
+                        <button
+                          onClick={() => handlePrintPassedInvoicePDF(inv)}
+                          className="p-1.5 text-slate-500 hover:text-slate-800 rounded-xl hover:bg-slate-200 transition"
+                          title="Quick Print Invoice"
+                        >
+                          <Printer className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => handleOpenPassedInvoiceModal(inv)}
+                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        View Bill
                       </button>
                     </div>
                   </div>

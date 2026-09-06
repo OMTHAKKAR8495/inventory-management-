@@ -313,14 +313,23 @@ export function generateInvoicePDF(invoice: any): jsPDF {
 
   // Items Table
   const tableHeaders = ["#", "Item Description", "SKU", "Qty", "Unit Rate (Rs.)", "Amount (Rs.)"];
-  const tableData = invoice.items.map((it: any, idx: number) => [
-    (idx + 1).toString(),
-    it.product.name,
-    it.product.sku,
-    `${it.quantity} ${it.product.unit}`,
-    `Rs. ${Number(it.unit_price).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-    `Rs. ${Number(it.total_price).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
-  ]);
+  const tableData = (invoice.items || []).map((it: any, idx: number) => {
+    const prodName = it.product_name || it.product?.name || "Item";
+    const sku = it.sku || it.product?.sku || "-";
+    const unit = it.unit || it.product?.unit || "Unit";
+    const qty = it.quantity || 1;
+    const unitPrice = Number(it.unit_price ?? it.unitPrice ?? 0);
+    const totalPrice = Number(it.total_price ?? it.totalPrice ?? (qty * unitPrice));
+
+    return [
+      (idx + 1).toString(),
+      prodName,
+      sku,
+      `${qty} ${unit}`,
+      `Rs. ${unitPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+      `Rs. ${totalPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
+    ];
+  });
 
   autoTable(doc, {
     head: [tableHeaders],

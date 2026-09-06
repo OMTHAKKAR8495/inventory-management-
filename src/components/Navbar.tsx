@@ -23,6 +23,8 @@ import {
   Truck,
   BookOpen,
   MessageSquare,
+  Receipt,
+  FileText,
 } from "lucide-react";
 import { User, DashboardMetrics } from "@/lib/types";
 
@@ -356,6 +358,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </span>
                     </div>
                   </div>
+
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      setActiveTab("pos");
+                    }}
+                    className="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium"
+                  >
+                    <Receipt className="w-4 h-4 text-emerald-600" />
+                    Passed Bills & Invoice Archive
+                  </button>
 
                   {isAdmin && onOpenUsersModal && (
                     <button
