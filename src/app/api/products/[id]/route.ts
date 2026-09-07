@@ -19,12 +19,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
+    const isAdmin = user.role === "admin";
     const logs = await queryAll(
-      "SELECT * FROM stock_logs WHERE product_id = ? ORDER BY created_at DESC LIMIT 20",
+      isAdmin
+        ? "SELECT * FROM stock_logs WHERE product_id = ? ORDER BY created_at DESC LIMIT 20"
+        : "SELECT * FROM stock_logs WHERE product_id = ? AND (change_type IN ('stock_in', 'bulk_import', 'product_created') OR quantity_delta > 0) AND (reason IS NULL OR (LOWER(reason) NOT LIKE '%pos sale%' AND LOWER(reason) NOT LIKE '%bill%')) ORDER BY created_at DESC LIMIT 20",
       [id]
     );
 
-    const isAdmin = user.role === "admin";
     const profit = Number((product.selling_price - product.cost_price).toFixed(2));
     const marginPct = product.cost_price > 0 ? Number(((profit / product.cost_price) * 100).toFixed(1)) : 0;
 

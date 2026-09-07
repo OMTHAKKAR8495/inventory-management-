@@ -118,7 +118,9 @@ export async function GET() {
     }));
 
     const recentActivities = await queryAll(
-      "SELECT * FROM stock_logs ORDER BY created_at DESC LIMIT 10"
+      isAdmin
+        ? "SELECT * FROM stock_logs ORDER BY created_at DESC LIMIT 10"
+        : "SELECT * FROM stock_logs WHERE (change_type IN ('stock_in', 'bulk_import', 'product_created') OR quantity_delta > 0) AND (reason IS NULL OR (LOWER(reason) NOT LIKE '%pos sale%' AND LOWER(reason) NOT LIKE '%bill%')) ORDER BY created_at DESC LIMIT 10"
     );
 
     const totalPotentialProfit = totalSalesVal - totalCostVal;

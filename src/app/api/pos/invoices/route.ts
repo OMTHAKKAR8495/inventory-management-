@@ -11,6 +11,13 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    if (user.role !== "admin") {
+      return NextResponse.json(
+        { error: "Forbidden: Invoice archive access is restricted to Store Administrator." },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const limit = Math.min(Number(searchParams.get("limit") || 50), 100);
     const search = searchParams.get("search")?.trim() || "";
@@ -90,6 +97,13 @@ export async function PATCH(req: Request) {
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (user.role !== "admin") {
+      return NextResponse.json(
+        { error: "Forbidden: Invoice update is restricted to Store Administrator." },
+        { status: 403 }
+      );
     }
 
     const body = await req.json();

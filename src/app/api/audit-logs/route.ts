@@ -17,8 +17,15 @@ export async function GET(req: Request) {
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "20", 10)));
 
+    const isAdmin = user.role === "admin";
+
     let query = "SELECT * FROM stock_logs WHERE 1=1";
     const params: any[] = [];
+
+    // For managers: Only show inward stock additions/restocks and never sales or customer purchases
+    if (!isAdmin) {
+      query += " AND (change_type IN ('stock_in', 'bulk_import', 'product_created') OR quantity_delta > 0) AND (reason IS NULL OR (LOWER(reason) NOT LIKE '%pos sale%' AND LOWER(reason) NOT LIKE '%bill%'))";
+    }
 
     if (search) {
       query +=
@@ -27,6 +34,15 @@ export async function GET(req: Request) {
     }
 
     if (changeType && changeType !== "all") {
+      if (!isAdmin && changeType === "stock_out") {
+        return NextResponse.json({
+          logs: [],
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+        });
+      }
       query += " AND change_type = ?";
       params.push(changeType);
     }

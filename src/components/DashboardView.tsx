@@ -128,7 +128,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            {onNavigateToPOS && (
+            {isAdmin && onNavigateToPOS && (
               <button
                 onClick={onNavigateToPOS}
                 className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-500/20 border border-white/20 transition flex items-center gap-2 cursor-pointer"

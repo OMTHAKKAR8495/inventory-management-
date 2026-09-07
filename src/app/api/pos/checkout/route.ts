@@ -11,6 +11,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    if (user.role !== "admin") {
+      return NextResponse.json(
+        { error: "Forbidden: Counter POS checkout is restricted to Store Administrator." },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const {
       customerId,

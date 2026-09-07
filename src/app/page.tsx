@@ -18,7 +18,7 @@ import { BackupModal } from "@/components/BackupModal";
 import { BarcodeScannerModal } from "@/components/BarcodeScannerModal";
 import { ShopfloorTasksModal } from "@/components/ShopfloorTasksModal";
 import { LoginView } from "@/components/LoginView";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle, Store } from "lucide-react";
 
 type TabType = "dashboard" | "inventory" | "pos" | "procurement" | "khata" | "bulk" | "audit";
 const VALID_TABS: TabType[] = ["dashboard", "inventory", "pos", "procurement", "khata", "bulk", "audit"];
@@ -465,17 +465,29 @@ export default function Home() {
         )}
 
         {activeTab === "pos" && (
-          <BillingCounterView
-            user={user}
-            catalogVersion={catalogVersion}
-            initialViewMode={posViewMode}
-            onViewModeChanged={(mode) => setPosViewMode(mode)}
-            onSaleCompleted={() => {
-              fetchMetrics();
-              setCatalogVersion((v) => v + 1);
-              showToast("Sale completed & stock updated in real time!");
-            }}
-          />
+          user.role === "admin" ? (
+            <BillingCounterView
+              user={user}
+              catalogVersion={catalogVersion}
+              initialViewMode={posViewMode}
+              onViewModeChanged={(mode) => setPosViewMode(mode)}
+              onSaleCompleted={() => {
+                fetchMetrics();
+                setCatalogVersion((v) => v + 1);
+                showToast("Sale completed & stock updated in real time!");
+              }}
+            />
+          ) : (
+            <div className="max-w-xl mx-auto my-12 p-8 glass-panel rounded-3xl border border-white/10 shadow-2xl text-center space-y-3 text-slate-100">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 flex items-center justify-center mx-auto">
+                <Store className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-white">Access Restricted</h3>
+              <p className="text-xs text-slate-400">
+                Counter POS billing and invoice archives are restricted to Store Administrator access.
+              </p>
+            </div>
+          )
         )}
 
         {activeTab === "procurement" && (
@@ -517,7 +529,7 @@ export default function Home() {
           />
         )}
 
-        {activeTab === "audit" && <AuditLogsView />}
+        {activeTab === "audit" && <AuditLogsView user={user} />}
       </main>
 
       {/* Single Product Add / Edit Modal */}

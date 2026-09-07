@@ -126,6 +126,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       const params = new URLSearchParams();
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (selectedCategory && selectedCategory !== "all") params.set("category", selectedCategory);
+      if (selectedStatus && selectedStatus !== "all") params.set("status", selectedStatus);
       if (selectedSupplier && selectedSupplier !== "all") params.set("supplier", selectedSupplier);
       if (selectedExpiry && selectedExpiry !== "all") params.set("expiry", selectedExpiry);
       if (minPrice) params.set("min_price", minPrice);
@@ -134,7 +135,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       if (endDate) params.set("end_date", endDate);
       params.set("sort_by", sortBy);
       params.set("sort_order", sortOrder);
-      params.set("limit", "200");
+      params.set("page", page.toString());
+      params.set("limit", limit.toString());
 
       const res = await fetch(`/api/products?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to load inventory");

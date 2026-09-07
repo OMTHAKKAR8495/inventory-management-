@@ -9,12 +9,15 @@ import {
   Filter,
   RotateCcw,
   Calendar,
-  User,
   Package,
 } from "lucide-react";
-import { StockLog } from "@/lib/types";
+import { StockLog, User } from "@/lib/types";
 
-export const AuditLogsView: React.FC = () => {
+interface AuditLogsViewProps {
+  user?: User | null;
+}
+
+export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ user }) => {
   const [logs, setLogs] = useState<StockLog[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
@@ -22,6 +25,8 @@ export const AuditLogsView: React.FC = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [isLoading, setIsLoading] = useState(true);
+
+  const isAdmin = user?.role === "admin";
 
   const fetchLogs = async () => {
     setIsLoading(true);
@@ -77,7 +82,9 @@ export const AuditLogsView: React.FC = () => {
             Stock Movement & Audit Logs
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Complete timestamped history of all stock-ins, sales deductions, bulk imports, and adjustments.
+            {isAdmin
+              ? "Complete timestamped history of all stock-ins, sales deductions, customer orders, bulk imports, and adjustments."
+              : "Timestamped history of stock additions, inward shipments, received POs, and catalog entries."}
           </p>
         </div>
       </div>
@@ -93,7 +100,11 @@ export const AuditLogsView: React.FC = () => {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="Search by product name, staff member, or reason..."
+            placeholder={
+              isAdmin
+                ? "Search by product name, staff member, or reason..."
+                : "Search by product name or inward entry reason..."
+            }
             className="w-full pl-10 pr-4 py-2.5 text-xs font-medium rounded-xl border border-white/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden bg-slate-900/60 text-white placeholder:text-slate-500"
           />
         </div>
@@ -107,12 +118,23 @@ export const AuditLogsView: React.FC = () => {
             }}
             className="px-3 py-2.5 rounded-xl border border-white/10 bg-slate-900 text-xs font-semibold text-slate-200 outline-hidden focus:border-blue-500"
           >
-            <option value="all">All Change Types</option>
-            <option value="stock_in">Stock In (+)</option>
-            <option value="stock_out">Stock Out (-)</option>
-            <option value="bulk_import">Bulk Ingestion</option>
-            <option value="product_created">Product Created</option>
-            <option value="manual_adjustment">Manual Adjustment</option>
+            {isAdmin ? (
+              <>
+                <option value="all">All Change Types</option>
+                <option value="stock_in">Stock In (+)</option>
+                <option value="stock_out">Stock Out (-)</option>
+                <option value="bulk_import">Bulk Ingestion</option>
+                <option value="product_created">Product Created</option>
+                <option value="manual_adjustment">Manual Adjustment</option>
+              </>
+            ) : (
+              <>
+                <option value="all">All Stock Additions</option>
+                <option value="stock_in">Stock In / Restocks (+)</option>
+                <option value="bulk_import">Bulk Ingestion</option>
+                <option value="product_created">Product Created</option>
+              </>
+            )}
           </select>
 
           {(search || changeType !== "all") && (
