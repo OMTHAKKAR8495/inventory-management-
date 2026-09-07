@@ -31,6 +31,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Customer name is required" }, { status: 400 });
     }
 
+    const cleanPhone = (customerPhone || "").replace(/\D/g, "");
+    if (!customerPhone || !customerPhone.trim() || cleanPhone.length < 10) {
+      return NextResponse.json(
+        { error: "Customer mobile number is compulsory (valid 10-digit number required) to generate bill." },
+        { status: 400 }
+      );
+    }
+
     const now = new Date().toISOString();
     const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
     const invoiceId = `inv_${Math.random().toString(36).substring(2, 10)}`;
@@ -82,6 +90,20 @@ export async function POST(req: Request) {
     const grandTotal = Math.max(0, Number((subtotal - discountAmount + taxAmount).toFixed(2)));
     const paymentStatus = paymentMethod === "khata" ? "unpaid" : "paid";
 
+    let finalCustomerId = customerId || null;
+    if (!finalCustomerId && customerPhone) {
+      const cleanPhone = customerPhone.replace(/\D/g, "");
+      if (cleanPhone.length >= 10) {
+        const matched = await queryOne(
+          "SELECT id FROM customers WHERE REPLACE(REPLACE(phone, ' ', ''), '-', '') LIKE ?",
+          [`%${cleanPhone.slice(-10)}%`]
+        );
+        if (matched) {
+          finalCustomerId = matched.id;
+        }
+      }
+    }
+
     // Run transaction
     await withTransaction(async (tx) => {
       // 1. Insert Invoice
@@ -96,7 +118,7 @@ export async function POST(req: Request) {
         [
           invoiceId,
           invoiceNumber,
-          customerId || null,
+          finalCustomerId,
           customerName.trim(),
           customerPhone?.trim() || null,
           subtotal,
@@ -168,35 +190,58 @@ export async function POST(req: Request) {
         );
       }
 
-      // 3. If Khata/Credit, update customer balance and ledger
-      if (paymentMethod === "khata" && customerId) {
-        const customer = await tx.queryOne("SELECT * FROM customers WHERE id = ?", [customerId]);
+      // 3. If registered customer, update customer balance and ledger
+      if (finalCustomerId) {
+        const customer = await tx.queryOne("SELECT * FROM customers WHERE id = ?", [finalCustomerId]);
         if (customer) {
-          const newBal = Number((customer.current_balance + grandTotal).toFixed(2));
-          await tx.execute(
-            "UPDATE customers SET current_balance = ?, updated_at = ? WHERE id = ?",
-            [newBal, now, customerId]
-          );
+          if (paymentMethod === "khata") {
+            const newBal = Number((customer.current_balance + grandTotal).toFixed(2));
+            await tx.execute(
+              "UPDATE customers SET current_balance = ?, updated_at = ? WHERE id = ?",
+              [newBal, now, finalCustomerId]
+            );
 
-          await tx.execute(
-            `
-            INSERT INTO khata_transactions (
-              id, customer_id, invoice_id, type, amount, previous_balance, new_balance,
-              payment_mode, notes, created_by_name, created_at
-            ) VALUES (?, ?, ?, 'debit_purchase', ?, ?, ?, 'Credit / Khata', ?, ?, ?)
-          `,
-            [
-              `ktx_${Math.random().toString(36).substring(2, 9)}`,
-              customerId,
-              invoiceId,
-              grandTotal,
-              customer.current_balance,
-              newBal,
-              `Billed on Invoice #${invoiceNumber}`,
-              user.name,
-              now,
-            ]
-          );
+            await tx.execute(
+              `
+              INSERT INTO khata_transactions (
+                id, customer_id, invoice_id, type, amount, previous_balance, new_balance,
+                payment_mode, notes, created_by_name, created_at
+              ) VALUES (?, ?, ?, 'debit_purchase', ?, ?, ?, 'Credit / Khata', ?, ?, ?)
+            `,
+              [
+                `ktx_${Math.random().toString(36).substring(2, 9)}`,
+                finalCustomerId,
+                invoiceId,
+                grandTotal,
+                customer.current_balance,
+                newBal,
+                `Khata Credit Bill #${invoiceNumber}`,
+                user.name,
+                now,
+              ]
+            );
+          } else {
+            // Instant Cash/UPI/Card paid purchase for customer: record in ledger history
+            await tx.execute(
+              `
+              INSERT INTO khata_transactions (
+                id, customer_id, invoice_id, type, amount, previous_balance, new_balance,
+                payment_mode, notes, created_by_name, created_at
+              ) VALUES (?, ?, ?, 'paid_bill', ?, ?, ?, ?, ?, ?, ?)
+            `,
+              [
+                `ktx_${Math.random().toString(36).substring(2, 9)}`,
+                finalCustomerId,
+                invoiceId,
+                grandTotal,
+                customer.current_balance,
+                customer.current_balance,
+                `${paymentMethod.toUpperCase()} Paid Bill #${invoiceNumber}`,
+                user.name,
+                now,
+              ]
+            );
+          }
         }
       }
     });

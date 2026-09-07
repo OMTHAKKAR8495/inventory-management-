@@ -41,6 +41,7 @@ export const KhataLedgerView: React.FC<KhataLedgerViewProps> = ({ user }) => {
     invoices: any[];
   } | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [modalTab, setModalTab] = useState<"ledger" | "invoices">("ledger");
 
   // New Customer Modal
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
@@ -410,58 +411,142 @@ export const KhataLedgerView: React.FC<KhataLedgerViewProps> = ({ user }) => {
                     setPayAmount(selectedCustomerData.customer.current_balance);
                     setIsRecordPaymentOpen(true);
                   }}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition"
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer"
                 >
                   Record Payment
                 </button>
               </div>
 
-              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                Khata Transaction Ledger ({selectedCustomerData.transactions.length})
-              </h4>
+              {/* Subtabs: Ledger vs Invoices */}
+              <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                <button
+                  type="button"
+                  onClick={() => setModalTab("ledger")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    modalTab === "ledger"
+                      ? "bg-purple-500/25 text-purple-300 border border-purple-500/40"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <History className="w-3.5 h-3.5" />
+                  Ledger Transactions ({selectedCustomerData.transactions.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalTab("invoices")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    modalTab === "invoices"
+                      ? "bg-blue-500/25 text-blue-300 border border-blue-500/40"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  Billed Invoices ({selectedCustomerData.invoices?.length || 0})
+                </button>
+              </div>
 
-              <div className="divide-y divide-white/5 border border-white/10 rounded-2xl overflow-hidden text-xs bg-white/5">
-                {selectedCustomerData.transactions.length === 0 ? (
-                  <div className="p-6 text-center text-slate-500">No transactions recorded yet.</div>
-                ) : (
-                  selectedCustomerData.transactions.map((tx) => {
-                    const isDebit = tx.type === "debit_purchase";
+              {modalTab === "ledger" ? (
+                <div className="divide-y divide-white/5 border border-white/10 rounded-2xl overflow-hidden text-xs bg-white/5">
+                  {selectedCustomerData.transactions.length === 0 ? (
+                    <div className="p-6 text-center text-slate-500">No transactions recorded yet.</div>
+                  ) : (
+                    selectedCustomerData.transactions.map((tx: any) => {
+                      const isDebit = tx.type === "debit_purchase";
+                      const isPaidBill = tx.type === "paid_bill";
 
-                    return (
-                      <div key={tx.id} className="p-3.5 flex items-center justify-between hover:bg-white/5">
-                        <div className="flex items-start gap-2.5">
-                          <div
-                            className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                              isDebit ? "bg-purple-500/20 text-purple-400" : "bg-emerald-500/20 text-emerald-400"
-                            }`}
-                          >
-                            {isDebit ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                      return (
+                        <div key={tx.id} className="p-3.5 flex items-center justify-between hover:bg-white/5">
+                          <div className="flex items-start gap-2.5">
+                            <div
+                              className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                                isDebit
+                                  ? "bg-purple-500/20 text-purple-400"
+                                  : isPaidBill
+                                  ? "bg-blue-500/20 text-blue-400"
+                                  : "bg-emerald-500/20 text-emerald-400"
+                              }`}
+                            >
+                              {isDebit ? (
+                                <ArrowUpRight className="w-4 h-4" />
+                              ) : isPaidBill ? (
+                                <CheckCircle2 className="w-4 h-4" />
+                              ) : (
+                                <ArrowDownRight className="w-4 h-4" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-bold text-slate-200">
+                                {tx.notes || (isDebit ? "Credit Purchase" : isPaidBill ? "Instant Paid Bill" : "Payment Received")}
+                              </p>
+                              <p className="text-[11px] text-slate-500">
+                                {new Date(tx.created_at).toLocaleString()} • {tx.payment_mode || "Khata"} • Logged by {tx.created_by_name}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-slate-200">{tx.notes || (isDebit ? "Credit Purchase" : "Payment Received")}</p>
-                            <p className="text-[11px] text-slate-500">
-                              {new Date(tx.created_at).toLocaleString()} • Logged by {tx.created_by_name}
+
+                          <div className="text-right">
+                            <span
+                              className={`font-black text-sm font-mono ${
+                                isDebit
+                                  ? "text-purple-400"
+                                  : isPaidBill
+                                  ? "text-blue-400"
+                                  : "text-emerald-400"
+                              }`}
+                            >
+                              {isDebit
+                                ? `+ ₹${tx.amount.toLocaleString("en-IN")}`
+                                : isPaidBill
+                                ? `₹${tx.amount.toLocaleString("en-IN")} (PAID)`
+                                : `- ₹${tx.amount.toLocaleString("en-IN")}`}
+                            </span>
+                            <p className="text-[10px] text-slate-500 font-mono">
+                              Balance: ₹{tx.new_balance.toLocaleString("en-IN")}
                             </p>
                           </div>
                         </div>
-
-                        <div className="text-right">
-                          <span
-                            className={`font-black text-sm font-mono ${
-                              isDebit ? "text-purple-400" : "text-emerald-400"
-                            }`}
-                          >
-                            {isDebit ? `+ ₹${tx.amount.toLocaleString("en-IN")}` : `- ₹${tx.amount.toLocaleString("en-IN")}`}
-                          </span>
-                          <p className="text-[10px] text-slate-500 font-mono">
-                            Balance: ₹{tx.new_balance.toLocaleString("en-IN")}
+                      );
+                    })
+                  )}
+                </div>
+              ) : (
+                <div className="divide-y divide-white/5 border border-white/10 rounded-2xl overflow-hidden text-xs bg-white/5">
+                  {!selectedCustomerData.invoices || selectedCustomerData.invoices.length === 0 ? (
+                    <div className="p-6 text-center text-slate-500">No invoices billed to this customer yet.</div>
+                  ) : (
+                    selectedCustomerData.invoices.map((inv: any) => (
+                      <div key={inv.id} className="p-3.5 flex items-center justify-between hover:bg-white/5">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-200 font-mono">#{inv.invoice_number}</span>
+                            <span
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
+                                inv.payment_status === "paid"
+                                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                                  : "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                              }`}
+                            >
+                              {inv.payment_method?.toUpperCase()} ({inv.payment_status?.toUpperCase()})
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500">
+                            {new Date(inv.created_at).toLocaleString()} • Billed by {inv.created_by_name}
                           </p>
                         </div>
+
+                        <div className="text-right font-mono">
+                          <div className="font-black text-sm text-slate-100">
+                            ₹{inv.grand_total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          </div>
+                          <div className="text-[10px] text-slate-500">
+                            Subtotal: ₹{inv.subtotal.toLocaleString("en-IN")}
+                          </div>
+                        </div>
                       </div>
-                    );
-                  })
-                )}
-              </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

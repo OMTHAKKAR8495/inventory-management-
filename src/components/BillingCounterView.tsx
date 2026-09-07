@@ -766,6 +766,16 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
       return;
     }
 
+    const effectivePhone = (selectedCustomer?.phone || customerPhone || "").trim();
+    const cleanDigits = effectivePhone.replace(/\D/g, "");
+    if (!effectivePhone || cleanDigits.length < 10) {
+      setFeedback({
+        type: "error",
+        text: "Customer mobile number is compulsory to generate bill. Please enter a valid 10-digit mobile number.",
+      });
+      return;
+    }
+
     setIsCheckingOut(true);
     setFeedback(null);
 
@@ -1146,12 +1156,14 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                       setSelectedCustomer(null);
                       setCustomerName("Walk-in Customer");
                       setCustomerPhone("");
+                      setPaymentMethod("cash");
                     } else {
                       const cust = customers.find((c) => c.id === val);
                       if (cust) {
                         setSelectedCustomer(cust);
                         setCustomerName(cust.name);
                         setCustomerPhone(cust.phone);
+                        setPaymentMethod("khata");
                       }
                     }
                   }}
@@ -1165,22 +1177,46 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   ))}
                 </select>
 
+                {selectedCustomer && (
+                  <div className="p-2.5 bg-purple-500/15 rounded-xl border border-purple-500/30 flex items-center justify-between text-xs">
+                    <div>
+                      <div className="font-bold text-purple-300 flex items-center gap-1.5">
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span>{selectedCustomer.store_name} ({selectedCustomer.name})</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-mono">
+                        📞 {selectedCustomer.phone} • Current Due: ₹{selectedCustomer.current_balance.toLocaleString("en-IN")}
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 font-bold text-[10px] border border-purple-500/30">
+                      Khata Linked
+                    </span>
+                  </div>
+                )}
+
                 {!selectedCustomer && (
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <input
-                      type="text"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="Customer Name"
-                      className="px-3 py-1.5 glass-input rounded-xl text-xs"
-                    />
-                    <input
-                      type="tel"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                      placeholder="Mobile (optional)"
-                      className="px-3 py-1.5 glass-input rounded-xl text-xs"
-                    />
+                  <div className="space-y-1.5 mt-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Customer Name"
+                        className="px-3 py-1.5 glass-input rounded-xl text-xs"
+                      />
+                      <input
+                        type="tel"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        placeholder="Mobile (Compulsory) *"
+                        maxLength={13}
+                        required
+                        className="px-3 py-1.5 glass-input rounded-xl text-xs border-amber-500/40 focus:border-amber-400 placeholder:text-amber-300/60"
+                      />
+                    </div>
+                    <p className="text-[10px] text-amber-300/80 font-medium flex items-center gap-1">
+                      <span>* 10-digit mobile number is mandatory to generate bill</span>
+                    </p>
                   </div>
                 )}
               </div>
