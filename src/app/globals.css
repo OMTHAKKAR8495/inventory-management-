@@ -180,14 +180,24 @@ body {
     visibility: visible !important;
     position: relative !important;
     width: 100% !important;
-    max-width: 100% !important;
-    padding: 10mm 15mm !important;
-    margin: 0 !important;
+    max-width: 58mm !important;
+    padding: 2mm !important;
+    margin: 0 auto !important;
     background: #ffffff !important;
     color: #000000 !important;
     border: none !important;
     box-shadow: none !important;
     page-break-inside: avoid !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Support standard A4/A5 if wide layout is needed or auto-scale to printer roll */
+  @media print and (min-width: 100mm) {
+    #printable-receipt {
+      max-width: 100% !important;
+      padding: 8mm 12mm !important;
+    }
   }
 
   #printable-receipt * {
@@ -196,7 +206,7 @@ body {
   }
 
   @page {
-    size: A4 portrait;
-    margin: 0;
+    size: auto;
+    margin: 0mm;
   }
 }
