@@ -31,6 +31,7 @@ import {
   Download,
   Layers,
   X,
+  Pencil,
 } from "lucide-react";
 import { Product, Customer, CartItem, PaymentMethod, SavedBill } from "@/lib/types";
 import { generateInvoicePDF } from "@/lib/exportUtils";
@@ -88,6 +89,17 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
   const [passedInvoicesStartDate, setPassedInvoicesStartDate] = useState<string>("");
   const [passedInvoicesEndDate, setPassedInvoicesEndDate] = useState<string>("");
   const [showDateRangeFilter, setShowDateRangeFilter] = useState<boolean>(false);
+
+  // Edit Passed Bill & Payment Mode Modal State
+  const [showEditInvoiceModal, setShowEditInvoiceModal] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<any | null>(null);
+  const [editCustomerName, setEditCustomerName] = useState("");
+  const [editCustomerPhone, setEditCustomerPhone] = useState("");
+  const [editPaymentMethod, setEditPaymentMethod] = useState<"cash" | "upi" | "khata" | "card">("cash");
+  const [editPaymentStatus, setEditPaymentStatus] = useState<"paid" | "unpaid">("paid");
+  const [editNotes, setEditNotes] = useState("");
+  const [isSavingInvoiceEdit, setIsSavingInvoiceEdit] = useState(false);
+  const [editError, setEditError] = useState("");
 
   // Load saved bills from localStorage on initial render
   useEffect(() => {
@@ -796,6 +808,87 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
       doc.save(`Invoice_${inv.invoice_number}.pdf`);
     } catch (e) {
       console.error("Failed to download PDF:", e);
+    }
+  };
+
+  // Helper: Open Edit Passed Bill & Payment Mode Modal
+  const handleOpenEditInvoiceModal = (inv: any) => {
+    setEditingInvoice(inv);
+    setEditCustomerName(inv.customer_name || "");
+    setEditCustomerPhone(inv.customer_phone || "");
+    const method = (inv.payment_method || "cash").toLowerCase();
+    setEditPaymentMethod(method === "khata" ? "khata" : method === "upi" ? "upi" : method === "card" ? "card" : "cash");
+    setEditPaymentStatus((inv.payment_status || (method === "khata" ? "unpaid" : "paid")).toLowerCase() as any);
+    setEditNotes(inv.notes || "");
+    setEditError("");
+    setShowEditInvoiceModal(true);
+  };
+
+  // Helper: Save Invoice Updates to Server & Khata Ledger
+  const handleSaveInvoiceEdit = async () => {
+    if (!editingInvoice) return;
+    if (!editCustomerName.trim()) {
+      setEditError("Customer Name is required.");
+      return;
+    }
+    const cleanPhone = editCustomerPhone.replace(/\D/g, "");
+    if (!editCustomerPhone.trim() || cleanPhone.length < 10) {
+      setEditError("Customer 10-digit mobile number is required.");
+      return;
+    }
+
+    setIsSavingInvoiceEdit(true);
+    setEditError("");
+    try {
+      const res = await fetch("/api/pos/invoices", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invoiceId: editingInvoice.id,
+          customerName: editCustomerName.trim(),
+          customerPhone: editCustomerPhone.trim(),
+          paymentMethod: editPaymentMethod,
+          paymentStatus: editPaymentStatus,
+          notes: editNotes.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setEditError(data.error || "Failed to update invoice.");
+        return;
+      }
+
+      // Success feedback
+      setShowEditInvoiceModal(false);
+      setFeedback({
+        type: "success",
+        text: `Invoice #${editingInvoice.invoice_number} updated successfully! Mode changed to ${editPaymentMethod.toUpperCase()}.`,
+      });
+
+      // Reload passed invoices
+      await loadPassedInvoices();
+
+      // If completed invoice modal is active for this invoice, update it too
+      if (completedInvoice && completedInvoice.id === editingInvoice.id) {
+        setCompletedInvoice((prev: any) => ({
+          ...prev,
+          customer_name: editCustomerName.trim(),
+          customer_phone: editCustomerPhone.trim(),
+          payment_method: editPaymentMethod,
+          payment_status: editPaymentStatus,
+          notes: editNotes.trim(),
+        }));
+      }
+
+      if (onSaleCompleted) {
+        onSaleCompleted();
+      }
+    } catch (err: any) {
+      console.error("Save invoice edit error:", err);
+      setEditError(err.message || "An unexpected error occurred while saving invoice changes.");
+    } finally {
+      setIsSavingInvoiceEdit(false);
     }
   };
 
@@ -2273,13 +2366,26 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                         </button>
                       </div>
 
-                      <button
-                        onClick={() => handleOpenPassedInvoiceModal(inv)}
-                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        View Bill
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditInvoiceModal(inv)}
+                          className="px-2.5 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-blue-500/30 cursor-pointer"
+                          title="Edit Bill details & change payment mode (Cash, UPI, Khata)"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-blue-400" />
+                          Edit Bill
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleOpenPassedInvoiceModal(inv)}
+                          className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          View Bill
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -2577,7 +2683,21 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
 
             {/* Action Buttons */}
             <div className="no-print p-4 bg-white/5 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (completedInvoice) {
+                      handleOpenEditInvoiceModal(completedInvoice);
+                    }
+                  }}
+                  className="px-3.5 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                  title="Edit customer details or change payment mode"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-blue-400" />
+                  Edit Bill / Mode
+                </button>
+
                 <button
                   onClick={() => {
                     try {
@@ -2589,10 +2709,10 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                       window.print();
                     }
                   }}
-                  className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-slate-100 border border-white/10 rounded-xl text-xs font-bold transition flex items-center gap-2"
+                  className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-slate-100 border border-white/10 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Printer className="w-4 h-4" />
-                  Print Tax Receipt (1 Page)
+                  <Printer className="w-3.5 h-3.5" />
+                  Print Receipt
                 </button>
 
                 <button
@@ -2600,18 +2720,265 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                     const doc = generateInvoicePDF(completedInvoice);
                     doc.save(`Invoice_${completedInvoice.invoice_number}.pdf`);
                   }}
-                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md shadow-emerald-600/20"
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 cursor-pointer"
                 >
-                  <FileDown className="w-4 h-4" />
-                  Download PDF Copy
+                  <FileDown className="w-3.5 h-3.5" />
+                  Download PDF
                 </button>
               </div>
 
               <button
                 onClick={() => setShowReceiptModal(false)}
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-blue-600/20"
+                className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition border border-white/10 cursor-pointer"
               >
-                New Sale
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Passed Invoice & Payment Mode Modal */}
+      {showEditInvoiceModal && editingInvoice && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="glass-modal rounded-3xl max-w-lg w-full shadow-2xl border border-white/15 overflow-hidden text-slate-100 flex flex-col max-h-[92vh]">
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 border-b border-white/10 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center">
+                  <Pencil className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Edit Bill & Payment Mode</h3>
+                  <p className="text-[11px] text-blue-300">
+                    Invoice #{editingInvoice.invoice_number} • Total: ₹
+                    {Number(editingInvoice.grand_total).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEditInvoiceModal(false)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 overflow-y-auto text-xs">
+              {editError && (
+                <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-xl text-red-300 flex items-center gap-2 font-bold animate-shake">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                  <span>{editError}</span>
+                </div>
+              )}
+
+              {/* Customer Details */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                    Customer Name: <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editCustomerName}
+                    onChange={(e) => setEditCustomerName(e.target.value)}
+                    placeholder="Customer Name"
+                    className="w-full px-3 py-2 glass-input rounded-xl text-xs font-bold text-slate-100 placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                    Customer Mobile: <span className="text-red-400">*</span>
+                  </label>
+                  <div className="flex items-center glass-input rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20">
+                    <span className="px-2.5 py-2 bg-white/10 text-slate-400 font-bold text-xs border-r border-white/10 select-none">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      value={editCustomerPhone}
+                      onChange={(e) => setEditCustomerPhone(e.target.value)}
+                      placeholder="10-digit number"
+                      maxLength={14}
+                      className="w-full px-2.5 py-2 text-xs font-bold text-slate-100 outline-hidden bg-transparent placeholder:text-slate-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Mode Selector */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 mb-1.5">
+                  Select Payment Mode:
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditPaymentMethod("cash");
+                      setEditPaymentStatus("paid");
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between gap-1 cursor-pointer ${
+                      editPaymentMethod === "cash"
+                        ? "bg-emerald-600/30 border-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <Banknote className={`w-4 h-4 ${editPaymentMethod === "cash" ? "text-emerald-400" : "text-slate-400"}`} />
+                      {editPaymentMethod === "cash" && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+                    </div>
+                    <span className="font-bold text-xs text-slate-100">Cash</span>
+                    <span className="text-[10px] text-slate-400">Instant Paid</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditPaymentMethod("upi");
+                      setEditPaymentStatus("paid");
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between gap-1 cursor-pointer ${
+                      editPaymentMethod === "upi"
+                        ? "bg-blue-600/30 border-blue-500 text-white shadow-md shadow-blue-500/20"
+                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <Smartphone className={`w-4 h-4 ${editPaymentMethod === "upi" ? "text-blue-400" : "text-slate-400"}`} />
+                      {editPaymentMethod === "upi" && <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />}
+                    </div>
+                    <span className="font-bold text-xs text-slate-100">UPI / QR</span>
+                    <span className="text-[10px] text-slate-400">GPay / PhonePe</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditPaymentMethod("khata");
+                      setEditPaymentStatus("unpaid");
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between gap-1 cursor-pointer ${
+                      editPaymentMethod === "khata"
+                        ? "bg-purple-600/30 border-purple-500 text-white shadow-md shadow-purple-500/20"
+                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <BookOpen className={`w-4 h-4 ${editPaymentMethod === "khata" ? "text-purple-400" : "text-slate-400"}`} />
+                      {editPaymentMethod === "khata" && <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />}
+                    </div>
+                    <span className="font-bold text-xs text-slate-100">Khata Credit</span>
+                    <span className="text-[10px] text-purple-300">Track in Ledger</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditPaymentMethod("card");
+                      setEditPaymentStatus("paid");
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between gap-1 cursor-pointer ${
+                      editPaymentMethod === "card"
+                        ? "bg-amber-600/30 border-amber-500 text-white shadow-md shadow-amber-500/20"
+                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <CreditCard className={`w-4 h-4 ${editPaymentMethod === "card" ? "text-amber-400" : "text-slate-400"}`} />
+                      {editPaymentMethod === "card" && <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />}
+                    </div>
+                    <span className="font-bold text-xs text-slate-100">Card / POS</span>
+                    <span className="text-[10px] text-slate-400">Card Swipe</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Payment Status Toggle */}
+              <div className="flex items-center justify-between p-3 bg-white/5 rounded-2xl border border-white/10">
+                <div>
+                  <span className="font-bold text-slate-200 block text-xs">Payment Settlement Status:</span>
+                  <span className="text-[10px] text-slate-400">
+                    {editPaymentStatus === "paid"
+                      ? "Bill is fully received and settled."
+                      : "Bill is unpaid and added as pending customer debt."}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setEditPaymentStatus("paid")}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                      editPaymentStatus === "paid" ? "bg-emerald-600 text-white" : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    PAID
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditPaymentStatus("unpaid")}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                      editPaymentStatus === "unpaid" ? "bg-purple-600 text-white" : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    UNPAID / CREDIT
+                  </button>
+                </div>
+              </div>
+
+              {/* Note / Remarks */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                  Remark / Reason for Edit:
+                </label>
+                <textarea
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  placeholder="e.g. Customer paid via Google Pay later, switched from cash..."
+                  rows={2}
+                  className="w-full px-3 py-2 glass-input rounded-xl text-xs font-medium text-slate-100 placeholder:text-slate-500 resize-none"
+                />
+              </div>
+
+              {/* Real-time Ledger Notice Alert */}
+              <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-[11px] text-blue-300 flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Automatic Khata Synchronization:</strong> Changing payment mode between Khata Credit and Cash/UPI will automatically update the customer&apos;s Khata balance and ledger transaction entries.
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-white/5 border-t border-white/10 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowEditInvoiceModal(false)}
+                disabled={isSavingInvoiceEdit}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-slate-300 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveInvoiceEdit}
+                disabled={isSavingInvoiceEdit}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-blue-600/30 cursor-pointer disabled:opacity-50"
+              >
+                {isSavingInvoiceEdit ? (
+                  <>
+                    <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Saving Changes...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Save Bill Updates</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
