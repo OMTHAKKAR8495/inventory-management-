@@ -39,9 +39,17 @@ interface BillingCounterViewProps {
   user: any;
   catalogVersion?: number;
   onSaleCompleted?: () => void;
+  initialViewMode?: "counter" | "saved_bills" | "passed_bills";
+  onViewModeChanged?: (mode: "counter" | "saved_bills" | "passed_bills") => void;
 }
 
-export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, catalogVersion = 0, onSaleCompleted }) => {
+export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
+  user,
+  catalogVersion = 0,
+  onSaleCompleted,
+  initialViewMode = "counter",
+  onViewModeChanged,
+}) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -50,7 +58,20 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
   const [isSearching, setIsSearching] = useState(false);
 
   // View Mode: "counter" (Live POS billing) vs "saved_bills" (Held/Draft bills) vs "passed_bills" (Completed Invoices History)
-  const [viewMode, setViewMode] = useState<"counter" | "saved_bills" | "passed_bills">("counter");
+  const [viewMode, setViewModeState] = useState<"counter" | "saved_bills" | "passed_bills">(initialViewMode);
+
+  const setViewMode = (mode: "counter" | "saved_bills" | "passed_bills") => {
+    setViewModeState(mode);
+    if (onViewModeChanged) {
+      onViewModeChanged(mode);
+    }
+  };
+
+  React.useEffect(() => {
+    if (initialViewMode) {
+      setViewModeState(initialViewMode);
+    }
+  }, [initialViewMode]);
 
   // Saved Bills State & Filters
   const [savedBills, setSavedBills] = useState<SavedBill[]>([]);

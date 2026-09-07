@@ -27,6 +27,7 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [activeTab, setActiveTabState] = useState<TabType>("dashboard");
+  const [posViewMode, setPosViewMode] = useState<"counter" | "saved_bills" | "passed_bills">("counter");
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [isMetricsLoading, setIsMetricsLoading] = useState(true);
 
@@ -362,6 +363,11 @@ export default function Home() {
         onToggleDarkMode={toggleDarkMode}
         metrics={metrics}
         onSwitchRoleQuickDemo={handleQuickRoleSwitch}
+        onNavigateToPassedBills={() => {
+          setPosViewMode("passed_bills");
+          setActiveTab("pos");
+        }}
+        posViewMode={posViewMode}
         onSelectAlertItem={(id) => {
           setActiveTab("inventory");
         }}
@@ -455,6 +461,8 @@ export default function Home() {
           <BillingCounterView
             user={user}
             catalogVersion={catalogVersion}
+            initialViewMode={posViewMode}
+            onViewModeChanged={(mode) => setPosViewMode(mode)}
             onSaleCompleted={() => {
               fetchMetrics();
               setCatalogVersion((v) => v + 1);

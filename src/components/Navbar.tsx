@@ -44,6 +44,8 @@ interface NavbarProps {
   onSelectAlertItem?: (productId: string) => void;
   isDarkMode?: boolean;
   onToggleDarkMode?: () => void;
+  onNavigateToPassedBills?: () => void;
+  posViewMode?: "counter" | "saved_bills" | "passed_bills";
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -62,6 +64,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectAlertItem,
   isDarkMode = false,
   onToggleDarkMode,
+  onNavigateToPassedBills,
+  posViewMode = "counter",
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -123,15 +127,39 @@ export const Navbar: React.FC<NavbarProps> = ({
               Catalog
             </button>
             <button
-              onClick={() => setActiveTab("pos")}
+              onClick={() => {
+                setActiveTab("pos");
+              }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === "pos"
+                activeTab === "pos" && posViewMode !== "passed_bills"
                   ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
                   : "text-emerald-400 hover:bg-emerald-500/15 font-bold"
               }`}
             >
               <Store className="w-3.5 h-3.5" />
               Counter POS
+            </button>
+            <button
+              onClick={() => {
+                if (onNavigateToPassedBills) {
+                  onNavigateToPassedBills();
+                } else {
+                  setActiveTab("pos");
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === "pos" && posViewMode === "passed_bills"
+                  ? "bg-teal-600 text-white shadow-md shadow-teal-600/30 font-bold"
+                  : "text-teal-300 hover:text-white hover:bg-teal-500/15 font-bold"
+              }`}
+            >
+              <Receipt className="w-3.5 h-3.5 text-teal-400" />
+              <span>Passed Bills</span>
+              {(metrics?.passed_bills_count ?? 0) > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-400 text-slate-950">
+                  {metrics?.passed_bills_count}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setActiveTab("procurement")}
@@ -453,13 +481,39 @@ export const Navbar: React.FC<NavbarProps> = ({
             Catalog
           </button>
           <button
-            onClick={() => setActiveTab("pos")}
+            onClick={() => {
+              setActiveTab("pos");
+            }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition ${
-              activeTab === "pos" ? "bg-emerald-600 text-white font-bold" : "text-emerald-400 bg-emerald-500/15 hover:bg-emerald-500/25 font-bold"
+              activeTab === "pos" && posViewMode !== "passed_bills"
+                ? "bg-emerald-600 text-white font-bold"
+                : "text-emerald-400 bg-emerald-500/15 hover:bg-emerald-500/25 font-bold"
             }`}
           >
             <Store className="w-3.5 h-3.5" />
             Counter POS
+          </button>
+          <button
+            onClick={() => {
+              if (onNavigateToPassedBills) {
+                onNavigateToPassedBills();
+              } else {
+                setActiveTab("pos");
+              }
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition ${
+              activeTab === "pos" && posViewMode === "passed_bills"
+                ? "bg-teal-600 text-white font-bold"
+                : "text-teal-300 bg-teal-500/15 hover:bg-teal-500/25 font-bold"
+            }`}
+          >
+            <Receipt className="w-3.5 h-3.5" />
+            <span>Passed Bills</span>
+            {(metrics?.passed_bills_count ?? 0) > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-400 text-slate-950">
+                {metrics?.passed_bills_count}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab("procurement")}

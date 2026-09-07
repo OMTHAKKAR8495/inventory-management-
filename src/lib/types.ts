@@ -81,6 +81,7 @@ export interface DashboardMetrics {
   in_stock_count: number;
   expiring_soon_count: number;
   trash_count: number;
+  passed_bills_count?: number;
   last_backup_at?: string | null;
   database_file_size_kb?: number;
   // Admin only metrics (in ₹):

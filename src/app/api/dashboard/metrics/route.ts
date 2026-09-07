@@ -19,6 +19,11 @@ export async function GET() {
     );
     const trashCount = trashRecord?.count ? Number(trashRecord.count) : 0;
 
+    const invoiceRecord = await queryOne<{ count: number }>(
+      "SELECT COUNT(*) as count FROM invoices"
+    );
+    const passedBillsCount = invoiceRecord?.count ? Number(invoiceRecord.count) : 0;
+
     let totalProducts = products.length;
     let totalStockUnits = 0;
     let lowStockCount = 0;
@@ -127,6 +132,7 @@ export async function GET() {
       in_stock_count: inStockCount,
       expiring_soon_count: expiringSoonCount,
       trash_count: trashCount,
+      passed_bills_count: passedBillsCount,
       last_backup_at: new Date().toISOString(),
       total_cost_value: isAdmin ? Number(totalCostVal.toFixed(2)) : undefined,
       total_sales_value: isAdmin ? Number(totalSalesVal.toFixed(2)) : undefined,
