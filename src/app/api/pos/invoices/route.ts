@@ -352,7 +352,7 @@ export async function PATCH(req: Request) {
         `UPDATE invoices
          SET customer_id = ?, customer_name = ?, customer_phone = ?,
              subtotal = ?, discount_amount = ?, tax_amount = ?, grand_total = ?,
-             payment_method = ?, payment_status = ?, notes = ?, updated_at = ?
+             payment_method = ?, payment_status = ?, notes = ?
          WHERE id = ?`,
         [
           customerId || null,
@@ -365,7 +365,6 @@ export async function PATCH(req: Request) {
           newMethod,
           newStatus,
           notes !== undefined ? (notes ? notes.trim() : null) : existingInvoice.notes,
-          now,
           invoiceId,
         ]
       );
