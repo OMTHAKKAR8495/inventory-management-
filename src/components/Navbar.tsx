@@ -75,21 +75,21 @@ export const Navbar: React.FC<NavbarProps> = ({
   const trashCount = metrics?.trash_count || 0;
 
   return (
-    <header className="sticky top-0 z-40 bg-[#070a12]/80 backdrop-blur-xl border-b border-white/10 shadow-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="sticky top-0 z-40 bg-[#070a12]/90 dark:bg-[#070a12]/95 backdrop-blur-xl border-b border-white/10 shadow-xl transition-colors">
+      <div className="w-full px-2 sm:px-4 lg:px-6">
+        <div className="flex items-center justify-between h-16 gap-2">
           {/* Brand Logo & Name */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 border border-white/20">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 border border-white/20 shrink-0">
               <Store className="w-4 h-4" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm sm:text-base font-black tracking-tight text-white leading-tight">
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-sm font-black tracking-tight text-white leading-tight">
                   PROVISION<span className="text-blue-400">SMART</span>
                 </h1>
                 <span
-                  className={`text-[9px] sm:text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full border ${
+                  className={`text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-full border ${
                     isAdmin
                       ? "bg-purple-500/15 text-purple-300 border-purple-500/30"
                       : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
@@ -98,15 +98,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {isAdmin ? "Admin" : "Staff"}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block font-medium">Wholesale Provision System (₹)</p>
+              <p className="text-[10px] text-slate-400 hidden 2xl:block font-medium">Wholesale Provision System (₹)</p>
             </div>
           </div>
 
           {/* Navigation Tabs */}
-          <nav className="hidden xl:flex items-center gap-1 bg-slate-900/60 backdrop-blur-md p-1 rounded-xl border border-white/10 shadow-inner">
+          <nav className="hidden xl:flex items-center gap-0.5 2xl:gap-1 bg-slate-900/60 backdrop-blur-md p-1 rounded-xl border border-white/10 shadow-inner shrink-0">
             <button
               onClick={() => setActiveTab("dashboard")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "dashboard"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
                   : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -117,7 +117,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => setActiveTab("inventory")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "inventory"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
                   : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -130,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => {
                 setActiveTab("pos");
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "pos" && posViewMode !== "passed_bills"
                   ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
                   : "text-emerald-400 hover:bg-emerald-500/15 font-bold"
@@ -147,7 +147,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setActiveTab("pos");
                 }
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "pos" && posViewMode === "passed_bills"
                   ? "bg-teal-600 text-white shadow-md shadow-teal-600/30 font-bold"
                   : "text-teal-300 hover:text-white hover:bg-teal-500/15 font-bold"
@@ -163,7 +163,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => setActiveTab("procurement")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "procurement"
                   ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
                   : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -175,7 +175,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {isAdmin && (
               <button
                 onClick={() => setActiveTab("khata")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === "khata"
                     ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
                     : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -187,7 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
             <button
               onClick={() => setActiveTab("bulk")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "bulk"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
                   : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -198,7 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => setActiveTab("audit")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "audit"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
                   : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -209,26 +209,26 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </nav>
 
-          {/* Right Controls: Barcode, Notifications, User, Quick Switch */}
-          <div className="flex items-center gap-2">
+          {/* Right Controls: Barcode, Demo, Tasks, Notifications, Dark Mode, User */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Barcode Scanner Shortcut */}
             {onOpenBarcodeScanner && (
               <button
                 onClick={onOpenBarcodeScanner}
-                className="p-2 text-slate-300 hover:text-blue-400 rounded-xl hover:bg-white/10 transition border border-transparent hover:border-white/10"
+                className="p-1.5 sm:p-2 text-slate-300 hover:text-blue-400 rounded-xl hover:bg-white/10 transition border border-transparent hover:border-white/10 cursor-pointer"
                 title="Open Barcode Scanner"
               >
-                <ScanBarcode className="w-5 h-5" />
+                <ScanBarcode className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             )}
 
             {/* Quick Demo Switcher */}
             {onSwitchRoleQuickDemo && (
-              <div className="hidden lg:flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-xl">
+              <div className="hidden 2xl:flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-xl">
                 <span className="text-[10px] font-medium text-amber-300">Demo:</span>
                 <button
                   onClick={() => onSwitchRoleQuickDemo("admin")}
-                  className={`text-[10px] px-1.5 py-0.5 rounded-lg font-medium transition ${
+                  className={`text-[10px] px-1.5 py-0.5 rounded-lg font-medium transition cursor-pointer ${
                     isAdmin ? "bg-amber-500 text-slate-950 font-bold" : "text-amber-300 hover:bg-amber-500/20"
                   }`}
                 >
@@ -236,7 +236,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
                 <button
                   onClick={() => onSwitchRoleQuickDemo("manager")}
-                  className={`text-[10px] px-1.5 py-0.5 rounded-lg font-medium transition ${
+                  className={`text-[10px] px-1.5 py-0.5 rounded-lg font-medium transition cursor-pointer ${
                     !isAdmin ? "bg-emerald-500 text-slate-950 font-bold" : "text-amber-300 hover:bg-amber-500/20"
                   }`}
                 >
@@ -249,15 +249,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             {onOpenTasksModal && (
               <button
                 onClick={() => onOpenTasksModal()}
-                className="relative flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/30 rounded-xl text-xs font-bold transition"
+                className="relative flex items-center gap-1 px-2 sm:px-2.5 py-1.5 bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/30 rounded-xl text-xs font-bold transition cursor-pointer"
                 title={isAdmin ? "Dispatch instructions or order products for floor manager" : "View active tasks from Admin"}
               >
-                <MessageSquare className="w-4 h-4 text-blue-400" />
-                <span className="hidden sm:inline">
-                  {isAdmin ? "Dispatch Tasks" : "Work Orders"}
+                <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
+                <span className="hidden md:inline">
+                  {isAdmin ? "Dispatch" : "Tasks"}
                 </span>
                 {pendingTasksCount > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black flex items-center justify-center animate-pulse">
+                  <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black flex items-center justify-center animate-pulse">
                     {pendingTasksCount}
                   </span>
                 )}
@@ -352,7 +352,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={onToggleDarkMode}
-                className="p-2 text-slate-300 hover:text-amber-300 rounded-xl hover:bg-white/10 transition border border-white/10 hover:border-white/20 flex items-center justify-center cursor-pointer shadow-sm"
+                className="p-1.5 sm:p-2 text-slate-300 hover:text-amber-300 rounded-xl hover:bg-white/10 transition border border-white/10 hover:border-white/20 flex items-center justify-center cursor-pointer shadow-sm shrink-0"
                 title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
                 aria-label="Toggle Theme"
               >
@@ -365,26 +365,26 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             {/* User Profile & Menu */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => {
                   setShowUserMenu(!showUserMenu);
                   setShowNotifications(false);
                 }}
-                className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-xl hover:bg-white/10 transition border border-transparent hover:border-white/10"
+                className="flex items-center gap-1.5 p-1 sm:px-2.5 sm:py-1 rounded-xl hover:bg-white/10 transition border border-transparent hover:border-white/10 cursor-pointer"
               >
                 <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-sm ${
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0 ${
                     isAdmin ? "bg-purple-600" : "bg-emerald-600"
                   }`}
                 >
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <div className="text-left hidden sm:block">
-                  <p className="text-xs font-semibold text-slate-200 leading-tight">{user.name}</p>
+                <div className="text-left hidden md:block">
+                  <p className="text-xs font-semibold text-slate-200 leading-tight truncate max-w-[90px] lg:max-w-[120px]">{user.name}</p>
                   <p className="text-[10px] text-slate-400 capitalize">{user.role}</p>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               </button>
 
               {showUserMenu && (
