@@ -25,8 +25,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.className}>
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
-        {children}
+      <body className="min-h-screen bg-[#070a12] text-slate-100 antialiased selection:bg-blue-600 selection:text-white relative bg-radial-glow bg-tech-grid">
+        {/* Ambient Top Glow / Copper & Indigo Orbs */}
+        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+          <div className="absolute -top-40 -left-40 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl" />
+          <div className="absolute top-20 right-10 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-10 left-1/3 w-[600px] h-[400px] bg-blue-600/10 rounded-full blur-3xl" />
+        </div>
+        <div className="relative z-10 flex flex-col min-h-screen">
+          {children}
+        </div>
       </body>
     </html>
   );

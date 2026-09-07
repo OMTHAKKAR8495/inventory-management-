@@ -130,28 +130,28 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 sm:p-6 relative overflow-hidden">
-      {/* Subtle Background Elements */}
-      <div className="absolute top-1/4 -left-20 w-96 h-96 bg-blue-100/50 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-indigo-100/50 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-[#070a12] bg-radial-glow bg-tech-grid flex flex-col justify-center items-center p-4 sm:p-6 relative overflow-hidden text-slate-100">
+      {/* Ambient Radial Lights */}
+      <div className="absolute top-1/4 -left-20 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-md w-full relative z-10 space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/20">
+          <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/25 border border-white/20">
             <Store className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            PROVISION<span className="text-blue-600">SMART</span>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            PROVISION<span className="text-blue-400">SMART</span>
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500">
+          <p className="text-xs sm:text-sm text-slate-400">
             Smart Inventory & Wholesale Provision Management System
           </p>
         </div>
 
         {/* 1-Click Fast Demo Logins Card */}
-        <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm space-y-3">
-          <div className="flex items-center gap-1.5 text-blue-600">
+        <div className="glass-panel rounded-3xl p-5 border border-white/10 shadow-2xl space-y-3">
+          <div className="flex items-center gap-1.5 text-blue-400">
             <Sparkles className="w-4 h-4" />
             <span className="text-[11px] font-bold uppercase tracking-wider">Instant 1-Click Demo Login</span>
           </div>
@@ -161,42 +161,42 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               type="button"
               onClick={() => handleLogin("admin@provision.store", "admin123")}
               disabled={isLoading}
-              className="p-3 bg-purple-50/60 hover:bg-purple-100/80 border border-purple-200 hover:border-purple-300 rounded-2xl text-left transition group"
+              className="p-3 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded-2xl text-left transition group cursor-pointer"
             >
               <div className="flex items-center justify-between">
-                <ShieldCheck className="w-4 h-4 text-purple-600" />
-                <span className="text-[9px] font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded">
+                <ShieldCheck className="w-4 h-4 text-purple-400" />
+                <span className="text-[9px] font-bold uppercase tracking-wider text-purple-300 bg-purple-500/20 px-1.5 py-0.5 rounded border border-purple-500/30">
                   Admin
                 </span>
               </div>
-              <div className="text-xs font-bold text-slate-900 mt-1.5">Store Admin</div>
-              <div className="text-[10px] text-purple-700 font-medium">Full financials & users</div>
+              <div className="text-xs font-bold text-white mt-1.5">Store Admin</div>
+              <div className="text-[10px] text-purple-300/80 font-medium">Full financials & users</div>
             </button>
 
             <button
               type="button"
               onClick={() => handleLogin("manager@provision.store", "manager123")}
               disabled={isLoading}
-              className="p-3 bg-emerald-50/60 hover:bg-emerald-100/80 border border-emerald-200 hover:border-emerald-300 rounded-2xl text-left transition group"
+              className="p-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 rounded-2xl text-left transition group cursor-pointer"
             >
               <div className="flex items-center justify-between">
-                <UserCheck className="w-4 h-4 text-emerald-600" />
-                <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
+                <UserCheck className="w-4 h-4 text-emerald-400" />
+                <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30">
                   Staff
                 </span>
               </div>
-              <div className="text-xs font-bold text-slate-900 mt-1.5">Inventory Mgr</div>
-              <div className="text-[10px] text-emerald-700 font-medium">Stock & bulk updates</div>
+              <div className="text-xs font-bold text-white mt-1.5">Inventory Mgr</div>
+              <div className="text-[10px] text-emerald-300/80 font-medium">Stock & bulk updates</div>
             </button>
           </div>
         </div>
 
         {/* Standard Login Card */}
-        <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-sm space-y-4">
-          <h2 className="text-sm font-bold text-slate-900">Sign in to your account</h2>
+        <div className="glass-panel rounded-3xl p-6 sm:p-7 border border-white/10 shadow-2xl space-y-4">
+          <h2 className="text-sm font-bold text-white">Sign in to your account</h2>
 
           {errorMsg && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
+            <div className="p-3 bg-red-500/15 border border-red-500/30 text-red-300 text-xs rounded-xl flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               {errorMsg}
             </div>
@@ -210,7 +210,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             className="space-y-4"
           >
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+              <label className="block text-xs font-bold text-slate-300 mb-1">Email Address</label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
@@ -219,14 +219,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@provision.store"
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 text-slate-900 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden text-xs font-medium"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-900/80 text-white placeholder:text-slate-500 rounded-xl border border-white/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden text-xs font-medium"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-bold text-slate-700">Password</label>
+                <label className="text-xs font-bold text-slate-300">Password</label>
                 <button
                   type="button"
                   onClick={() => {
@@ -234,7 +234,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     setForgotMsg(null);
                     setForgotStep(1);
                   }}
-                  className="text-[11px] font-semibold text-blue-600 hover:text-blue-700"
+                  className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 cursor-pointer"
                 >
                   Forgot Password?
                 </button>
@@ -247,7 +247,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 text-slate-900 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden text-xs font-medium"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-900/80 text-white placeholder:text-slate-500 rounded-xl border border-white/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden text-xs font-medium"
                 />
               </div>
             </div>
@@ -255,7 +255,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-500/25 border border-white/20 transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {isLoading ? (
                 "Authenticating..."
@@ -270,23 +270,23 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         </div>
 
         {/* Security & System Info Footer */}
-        <div className="text-center text-[11px] text-slate-400">
+        <div className="text-center text-[11px] text-slate-500">
           Role-Based Access Control • Supabase Cloud PostgreSQL • Wholesale Ready
         </div>
       </div>
 
       {/* Forgot Password Modal */}
       {showForgotModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-fade-in text-slate-900">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-panel bg-[#0c1222]/95 border border-white/15 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-fade-in text-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-blue-600" />
-                <h3 className="text-sm font-bold">Password Recovery</h3>
+                <KeyRound className="w-5 h-5 text-blue-400" />
+                <h3 className="text-sm font-bold text-white">Password Recovery</h3>
               </div>
               <button
                 onClick={() => setShowForgotModal(false)}
-                className="text-slate-400 hover:text-slate-600 text-xs font-bold"
+                className="text-slate-400 hover:text-white text-xs font-bold cursor-pointer"
               >
                 Close
               </button>
@@ -296,69 +296,76 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               <div
                 className={`p-3 rounded-xl text-xs flex items-center gap-2 border ${
                   forgotMsg.type === "success"
-                    ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                    : "bg-red-50 text-red-800 border-red-200"
+                    ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                    : "bg-red-500/15 text-red-300 border-red-500/30"
                 }`}
               >
-                {forgotMsg.type === "success" ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                {forgotMsg.type === "success" ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                )}
                 {forgotMsg.text}
               </div>
             )}
 
             {forgotStep === 1 ? (
               <form onSubmit={handleForgotPasswordRequest} className="space-y-4">
-                <p className="text-xs text-slate-500">
-                  Enter your registered account email to initiate a reset token.
+                <p className="text-xs text-slate-400">
+                  Enter your registered account email to initiate a secure password reset.
                 </p>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Account Email</label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Email Address</label>
                   <input
                     type="email"
                     required
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="e.g. admin@provision.store"
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 outline-hidden focus:border-blue-500"
+                    placeholder="your-account@provision.store"
+                    className="w-full px-3 py-2 bg-slate-900 text-white rounded-xl border border-white/10 focus:border-blue-500 outline-hidden text-xs"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={isForgotSubmitting}
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition disabled:opacity-50"
+                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs shadow-md transition disabled:opacity-50 cursor-pointer"
                 >
-                  {isForgotSubmitting ? "Generating Token..." : "Generate Reset Token"}
+                  {isForgotSubmitting ? "Generating token..." : "Send Reset Token"}
                 </button>
               </form>
             ) : (
               <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+                <p className="text-xs text-slate-400">
+                  Enter the verification token along with your new password.
+                </p>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Reset Token</label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">Reset Token</label>
                   <input
                     type="text"
                     required
                     value={resetToken}
                     onChange={(e) => setResetToken(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-blue-700 outline-hidden focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-slate-900 text-white rounded-xl border border-white/10 font-mono text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">New Password (min 6 chars)</label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">New Password</label>
                   <input
                     type="password"
                     required
                     minLength={6}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter new password"
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-900 outline-hidden focus:border-blue-500"
+                    placeholder="At least 6 characters"
+                    className="w-full px-3 py-2 bg-slate-900 text-white rounded-xl border border-white/10 text-xs"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={isForgotSubmitting}
-                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition disabled:opacity-50"
+                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-md transition disabled:opacity-50 cursor-pointer"
                 >
-                  {isForgotSubmitting ? "Updating Password..." : "Set New Password"}
+                  {isForgotSubmitting ? "Updating Password..." : "Update Password & Sign In"}
                 </button>
               </form>
             )}
