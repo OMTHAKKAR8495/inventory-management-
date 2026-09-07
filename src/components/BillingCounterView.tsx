@@ -98,6 +98,23 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
   const [editPaymentMethod, setEditPaymentMethod] = useState<"cash" | "upi" | "khata" | "card">("cash");
   const [editPaymentStatus, setEditPaymentStatus] = useState<"paid" | "unpaid">("paid");
   const [editNotes, setEditNotes] = useState("");
+  const [editItems, setEditItems] = useState<
+    Array<{
+      id?: string;
+      productId: string;
+      productName: string;
+      sku: string;
+      unit: string;
+      quantity: number;
+      unitPrice: number;
+      costPrice: number;
+      totalPrice: number;
+    }>
+  >([]);
+  const [editDiscountAmount, setEditDiscountAmount] = useState<number>(0);
+  const [editTaxAmount, setEditTaxAmount] = useState<number>(0);
+  const [editProductSearch, setEditProductSearch] = useState("");
+  const [showAddProductDropdown, setShowAddProductDropdown] = useState(false);
   const [isSavingInvoiceEdit, setIsSavingInvoiceEdit] = useState(false);
   const [editError, setEditError] = useState("");
 
@@ -820,8 +837,98 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
     setEditPaymentMethod(method === "khata" ? "khata" : method === "upi" ? "upi" : method === "card" ? "card" : "cash");
     setEditPaymentStatus((inv.payment_status || (method === "khata" ? "unpaid" : "paid")).toLowerCase() as any);
     setEditNotes(inv.notes || "");
+    setEditDiscountAmount(Number(inv.discount_amount ?? inv.discountAmount ?? 0));
+    setEditTaxAmount(Number(inv.tax_amount ?? inv.taxAmount ?? 0));
+
+    // Normalize invoice items for editing
+    const rawItems = inv.items || [];
+    const formattedItems = rawItems.map((it: any) => ({
+      id: it.id,
+      productId: it.product_id || it.product?.id || "",
+      productName: it.product_name || it.product?.name || "Product Item",
+      sku: it.sku || it.product?.sku || "",
+      unit: it.unit || it.product?.unit || "pcs",
+      quantity: Number(it.quantity || 1),
+      unitPrice: Number(it.unit_price ?? it.unitPrice ?? 0),
+      costPrice: Number(it.cost_price ?? it.costPrice ?? 0),
+      totalPrice: Number(it.total_price ?? it.totalPrice ?? (Number(it.quantity || 1) * Number(it.unit_price || 0))),
+    }));
+    setEditItems(formattedItems);
+    setEditProductSearch("");
+    setShowAddProductDropdown(false);
     setEditError("");
     setShowEditInvoiceModal(true);
+  };
+
+  // Helper: Modify item quantity in edit bill
+  const handleUpdateEditItemQty = (productId: string, newQty: number) => {
+    if (newQty <= 0) {
+      handleRemoveEditItem(productId);
+      return;
+    }
+    setEditItems((prev) =>
+      prev.map((item) => {
+        if (item.productId === productId) {
+          const qty = Number(newQty);
+          return {
+            ...item,
+            quantity: qty,
+            totalPrice: Number((qty * item.unitPrice).toFixed(2)),
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  // Helper: Modify item unit rate/price in edit bill
+  const handleUpdateEditItemPrice = (productId: string, newPrice: number) => {
+    const price = Math.max(0, Number(newPrice) || 0);
+    setEditItems((prev) =>
+      prev.map((item) => {
+        if (item.productId === productId) {
+          return {
+            ...item,
+            unitPrice: price,
+            totalPrice: Number((item.quantity * price).toFixed(2)),
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  // Helper: Remove item from edit bill
+  const handleRemoveEditItem = (productId: string) => {
+    if (editItems.length <= 1) {
+      setEditError("A bill must contain at least 1 item. You cannot remove all items.");
+      return;
+    }
+    setEditError("");
+    setEditItems((prev) => prev.filter((item) => item.productId !== productId));
+  };
+
+  // Helper: Add product to edit bill
+  const handleAddProductToEditInvoice = (prod: Product) => {
+    setEditError("");
+    const existingIndex = editItems.findIndex((it) => it.productId === prod.id);
+    if (existingIndex > -1) {
+      handleUpdateEditItemQty(prod.id, editItems[existingIndex].quantity + 1);
+    } else {
+      const newItem = {
+        productId: prod.id,
+        productName: prod.name,
+        sku: prod.sku,
+        unit: prod.unit,
+        quantity: 1,
+        unitPrice: prod.selling_price,
+        costPrice: prod.cost_price,
+        totalPrice: prod.selling_price,
+      };
+      setEditItems((prev) => [...prev, newItem]);
+    }
+    setEditProductSearch("");
+    setShowAddProductDropdown(false);
   };
 
   // Helper: Save Invoice Updates to Server & Khata Ledger
@@ -834,6 +941,10 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
     const cleanPhone = editCustomerPhone.replace(/\D/g, "");
     if (!editCustomerPhone.trim() || cleanPhone.length < 10) {
       setEditError("Customer 10-digit mobile number is required.");
+      return;
+    }
+    if (editItems.length === 0) {
+      setEditError("The bill must contain at least 1 item.");
       return;
     }
 
@@ -850,6 +961,9 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
           paymentMethod: editPaymentMethod,
           paymentStatus: editPaymentStatus,
           notes: editNotes.trim(),
+          items: editItems,
+          discountAmount: editDiscountAmount,
+          taxAmount: editTaxAmount,
         }),
       });
 
@@ -863,22 +977,15 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
       setShowEditInvoiceModal(false);
       setFeedback({
         type: "success",
-        text: `Invoice #${editingInvoice.invoice_number} updated successfully! Mode changed to ${editPaymentMethod.toUpperCase()}.`,
+        text: `Invoice #${editingInvoice.invoice_number} updated successfully! Total: ₹${Number(data.invoice?.grand_total || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })} (${editPaymentMethod.toUpperCase()})`,
       });
 
-      // Reload passed invoices
-      await loadPassedInvoices();
+      // Reload passed invoices & catalog data
+      await Promise.all([loadPassedInvoices(), loadData()]);
 
       // If completed invoice modal is active for this invoice, update it too
-      if (completedInvoice && completedInvoice.id === editingInvoice.id) {
-        setCompletedInvoice((prev: any) => ({
-          ...prev,
-          customer_name: editCustomerName.trim(),
-          customer_phone: editCustomerPhone.trim(),
-          payment_method: editPaymentMethod,
-          payment_status: editPaymentStatus,
-          notes: editNotes.trim(),
-        }));
+      if (completedInvoice && completedInvoice.id === editingInvoice.id && data.invoice) {
+        setCompletedInvoice(data.invoice);
       }
 
       if (onSaleCompleted) {
@@ -2765,7 +2872,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-4 overflow-y-auto text-xs">
+            <div className="p-6 space-y-5 overflow-y-auto text-xs">
               {editError && (
                 <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-xl text-red-300 flex items-center gap-2 font-bold animate-shake">
                   <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
@@ -2773,46 +2880,240 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                 </div>
               )}
 
-              {/* Customer Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-300 mb-1">
-                    Customer Name: <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={editCustomerName}
-                    onChange={(e) => setEditCustomerName(e.target.value)}
-                    placeholder="Customer Name"
-                    className="w-full px-3 py-2 glass-input rounded-xl text-xs font-bold text-slate-100 placeholder:text-slate-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-300 mb-1">
-                    Customer Mobile: <span className="text-red-400">*</span>
-                  </label>
-                  <div className="flex items-center glass-input rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20">
-                    <span className="px-2.5 py-2 bg-white/10 text-slate-400 font-bold text-xs border-r border-white/10 select-none">
-                      +91
-                    </span>
+              {/* Section 1: Customer Details */}
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-3">
+                <h4 className="font-bold text-slate-200 text-xs flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-blue-400" />
+                  Customer Information
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                      Customer Name: <span className="text-red-400">*</span>
+                    </label>
                     <input
-                      type="tel"
-                      value={editCustomerPhone}
-                      onChange={(e) => setEditCustomerPhone(e.target.value)}
-                      placeholder="10-digit number"
-                      maxLength={14}
-                      className="w-full px-2.5 py-2 text-xs font-bold text-slate-100 outline-hidden bg-transparent placeholder:text-slate-500"
+                      type="text"
+                      value={editCustomerName}
+                      onChange={(e) => setEditCustomerName(e.target.value)}
+                      placeholder="Customer Name"
+                      className="w-full px-3 py-2 glass-input rounded-xl text-xs font-bold text-slate-100 placeholder:text-slate-500"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                      Customer Mobile: <span className="text-red-400">*</span>
+                    </label>
+                    <div className="flex items-center glass-input rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20">
+                      <span className="px-2.5 py-2 bg-white/10 text-slate-400 font-bold text-xs border-r border-white/10 select-none">
+                        +91
+                      </span>
+                      <input
+                        type="tel"
+                        value={editCustomerPhone}
+                        onChange={(e) => setEditCustomerPhone(e.target.value)}
+                        placeholder="10-digit number"
+                        maxLength={14}
+                        className="w-full px-2.5 py-2 text-xs font-bold text-slate-100 outline-hidden bg-transparent placeholder:text-slate-500"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Payment Mode Selector */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-300 mb-1.5">
-                  Select Payment Mode:
-                </label>
+              {/* Section 2: Editable Billed Items */}
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-slate-200 text-xs flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    Billed Products ({editItems.length})
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddProductDropdown(!showAddProductDropdown)}
+                    className="px-2.5 py-1 bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Item</span>
+                  </button>
+                </div>
+
+                {/* Search & Add Product Dropdown */}
+                {showAddProductDropdown && (
+                  <div className="p-3 bg-slate-900/90 rounded-2xl border border-blue-500/30 space-y-2 animate-fade-in">
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={editProductSearch}
+                        onChange={(e) => setEditProductSearch(e.target.value)}
+                        placeholder="Search product name or SKU..."
+                        autoFocus
+                        className="w-full pl-8 pr-3 py-1.5 glass-input rounded-xl text-xs font-medium text-slate-100 placeholder:text-slate-500"
+                      />
+                    </div>
+                    <div className="max-h-36 overflow-y-auto divide-y divide-white/5 pr-1">
+                      {products
+                        .filter(
+                          (p) =>
+                            !editProductSearch.trim() ||
+                            p.name.toLowerCase().includes(editProductSearch.toLowerCase()) ||
+                            p.sku.toLowerCase().includes(editProductSearch.toLowerCase()) ||
+                            p.category.toLowerCase().includes(editProductSearch.toLowerCase())
+                        )
+                        .slice(0, 8)
+                        .map((prod) => (
+                          <div
+                            key={prod.id}
+                            onClick={() => handleAddProductToEditInvoice(prod)}
+                            className="py-1.5 px-2 hover:bg-white/10 rounded-lg cursor-pointer transition flex items-center justify-between"
+                          >
+                            <div>
+                              <p className="font-bold text-slate-100 text-xs">{prod.name}</p>
+                              <p className="text-[10px] text-slate-400 font-mono">
+                                SKU: {prod.sku} • Stock: {prod.stock_quantity} {prod.unit}
+                              </p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <span className="font-bold text-amber-400 font-mono text-xs">
+                                ₹{prod.selling_price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                              </span>
+                              <span className="block text-[10px] text-emerald-400 font-bold">+ Add</span>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Items List */}
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {editItems.map((item) => (
+                    <div
+                      key={item.productId}
+                      className="p-2.5 bg-slate-900/60 rounded-xl border border-white/10 space-y-2 hover:border-white/20 transition"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-100 text-xs truncate">{item.productName}</p>
+                          <p className="text-[10px] text-slate-400 font-mono">SKU: {item.sku || "-"}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveEditItem(item.productId)}
+                          className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition cursor-pointer shrink-0"
+                          title="Remove item from bill"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/5 text-[11px]">
+                        {/* Quantity Controls */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-slate-400 font-medium">Qty:</span>
+                          <div className="flex items-center bg-white/10 rounded-lg border border-white/10 overflow-hidden">
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateEditItemQty(item.productId, item.quantity - 1)}
+                              className="px-2 py-1 hover:bg-white/20 text-slate-200 transition cursor-pointer font-bold"
+                            >
+                              -
+                            </button>
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => handleUpdateEditItemQty(item.productId, Number(e.target.value))}
+                              className="w-12 text-center bg-transparent font-bold text-slate-100 text-xs outline-hidden [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateEditItemQty(item.productId, item.quantity + 1)}
+                              className="px-2 py-1 hover:bg-white/20 text-slate-200 transition cursor-pointer font-bold"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <span className="text-slate-400 text-[10px] font-mono">{item.unit}</span>
+                        </div>
+
+                        {/* Rate Input */}
+                        <div className="flex items-center gap-1">
+                          <span className="text-slate-400 font-medium">Rate:</span>
+                          <div className="flex items-center glass-input rounded-lg px-1.5 py-0.5 w-20">
+                            <span className="text-slate-400 text-[10px]">₹</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.5"
+                              value={item.unitPrice}
+                              onChange={(e) => handleUpdateEditItemPrice(item.productId, Number(e.target.value))}
+                              className="w-full bg-transparent font-mono font-bold text-slate-100 text-xs outline-hidden"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Line Total */}
+                        <div className="text-right">
+                          <span className="font-mono font-bold text-amber-400 text-xs">
+                            ₹{(item.quantity * item.unitPrice).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Financial Adjustments & Calculated Grand Total */}
+                <div className="p-3 bg-slate-900/80 rounded-xl border border-white/10 space-y-2 pt-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Discount (₹):</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editDiscountAmount}
+                        onChange={(e) => setEditDiscountAmount(Math.max(0, Number(e.target.value) || 0))}
+                        className="w-full px-2 py-1 glass-input rounded-lg text-xs font-mono font-bold text-emerald-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 mb-0.5">GST Tax (₹):</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editTaxAmount}
+                        onChange={(e) => setEditTaxAmount(Math.max(0, Number(e.target.value) || 0))}
+                        className="w-full px-2 py-1 glass-input rounded-lg text-xs font-mono font-bold text-slate-300"
+                      />
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const currentSubtotal = editItems.reduce((acc, it) => acc + (it.quantity * it.unitPrice), 0);
+                    const currentGrandTotal = Math.max(0, currentSubtotal - editDiscountAmount + editTaxAmount);
+                    return (
+                      <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                        <div>
+                          <span className="text-[10px] text-slate-400 block">Subtotal: ₹{currentSubtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                          <span className="text-xs font-bold text-slate-200">New Grand Total:</span>
+                        </div>
+                        <span className="text-base font-black font-mono text-amber-400">
+                          ₹{currentGrandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Section 3: Payment Mode Selector */}
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-3">
+                <h4 className="font-bold text-slate-200 text-xs flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-purple-400" />
+                  Payment Mode & Ledger Settlement
+                </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     type="button"
@@ -2894,59 +3195,59 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                     <span className="text-[10px] text-slate-400">Card Swipe</span>
                   </button>
                 </div>
-              </div>
 
-              {/* Payment Status Toggle */}
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-2xl border border-white/10">
+                {/* Payment Status Toggle */}
+                <div className="flex items-center justify-between p-3 bg-slate-900/60 rounded-xl border border-white/10">
+                  <div>
+                    <span className="font-bold text-slate-200 block text-xs">Payment Settlement Status:</span>
+                    <span className="text-[10px] text-slate-400">
+                      {editPaymentStatus === "paid"
+                        ? "Bill is fully received and settled."
+                        : "Bill is unpaid and added as pending customer debt."}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setEditPaymentStatus("paid")}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        editPaymentStatus === "paid" ? "bg-emerald-600 text-white" : "text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      PAID
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditPaymentStatus("unpaid")}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        editPaymentStatus === "unpaid" ? "bg-purple-600 text-white" : "text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      UNPAID / CREDIT
+                    </button>
+                  </div>
+                </div>
+
+                {/* Note / Remarks */}
                 <div>
-                  <span className="font-bold text-slate-200 block text-xs">Payment Settlement Status:</span>
-                  <span className="text-[10px] text-slate-400">
-                    {editPaymentStatus === "paid"
-                      ? "Bill is fully received and settled."
-                      : "Bill is unpaid and added as pending customer debt."}
-                  </span>
+                  <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                    Remark / Reason for Edit:
+                  </label>
+                  <textarea
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    placeholder="e.g. Customer changed item quantity or paid via Google Pay later..."
+                    rows={2}
+                    className="w-full px-3 py-2 glass-input rounded-xl text-xs font-medium text-slate-100 placeholder:text-slate-500 resize-none"
+                  />
                 </div>
-                <div className="flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-white/10">
-                  <button
-                    type="button"
-                    onClick={() => setEditPaymentStatus("paid")}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      editPaymentStatus === "paid" ? "bg-emerald-600 text-white" : "text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    PAID
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditPaymentStatus("unpaid")}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      editPaymentStatus === "unpaid" ? "bg-purple-600 text-white" : "text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    UNPAID / CREDIT
-                  </button>
-                </div>
-              </div>
-
-              {/* Note / Remarks */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-300 mb-1">
-                  Remark / Reason for Edit:
-                </label>
-                <textarea
-                  value={editNotes}
-                  onChange={(e) => setEditNotes(e.target.value)}
-                  placeholder="e.g. Customer paid via Google Pay later, switched from cash..."
-                  rows={2}
-                  className="w-full px-3 py-2 glass-input rounded-xl text-xs font-medium text-slate-100 placeholder:text-slate-500 resize-none"
-                />
               </div>
 
               {/* Real-time Ledger Notice Alert */}
               <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-[11px] text-blue-300 flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                 <span>
-                  <strong>Automatic Khata Synchronization:</strong> Changing payment mode between Khata Credit and Cash/UPI will automatically update the customer&apos;s Khata balance and ledger transaction entries.
+                  <strong>Automatic Inventory & Khata Reconciliation:</strong> Changing item quantities will automatically adjust your inventory stock levels. Changing payment modes or invoice totals will sync with Khata balances instantly.
                 </span>
               </div>
             </div>

@@ -100,6 +100,9 @@ export async function PATCH(req: Request) {
       paymentMethod,
       paymentStatus,
       notes,
+      items, // Optional updated items array: [{ productId, productName, sku, unit, quantity, unitPrice, costPrice, totalPrice }]
+      discountAmount: rawDiscount,
+      taxAmount: rawTax,
     } = body;
 
     if (!invoiceId) {
@@ -114,7 +117,7 @@ export async function PATCH(req: Request) {
 
     const now = new Date().toISOString();
     const cleanPhone = (customerPhone || "").replace(/\D/g, "");
-    const grandTotal = Number(existingInvoice.grand_total || 0);
+    const oldGrandTotal = Number(existingInvoice.grand_total || 0);
     const oldMethod = (existingInvoice.payment_method || "cash").toLowerCase();
     const oldStatus = (existingInvoice.payment_status || "paid").toLowerCase();
     const newMethod = (paymentMethod || oldMethod).toLowerCase();
@@ -133,20 +136,131 @@ export async function PATCH(req: Request) {
         }
       }
 
-      // Handle Khata ledger balance transitions if payment method or status changed:
-      // Transition 1: From Khata (Credit) to Cash/UPI/Card (Paid)
+      let finalSubtotal = Number(existingInvoice.subtotal || 0);
+      let finalDiscount = rawDiscount !== undefined ? Number(rawDiscount) : Number(existingInvoice.discount_amount || 0);
+      let finalTax = rawTax !== undefined ? Number(rawTax) : Number(existingInvoice.tax_amount || 0);
+      let finalGrandTotal = oldGrandTotal;
+
+      // Handle items modification & Stock adjustments
+      if (items && Array.isArray(items) && items.length > 0) {
+        const oldItems = await tx.queryAll(
+          "SELECT * FROM invoice_items WHERE invoice_id = ?",
+          [invoiceId]
+        );
+
+        // Map old quantities by product_id
+        const oldQtyMap: Record<string, number> = {};
+        for (const oi of oldItems) {
+          oldQtyMap[oi.product_id] = (oldQtyMap[oi.product_id] || 0) + Number(oi.quantity);
+        }
+
+        // Map new quantities by product_id
+        const newQtyMap: Record<string, number> = {};
+        for (const ni of items) {
+          const pid = ni.productId || ni.product_id;
+          newQtyMap[pid] = (newQtyMap[pid] || 0) + Number(ni.quantity);
+        }
+
+        // Calculate all involved product IDs
+        const allProductIds = Array.from(new Set([...Object.keys(oldQtyMap), ...Object.keys(newQtyMap)]));
+
+        // Adjust stock for each product
+        for (const pid of allProductIds) {
+          const oldQ = oldQtyMap[pid] || 0;
+          const newQ = newQtyMap[pid] || 0;
+          const delta = newQ - oldQ; // Positive = sold more (deduct stock), Negative = reduced/removed (restore stock)
+
+          if (delta !== 0) {
+            const product = await tx.queryOne("SELECT * FROM products WHERE id = ?", [pid]);
+            if (product) {
+              if (delta > 0 && product.stock_quantity < delta) {
+                throw new Error(
+                  `Insufficient stock for "${product.name}". Additional needed: ${delta} ${product.unit}, available: ${product.stock_quantity} ${product.unit}.`
+                );
+              }
+
+              const updatedStock = product.stock_quantity - delta;
+              await tx.execute(
+                "UPDATE products SET stock_quantity = ?, updated_at = ? WHERE id = ?",
+                [updatedStock, now, pid]
+              );
+
+              await tx.execute(
+                `INSERT INTO stock_logs (
+                  id, product_id, product_name, user_id, user_name,
+                  change_type, quantity_delta, previous_quantity, new_quantity, reason, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                  `log_${Math.random().toString(36).substring(2, 9)}`,
+                  pid,
+                  product.name,
+                  user.id,
+                  user.name,
+                  delta > 0 ? "stock_out" : "stock_in",
+                  -delta,
+                  product.stock_quantity,
+                  updatedStock,
+                  `Edited Invoice #${existingInvoice.invoice_number} (Qty: ${oldQ} -> ${newQ})`,
+                  now,
+                ]
+              );
+            }
+          }
+        }
+
+        // Delete old invoice items and insert new ones
+        await tx.execute("DELETE FROM invoice_items WHERE invoice_id = ?", [invoiceId]);
+
+        let calculatedSubtotal = 0;
+        for (const item of items) {
+          const itemId = item.id && !item.id.startsWith("item_") ? item.id : `item_${Math.random().toString(36).substring(2, 10)}`;
+          const pid = item.productId || item.product_id;
+          const pname = item.productName || item.product_name || item.name || "Item";
+          const psku = item.sku || "";
+          const punit = item.unit || "pcs";
+          const unitPrice = Number(item.unitPrice ?? item.unit_price ?? 0);
+          const costPrice = Number(item.costPrice ?? item.cost_price ?? 0);
+          const qty = Number(item.quantity || 1);
+          const itemTotal = Number((qty * unitPrice).toFixed(2));
+          calculatedSubtotal += itemTotal;
+
+          await tx.execute(
+            `INSERT INTO invoice_items (
+              id, invoice_id, product_id, product_name, sku, unit,
+              unit_price, cost_price, quantity, total_price
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              itemId,
+              invoiceId,
+              pid,
+              pname,
+              psku,
+              punit,
+              unitPrice,
+              costPrice,
+              qty,
+              itemTotal,
+            ]
+          );
+        }
+
+        finalSubtotal = Number(calculatedSubtotal.toFixed(2));
+        finalGrandTotal = Math.max(0, Number((finalSubtotal - finalDiscount + finalTax).toFixed(2)));
+      }
+
+      // Handle Khata ledger balance transitions
       if (oldMethod === "khata" && newMethod !== "khata") {
+        // Transition 1: Switched from Khata to Cash/UPI/Card -> Remove previous debt from Khata
         if (customerId) {
           const cust = await tx.queryOne("SELECT * FROM customers WHERE id = ?", [customerId]);
           if (cust) {
-            const updatedBal = Math.max(0, Number((cust.current_balance - grandTotal).toFixed(2)));
+            const updatedBal = Math.max(0, Number((cust.current_balance - oldGrandTotal).toFixed(2)));
             await tx.execute("UPDATE customers SET current_balance = ?, updated_at = ? WHERE id = ?", [
               updatedBal,
               now,
               customerId,
             ]);
 
-            // Add payment collection log in khata_transactions
             await tx.execute(
               `INSERT INTO khata_transactions (
                 id, customer_id, invoice_id, type, amount, previous_balance, new_balance,
@@ -156,7 +270,7 @@ export async function PATCH(req: Request) {
                 `ktx_${Math.random().toString(36).substring(2, 9)}`,
                 customerId,
                 invoiceId,
-                grandTotal,
+                oldGrandTotal,
                 cust.current_balance,
                 updatedBal,
                 `${newMethod.toUpperCase()} (Converted from Khata)`,
@@ -167,20 +281,18 @@ export async function PATCH(req: Request) {
             );
           }
         }
-      }
-      // Transition 2: From Cash/UPI/Card (Paid) to Khata (Credit)
-      else if (oldMethod !== "khata" && newMethod === "khata") {
+      } else if (oldMethod !== "khata" && newMethod === "khata") {
+        // Transition 2: Switched from Cash/UPI to Khata -> Add new debt to Khata
         if (customerId) {
           const cust = await tx.queryOne("SELECT * FROM customers WHERE id = ?", [customerId]);
           if (cust) {
-            const updatedBal = Number((cust.current_balance + grandTotal).toFixed(2));
+            const updatedBal = Number((cust.current_balance + finalGrandTotal).toFixed(2));
             await tx.execute("UPDATE customers SET current_balance = ?, updated_at = ? WHERE id = ?", [
               updatedBal,
               now,
               customerId,
             ]);
 
-            // Add debit transaction log in khata_transactions
             await tx.execute(
               `INSERT INTO khata_transactions (
                 id, customer_id, invoice_id, type, amount, previous_balance, new_balance,
@@ -190,10 +302,43 @@ export async function PATCH(req: Request) {
                 `ktx_${Math.random().toString(36).substring(2, 9)}`,
                 customerId,
                 invoiceId,
-                grandTotal,
+                finalGrandTotal,
                 cust.current_balance,
                 updatedBal,
-                `Bill #${existingInvoice.invoice_number} switched from ${oldMethod.toUpperCase()} to Khata Credit (${user.name})`,
+                `Bill #${existingInvoice.invoice_number} switched to Khata Credit (${user.name})`,
+                user.name,
+                now,
+              ]
+            );
+          }
+        }
+      } else if (oldMethod === "khata" && newMethod === "khata" && finalGrandTotal !== oldGrandTotal) {
+        // Transition 3: Remained on Khata, but items changed so Grand Total changed -> Adjust customer balance delta
+        if (customerId) {
+          const cust = await tx.queryOne("SELECT * FROM customers WHERE id = ?", [customerId]);
+          if (cust) {
+            const delta = finalGrandTotal - oldGrandTotal;
+            const updatedBal = Math.max(0, Number((cust.current_balance + delta).toFixed(2)));
+            await tx.execute("UPDATE customers SET current_balance = ?, updated_at = ? WHERE id = ?", [
+              updatedBal,
+              now,
+              customerId,
+            ]);
+
+            await tx.execute(
+              `INSERT INTO khata_transactions (
+                id, customer_id, invoice_id, type, amount, previous_balance, new_balance,
+                payment_mode, notes, created_by_name, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Credit / Khata', ?, ?, ?)`,
+              [
+                `ktx_${Math.random().toString(36).substring(2, 9)}`,
+                customerId,
+                invoiceId,
+                delta > 0 ? "debit_purchase" : "payment_collection",
+                Math.abs(delta),
+                cust.current_balance,
+                updatedBal,
+                `Items updated in Khata Bill #${existingInvoice.invoice_number} (Delta: ₹${delta})`,
                 user.name,
                 now,
               ]
@@ -201,41 +346,22 @@ export async function PATCH(req: Request) {
           }
         }
       }
-      // Transition 3: Switching between Cash and UPI (or Card)
-      else if (oldMethod !== "khata" && newMethod !== "khata" && oldMethod !== newMethod) {
-        if (customerId) {
-          // Log payment mode switch in Khata history if customer exists
-          await tx.execute(
-            `INSERT INTO khata_transactions (
-              id, customer_id, invoice_id, type, amount, previous_balance, new_balance,
-              payment_mode, notes, created_by_name, created_at
-            ) VALUES (?, ?, ?, 'paid_bill', ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              `ktx_${Math.random().toString(36).substring(2, 9)}`,
-              customerId,
-              invoiceId,
-              grandTotal,
-              0,
-              0,
-              `${newMethod.toUpperCase()} (Changed from ${oldMethod.toUpperCase()})`,
-              `Payment method updated to ${newMethod.toUpperCase()} for Bill #${existingInvoice.invoice_number}`,
-              user.name,
-              now,
-            ]
-          );
-        }
-      }
 
       // Update invoice table
       await tx.execute(
         `UPDATE invoices
          SET customer_id = ?, customer_name = ?, customer_phone = ?,
+             subtotal = ?, discount_amount = ?, tax_amount = ?, grand_total = ?,
              payment_method = ?, payment_status = ?, notes = ?, updated_at = ?
          WHERE id = ?`,
         [
           customerId || null,
           customerName ? customerName.trim() : existingInvoice.customer_name,
           customerPhone ? customerPhone.trim() : existingInvoice.customer_phone,
+          finalSubtotal,
+          finalDiscount,
+          finalTax,
+          finalGrandTotal,
           newMethod,
           newStatus,
           notes !== undefined ? (notes ? notes.trim() : null) : existingInvoice.notes,
@@ -258,12 +384,14 @@ export async function PATCH(req: Request) {
           existingInvoice.invoice_number,
           JSON.stringify({
             previous: {
+              grand_total: oldGrandTotal,
               payment_method: oldMethod,
               payment_status: oldStatus,
               customer_name: existingInvoice.customer_name,
               customer_phone: existingInvoice.customer_phone,
             },
             updated: {
+              grand_total: finalGrandTotal,
               payment_method: newMethod,
               payment_status: newStatus,
               customer_name: customerName,
@@ -276,7 +404,15 @@ export async function PATCH(req: Request) {
     });
 
     const updated = await queryOne("SELECT * FROM invoices WHERE id = ?", [invoiceId]);
-    return NextResponse.json({ success: true, invoice: updated });
+    const updatedItems = await queryAll("SELECT * FROM invoice_items WHERE invoice_id = ? ORDER BY id ASC", [invoiceId]);
+
+    return NextResponse.json({
+      success: true,
+      invoice: {
+        ...updated,
+        items: updatedItems,
+      },
+    });
   } catch (err: any) {
     console.error("Update invoice error:", err);
     return NextResponse.json({ error: err.message || "Failed to update invoice" }, { status: 500 });
