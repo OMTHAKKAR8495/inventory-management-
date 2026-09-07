@@ -70,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const isAdmin = user.role === "admin";
+  const isAdmin = Boolean(user && typeof user.role === "string" && user.role.toLowerCase().trim() === "admin");
   const criticalCount = (metrics?.low_stock_count || 0) + (metrics?.out_of_stock_count || 0);
   const trashCount = metrics?.trash_count || 0;
 

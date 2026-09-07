@@ -258,6 +258,14 @@ export default function Home() {
     showToast("Logged out successfully");
   };
 
+  useEffect(() => {
+    if (user && user.role !== "admin") {
+      if (activeTab === "pos" || activeTab === "khata") {
+        setActiveTab("dashboard");
+      }
+    }
+  }, [user]);
+
   const handleQuickRoleSwitch = async (targetRole: "admin" | "manager") => {
     const creds =
       targetRole === "admin"
@@ -273,6 +281,9 @@ export default function Home() {
       const data = await res.json();
       if (res.ok) {
         setUser(data.user);
+        if (data.user?.role !== "admin" && (activeTab === "pos" || activeTab === "khata")) {
+          setActiveTab("dashboard");
+        }
         showToast(`Switched view to ${data.user.role === "admin" ? "Store Administrator" : "Inventory Manager"}`);
       }
     } catch (err) {
