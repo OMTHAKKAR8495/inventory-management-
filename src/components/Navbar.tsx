@@ -347,6 +347,23 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
+            {/* Light / Dark Mode Toggle Button */}
+            {onToggleDarkMode && (
+              <button
+                type="button"
+                onClick={onToggleDarkMode}
+                className="p-2 text-slate-300 hover:text-amber-300 rounded-xl hover:bg-white/10 transition border border-white/10 hover:border-white/20 flex items-center justify-center cursor-pointer shadow-sm"
+                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                aria-label="Toggle Theme"
+              >
+                {isDarkMode ? (
+                  <Sun className="w-4 h-4 text-amber-400 animate-pulse" />
+                ) : (
+                  <Moon className="w-4 h-4 text-sky-300" />
+                )}
+              </button>
+            )}
+
             {/* User Profile & Menu */}
             <div className="relative">
               <button
@@ -441,6 +458,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <Database className="w-4 h-4 text-slate-400" />
                       Database Backup Snapshots
+                    </button>
+                  )}
+
+                  {onToggleDarkMode && (
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        onToggleDarkMode();
+                      }}
+                      className="w-full px-4 py-2 text-left text-xs text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between font-medium cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-sky-300" />}
+                        <span>{isDarkMode ? "Switch to Light Theme" : "Switch to Dark Theme"}</span>
+                      </div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400">
+                        {isDarkMode ? "Dark" : "Light"}
+                      </span>
                     </button>
                   )}
 
@@ -553,6 +588,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             <History className="w-3.5 h-3.5" />
             Logs
           </button>
+
+          {onToggleDarkMode && (
+            <button
+              onClick={onToggleDarkMode}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition bg-white/5 hover:bg-white/10 text-amber-300 border border-white/10 cursor-pointer"
+              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDarkMode ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-sky-300" />}
+              <span>{isDarkMode ? "Light" : "Dark"}</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

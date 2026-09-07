@@ -92,11 +92,18 @@ export default function Home() {
     }, 4000);
   };
 
-  // Theme initialization (Always default to crisp professional clean white theme)
+  // Theme initialization (Restore saved theme preference)
   useEffect(() => {
-    document.documentElement.classList.remove("dark");
-    localStorage.removeItem("provisionsmart_theme");
-    setIsDarkMode(false);
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem("provisionsmart_theme");
+      if (savedTheme === "dark") {
+        document.documentElement.classList.add("dark");
+        setIsDarkMode(true);
+      } else {
+        document.documentElement.classList.remove("dark");
+        setIsDarkMode(false);
+      }
+    }
   }, []);
 
   const toggleDarkMode = () => {
