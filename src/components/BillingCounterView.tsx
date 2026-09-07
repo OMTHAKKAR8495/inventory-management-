@@ -83,7 +83,11 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
   const [passedInvoices, setPassedInvoices] = useState<any[]>([]);
   const [isPassedInvoicesLoading, setIsPassedInvoicesLoading] = useState(false);
   const [passedInvoicesSearch, setPassedInvoicesSearch] = useState("");
-  const [passedInvoicesFilter, setPassedInvoicesFilter] = useState<"all" | "today" | "cash" | "upi" | "khata" | "card">("all");
+  const [passedInvoicesFilter, setPassedInvoicesFilter] = useState<"all" | "today" | "yesterday" | "cash" | "upi" | "khata" | "card">("all");
+  const [passedInvoicesDate, setPassedInvoicesDate] = useState<string>("");
+  const [passedInvoicesStartDate, setPassedInvoicesStartDate] = useState<string>("");
+  const [passedInvoicesEndDate, setPassedInvoicesEndDate] = useState<string>("");
+  const [showDateRangeFilter, setShowDateRangeFilter] = useState<boolean>(false);
 
   // Load saved bills from localStorage on initial render
   useEffect(() => {
@@ -684,13 +688,54 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
 
     if (passedInvoicesFilter === "today") {
       const today = new Date().toISOString().split("T")[0];
-      list = list.filter((inv) => inv.created_at?.startsWith(today));
-    } else if (passedInvoicesFilter !== "all") {
+      list = list.filter((inv) => {
+        const d = inv.created_at ? new Date(inv.created_at).toISOString().split("T")[0] : "";
+        return d === today;
+      });
+    } else if (passedInvoicesFilter === "yesterday") {
+      const yest = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+      list = list.filter((inv) => {
+        const d = inv.created_at ? new Date(inv.created_at).toISOString().split("T")[0] : "";
+        return d === yest;
+      });
+    } else if (passedInvoicesFilter !== "all" && ["cash", "upi", "khata", "card"].includes(passedInvoicesFilter)) {
       list = list.filter((inv) => inv.payment_method === passedInvoicesFilter);
     }
 
+    // Specific Date filter
+    if (passedInvoicesDate) {
+      list = list.filter((inv) => {
+        if (!inv.created_at) return false;
+        const invDate = new Date(inv.created_at).toISOString().split("T")[0];
+        return invDate === passedInvoicesDate;
+      });
+    }
+
+    // Custom Date Range filter
+    if (passedInvoicesStartDate) {
+      list = list.filter((inv) => {
+        if (!inv.created_at) return false;
+        const invDate = new Date(inv.created_at).toISOString().split("T")[0];
+        return invDate >= passedInvoicesStartDate;
+      });
+    }
+    if (passedInvoicesEndDate) {
+      list = list.filter((inv) => {
+        if (!inv.created_at) return false;
+        const invDate = new Date(inv.created_at).toISOString().split("T")[0];
+        return invDate <= passedInvoicesEndDate;
+      });
+    }
+
     return list;
-  }, [passedInvoices, passedInvoicesSearch, passedInvoicesFilter]);
+  }, [
+    passedInvoices,
+    passedInvoicesSearch,
+    passedInvoicesFilter,
+    passedInvoicesDate,
+    passedInvoicesStartDate,
+    passedInvoicesEndDate,
+  ]);
 
   const totalPassedRevenue = passedInvoices.reduce((sum, inv) => sum + (Number(inv.grand_total) || 0), 0);
   const todayDateStr = new Date().toISOString().split("T")[0];
@@ -1858,12 +1903,18 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                 />
               </div>
 
-              {/* Filter Pills */}
+              {/* Filter Pills & Actions */}
               <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                 <button
-                  onClick={() => setPassedInvoicesFilter("all")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
-                    passedInvoicesFilter === "all"
+                  type="button"
+                  onClick={() => {
+                    setPassedInvoicesFilter("all");
+                    setPassedInvoicesDate("");
+                    setPassedInvoicesStartDate("");
+                    setPassedInvoicesEndDate("");
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    passedInvoicesFilter === "all" && !passedInvoicesDate && !passedInvoicesStartDate && !passedInvoicesEndDate
                       ? "bg-emerald-600 text-white shadow-sm"
                       : "bg-white/5 text-slate-400 hover:bg-white/10"
                   }`}
@@ -1871,8 +1922,14 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                   All ({passedInvoices.length})
                 </button>
                 <button
-                  onClick={() => setPassedInvoicesFilter("today")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                  type="button"
+                  onClick={() => {
+                    setPassedInvoicesFilter("today");
+                    setPassedInvoicesDate("");
+                    setPassedInvoicesStartDate("");
+                    setPassedInvoicesEndDate("");
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                     passedInvoicesFilter === "today"
                       ? "bg-emerald-600 text-white shadow-sm"
                       : "bg-white/5 text-slate-400 hover:bg-white/10"
@@ -1881,8 +1938,25 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                   Today ({todayPassedInvoices.length})
                 </button>
                 <button
+                  type="button"
+                  onClick={() => {
+                    setPassedInvoicesFilter("yesterday");
+                    setPassedInvoicesDate("");
+                    setPassedInvoicesStartDate("");
+                    setPassedInvoicesEndDate("");
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    passedInvoicesFilter === "yesterday"
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
+                  }`}
+                >
+                  Yesterday
+                </button>
+                <button
+                  type="button"
                   onClick={() => setPassedInvoicesFilter("cash")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                     passedInvoicesFilter === "cash"
                       ? "bg-emerald-600 text-white shadow-sm"
                       : "bg-white/5 text-slate-400 hover:bg-white/10"
@@ -1891,8 +1965,9 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                   Cash
                 </button>
                 <button
+                  type="button"
                   onClick={() => setPassedInvoicesFilter("upi")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                     passedInvoicesFilter === "upi"
                       ? "bg-emerald-600 text-white shadow-sm"
                       : "bg-white/5 text-slate-400 hover:bg-white/10"
@@ -1901,8 +1976,9 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                   UPI
                 </button>
                 <button
+                  type="button"
                   onClick={() => setPassedInvoicesFilter("khata")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                     passedInvoicesFilter === "khata"
                       ? "bg-emerald-600 text-white shadow-sm"
                       : "bg-white/5 text-slate-400 hover:bg-white/10"
@@ -1912,16 +1988,103 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                 </button>
 
                 <button
+                  type="button"
+                  onClick={() => setShowDateRangeFilter(!showDateRangeFilter)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    showDateRangeFilter || passedInvoicesDate || passedInvoicesStartDate || passedInvoicesEndDate
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Date Filter</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={loadPassedInvoices}
                   disabled={isPassedInvoicesLoading}
-                  className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-white/10"
+                  className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-white/10 cursor-pointer"
                   title="Reload latest passed invoices"
                 >
                   <RotateCw className={`w-3.5 h-3.5 ${isPassedInvoicesLoading ? "animate-spin text-emerald-400" : ""}`} />
-                  {isPassedInvoicesLoading ? "Loading..." : "Sync Bills"}
+                  <span>Sync Bills</span>
                 </button>
               </div>
             </div>
+
+            {/* Expandable Date Selector & Date Range Filter */}
+            {(showDateRangeFilter || passedInvoicesDate || passedInvoicesStartDate || passedInvoicesEndDate) && (
+              <div className="p-4 bg-slate-900/70 dark:bg-slate-900/90 rounded-2xl border border-blue-500/30 flex flex-wrap items-center justify-between gap-4 animate-fade-in text-xs">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <label className="font-bold text-slate-300 flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                      Select Date:
+                    </label>
+                    <input
+                      type="date"
+                      value={passedInvoicesDate}
+                      onChange={(e) => {
+                        setPassedInvoicesDate(e.target.value);
+                        setPassedInvoicesStartDate("");
+                        setPassedInvoicesEndDate("");
+                        setPassedInvoicesFilter("all");
+                      }}
+                      className="px-2.5 py-1.5 glass-input rounded-xl text-xs font-mono font-bold text-slate-100"
+                    />
+                  </div>
+
+                  <span className="text-slate-500 font-bold hidden sm:inline">OR</span>
+
+                  <div className="flex items-center gap-2">
+                    <label className="font-bold text-slate-300">From:</label>
+                    <input
+                      type="date"
+                      value={passedInvoicesStartDate}
+                      onChange={(e) => {
+                        setPassedInvoicesStartDate(e.target.value);
+                        setPassedInvoicesDate("");
+                        setPassedInvoicesFilter("all");
+                      }}
+                      className="px-2.5 py-1.5 glass-input rounded-xl text-xs font-mono font-bold text-slate-100"
+                    />
+                    <label className="font-bold text-slate-300">To:</label>
+                    <input
+                      type="date"
+                      value={passedInvoicesEndDate}
+                      onChange={(e) => {
+                        setPassedInvoicesEndDate(e.target.value);
+                        setPassedInvoicesDate("");
+                        setPassedInvoicesFilter("all");
+                      }}
+                      className="px-2.5 py-1.5 glass-input rounded-xl text-xs font-mono font-bold text-slate-100"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {(passedInvoicesDate || passedInvoicesStartDate || passedInvoicesEndDate) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPassedInvoicesDate("");
+                        setPassedInvoicesStartDate("");
+                        setPassedInvoicesEndDate("");
+                        setPassedInvoicesFilter("all");
+                      }}
+                      className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      Clear Date Filter
+                    </button>
+                  )}
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono font-bold text-xs">
+                    Showing {filteredPassedInvoices.length} Bills
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Passed Invoices Cards Grid */}

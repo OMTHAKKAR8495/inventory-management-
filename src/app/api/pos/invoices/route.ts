@@ -16,6 +16,10 @@ export async function GET(req: Request) {
     const search = searchParams.get("search")?.trim() || "";
     const customerId = searchParams.get("customer_id");
 
+    const startDate = searchParams.get("start_date")?.trim();
+    const endDate = searchParams.get("end_date")?.trim();
+    const date = searchParams.get("date")?.trim();
+
     let query = "SELECT * FROM invoices WHERE 1=1";
     const params: any[] = [];
 
@@ -28,6 +32,20 @@ export async function GET(req: Request) {
     if (customerId) {
       query += " AND customer_id = ?";
       params.push(customerId);
+    }
+
+    if (date) {
+      query += " AND created_at::text LIKE ?";
+      params.push(`${date}%`);
+    } else {
+      if (startDate) {
+        query += " AND created_at >= ?";
+        params.push(`${startDate} 00:00:00`);
+      }
+      if (endDate) {
+        query += " AND created_at <= ?";
+        params.push(`${endDate} 23:59:59`);
+      }
     }
 
     query += " ORDER BY created_at DESC LIMIT ?";
