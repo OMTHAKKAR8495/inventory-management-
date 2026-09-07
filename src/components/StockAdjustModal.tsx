@@ -77,21 +77,23 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
   const quickIncrements = [5, 10, 25, 50, 100];
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-fade-in my-8">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="glass-modal rounded-3xl max-w-lg w-full shadow-2xl border border-white/10 overflow-hidden animate-fade-in my-8 text-slate-100">
         {/* Header with quick Save Changes action */}
-        <div className={`px-6 py-4 text-white flex items-center justify-between ${
-          type === "stock_in" ? "bg-emerald-700" : "bg-red-700"
+        <div className={`px-6 py-4 text-white flex items-center justify-between border-b border-white/10 ${
+          type === "stock_in" ? "bg-emerald-500/20" : "bg-red-500/20"
         } transition-colors`}>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
+              type === "stock_in" ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400" : "bg-red-500/20 border-red-500/30 text-red-400"
+            }`}>
               {type === "stock_in" ? <Plus className="w-5 h-5" /> : <Minus className="w-5 h-5" />}
             </div>
             <div>
-              <h3 className="text-base font-bold">
+              <h3 className="text-base font-bold text-slate-100">
                 {type === "stock_in" ? "Stock In (Add Units)" : "Stock Out (Remove Units)"}
               </h3>
-              <p className="text-xs text-white/80 truncate max-w-xs">{product.name}</p>
+              <p className="text-xs text-slate-400 truncate max-w-xs">{product.name}</p>
             </div>
           </div>
           
@@ -100,10 +102,10 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
               type="button"
               onClick={(e) => handleSubmit(e)}
               disabled={isSubmitting}
-              className={`px-3.5 py-1.5 bg-white rounded-xl text-xs font-black shadow-xs transition flex items-center gap-1.5 disabled:opacity-50 ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black shadow-xs transition flex items-center gap-1.5 disabled:opacity-50 ${
                 type === "stock_in"
-                  ? "text-emerald-800 hover:bg-emerald-50"
-                  : "text-red-800 hover:bg-red-50"
+                  ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950"
+                  : "bg-red-500 hover:bg-red-400 text-white"
               }`}
             >
               <Check className="w-3.5 h-3.5" />
@@ -111,7 +113,7 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
             </button>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition"
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition"
             >
               <X className="w-4 h-4" />
             </button>
@@ -119,22 +121,22 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
         </div>
 
         {errorMsg && (
-          <div className="mx-6 mt-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="mx-6 mt-4 p-3 rounded-xl bg-red-950/50 border border-red-500/30 text-xs text-red-300 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
             {errorMsg}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Toggle Type */}
-          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-2xl">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-white/5 border border-white/10 rounded-2xl">
             <button
               type="button"
               onClick={() => setType("stock_in")}
               className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 ${
                 type === "stock_in"
                   ? "bg-emerald-600 text-white shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
+                  : "text-slate-400 hover:text-slate-200"
               }`}
             >
               <Plus className="w-3.5 h-3.5" />
@@ -146,7 +148,7 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
               className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 ${
                 type === "stock_out"
                   ? "bg-red-600 text-white shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
+                  : "text-slate-400 hover:text-slate-200"
               }`}
             >
               <Minus className="w-3.5 h-3.5" />
@@ -155,19 +157,19 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
           </div>
 
           {/* Current vs Projected Calculation */}
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-center">
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between text-center">
             <div>
               <span className="text-[10px] font-bold text-slate-400 uppercase">On Hand</span>
-              <div className="text-xl font-bold text-slate-800">{currentQty} {product.unit}</div>
+              <div className="text-xl font-bold text-slate-100">{currentQty} {product.unit}</div>
             </div>
-            <div className="flex items-center text-slate-400 font-bold px-2">
+            <div className="flex items-center text-slate-500 font-bold px-2">
               <span className="text-sm mr-2">{type === "stock_in" ? "+" : "-"}</span>
               <ArrowRight className="w-4 h-4" />
             </div>
             <div>
               <span className="text-[10px] font-bold text-slate-400 uppercase">Projected Stock</span>
               <div className={`text-xl font-black ${
-                newQty <= 0 ? "text-red-600" : newQty <= product.reorder_level ? "text-amber-600" : "text-emerald-600"
+                newQty <= 0 ? "text-red-400" : newQty <= product.reorder_level ? "text-amber-400" : "text-emerald-400"
               }`}>
                 {newQty} {product.unit}
               </div>
@@ -176,8 +178,8 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
 
           {/* Quantity Input */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Quantity to {type === "stock_in" ? "Add" : "Deduct"} ({product.unit}) <span className="text-red-500">*</span>
+            <label className="block text-xs font-bold text-slate-300 mb-1">
+              Quantity to {type === "stock_in" ? "Add" : "Deduct"} ({product.unit}) <span className="text-red-400">*</span>
             </label>
             <input
               type="number"
@@ -185,7 +187,7 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
               required
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              className="w-full px-4 py-2.5 text-base font-bold rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden text-slate-900"
+              className="w-full px-4 py-2.5 text-base font-bold rounded-xl glass-input"
             />
 
             {/* Quick Increment buttons */}
@@ -196,7 +198,7 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
                   key={inc}
                   type="button"
                   onClick={() => setQuantity(inc.toString())}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+                  className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 transition"
                 >
                   +{inc}
                 </button>
@@ -206,13 +208,13 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
 
           {/* Reason */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Adjustment Reason <span className="text-red-500">*</span>
+            <label className="block text-xs font-bold text-slate-300 mb-1">
+              Adjustment Reason <span className="text-red-400">*</span>
             </label>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden bg-white text-slate-900 font-medium"
+              className="w-full px-3.5 py-2 text-xs rounded-xl glass-input font-medium"
             >
               {COMMON_REASONS.map((r) => (
                 <option key={r} value={r}>
@@ -227,31 +229,31 @@ export const StockAdjustModal: React.FC<StockAdjustModalProps> = ({
                 placeholder="Type specific reason for audit log"
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
-                className="mt-2 w-full px-3.5 py-2 text-xs rounded-xl border border-blue-400 focus:ring-2 focus:ring-blue-500/20 outline-hidden text-slate-900"
+                className="mt-2 w-full px-3.5 py-2 text-xs rounded-xl glass-input"
               />
             )}
           </div>
 
           {/* Footer */}
-          <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-3">
+          <div className="pt-3 border-t border-white/10 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition"
+              className="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`px-6 py-2.5 text-xs font-black text-white rounded-xl shadow-sm transition flex items-center gap-2 ${
+              className={`px-5 py-2 text-xs font-bold rounded-xl shadow-lg transition flex items-center gap-2 disabled:opacity-50 ${
                 type === "stock_in"
-                  ? "bg-emerald-600 hover:bg-emerald-700 active:scale-95"
-                  : "bg-red-600 hover:bg-red-700 active:scale-95"
-              } disabled:opacity-50`}
+                  ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
+                  : "bg-red-600 hover:bg-red-500 text-white shadow-red-600/20"
+              }`}
             >
               <Check className="w-4 h-4" />
-              {isSubmitting ? "Saving & Syncing to POS..." : `Save Changes (${type === "stock_in" ? "+ Stock-In" : "- Stock-Out"})`}
+              {isSubmitting ? "Saving..." : "Confirm & Save"}
             </button>
           </div>
         </form>

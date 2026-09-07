@@ -84,22 +84,22 @@ export const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-fade-in my-8">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="glass-modal rounded-3xl max-w-2xl w-full shadow-2xl border border-white/10 overflow-hidden animate-fade-in my-8 text-slate-100">
         {/* Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-purple-900 to-indigo-900 text-white flex items-center justify-between">
+        <div className="px-6 py-4 bg-gradient-to-r from-purple-500/20 via-indigo-500/20 to-blue-500/20 border-b border-white/10 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
-              <Users className="w-5 h-5 text-purple-200" />
+            <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center">
+              <Users className="w-5 h-5 text-purple-400" />
             </div>
             <div>
-              <h3 className="text-base font-bold">Staff & User Management</h3>
-              <p className="text-xs text-purple-200">Manage store managers & system administrators</p>
+              <h3 className="text-base font-bold text-slate-100">Staff & User Management</h3>
+              <p className="text-xs text-slate-400">Manage store managers & system administrators</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition"
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition"
           >
             <X className="w-4 h-4" />
           </button>
@@ -110,11 +110,11 @@ export const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose }) => {
           <div
             className={`mx-6 mt-4 p-3 rounded-xl text-xs flex items-center gap-2 border ${
               msg.type === "success"
-                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                : "bg-red-50 text-red-800 border-red-200"
+                ? "bg-emerald-950/50 text-emerald-300 border-emerald-500/30"
+                : "bg-red-950/50 text-red-300 border-red-500/30"
             }`}
           >
-            {msg.type === "success" ? <Check className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+            {msg.type === "success" ? <Check className="w-4 h-4 text-emerald-400" /> : <AlertCircle className="w-4 h-4 text-red-400" />}
             {msg.text}
           </div>
         )}
@@ -122,12 +122,12 @@ export const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose }) => {
         <div className="p-6 space-y-5">
           {/* Action to create new staff */}
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Active Store Accounts ({users.length})
             </h4>
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="px-3 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+              className="px-3 py-1.5 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-500/30 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
             >
               <UserPlus className="w-3.5 h-3.5" />
               {showAddForm ? "Cancel" : "Add New Staff Member"}
@@ -136,37 +136,37 @@ export const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose }) => {
 
           {/* Add Form */}
           {showAddForm && (
-            <form onSubmit={handleCreateUser} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 animate-fade-in">
-              <h5 className="text-xs font-bold text-slate-800">Create Staff Credentials</h5>
+            <form onSubmit={handleCreateUser} className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-3 animate-fade-in">
+              <h5 className="text-xs font-bold text-slate-200">Create Staff Credentials</h5>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Full Name</label>
+                  <label className="block text-[11px] font-bold text-slate-300 mb-1">Full Name</label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. John Miller"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:border-purple-500 outline-hidden bg-white text-slate-900 font-medium"
+                    className="w-full px-3 py-2 text-xs rounded-xl glass-input font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Email Address</label>
+                  <label className="block text-[11px] font-bold text-slate-300 mb-1">Email Address</label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="e.g. jmiller@provision.store"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:border-purple-500 outline-hidden bg-white text-slate-900 font-medium"
+                    className="w-full px-3 py-2 text-xs rounded-xl glass-input font-medium"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Temporary Password</label>
+                  <label className="block text-[11px] font-bold text-slate-300 mb-1">Temporary Password</label>
                   <input
                     type="password"
                     required
@@ -174,15 +174,15 @@ export const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose }) => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Min. 6 characters"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:border-purple-500 outline-hidden bg-white text-slate-900 font-medium"
+                    className="w-full px-3 py-2 text-xs rounded-xl glass-input font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">Role / Permissions</label>
+                  <label className="block text-[11px] font-bold text-slate-300 mb-1">Role / Permissions</label>
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value as any)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:border-purple-500 outline-hidden bg-white text-slate-900 font-medium"
+                    className="w-full px-3 py-2 text-xs rounded-xl glass-input font-medium"
                   >
                     <option value="manager">Inventory Manager (Restricted Financials)</option>
                     <option value="admin">Store Administrator (Full Access)</option>
@@ -194,7 +194,7 @@ export const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose }) => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50"
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50 shadow-lg shadow-purple-600/20"
                 >
                   <UserPlus className="w-3.5 h-3.5" />
                   {isSubmitting ? "Creating Account..." : "Create Account"}
@@ -204,12 +204,12 @@ export const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose }) => {
           )}
 
           {/* Users List */}
-          <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden">
+          <div className="divide-y divide-white/5 border border-white/10 rounded-2xl overflow-hidden bg-white/5">
             {isLoading ? (
-              <div className="p-8 text-center text-xs text-slate-400">Loading staff accounts...</div>
+              <div className="p-8 text-center text-xs text-slate-500">Loading staff accounts...</div>
             ) : (
               users.map((u) => (
-                <div key={u.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition">
+                <div key={u.id} className="p-4 flex items-center justify-between hover:bg-white/5 transition">
                   <div className="flex items-center gap-3">
                     <div
                       className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-xs ${
@@ -219,8 +219,8 @@ export const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose }) => {
                       {u.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-slate-900">{u.name}</h4>
-                      <p className="text-[11px] text-slate-500">{u.email}</p>
+                      <h4 className="text-xs font-bold text-slate-200">{u.name}</h4>
+                      <p className="text-[11px] text-slate-400">{u.email}</p>
                     </div>
                   </div>
 
@@ -228,13 +228,13 @@ export const UsersModal: React.FC<UsersModalProps> = ({ isOpen, onClose }) => {
                     <span
                       className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
                         u.role === "admin"
-                          ? "bg-purple-50 text-purple-700 border-purple-200"
-                          : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                          : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                       }`}
                     >
                       {u.role === "admin" ? "Admin" : "Inventory Manager"}
                     </span>
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-[10px] text-emerald-400">
                       Active
                     </span>
                   </div>

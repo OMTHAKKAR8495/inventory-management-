@@ -478,12 +478,12 @@ export default function Home() {
           user.role === "admin" ? (
             <KhataLedgerView user={user} />
           ) : (
-            <div className="max-w-xl mx-auto my-12 p-8 bg-white rounded-3xl border border-slate-200 shadow-xs text-center space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto font-black text-lg">
+            <div className="max-w-xl mx-auto my-12 p-8 glass-panel rounded-3xl border border-white/10 shadow-2xl text-center space-y-3 text-slate-100">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-300 flex items-center justify-center mx-auto font-black text-lg">
                 ₹
               </div>
-              <h3 className="text-base font-bold text-slate-900">Access Restricted</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="text-base font-bold text-white">Access Restricted</h3>
+              <p className="text-xs text-slate-400">
                 Customer credit and Khata Ledgers are restricted to Store Administrator access.
               </p>
             </div>

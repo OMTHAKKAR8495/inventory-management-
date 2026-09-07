@@ -369,28 +369,28 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
   const validParsedCount = parsedRows.length - invalidParsedCount;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in text-slate-100">
       {/* Studio Header */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="glass-panel rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-blue-600 mb-1">
+          <div className="flex items-center gap-2 text-blue-400 mb-1">
             <Sparkles className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">Fast Bulk Inventory Ingestion</span>
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Bulk Add & Upload Studio</h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
+          <h2 className="text-2xl font-black text-white tracking-tight">Bulk Add & Upload Studio</h2>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
             Effortlessly ingest large wholesale shipments into the warehouse. Choose between uploading a spreadsheet file or entering products directly into the interactive spreadsheet table with Rupee (₹) pricing.
           </p>
         </div>
 
         {/* Subtab Switcher */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 self-start md:self-auto">
+        <div className="flex items-center gap-1 bg-white/5 p-1.5 rounded-2xl border border-white/10 self-start md:self-auto">
           <button
             onClick={() => setActiveSubTab("file")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
               activeSubTab === "file"
-                ? "bg-white text-blue-700 shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                : "text-slate-400 hover:text-white"
             }`}
           >
             <UploadCloud className="w-4 h-4" />
@@ -398,10 +398,10 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
           </button>
           <button
             onClick={() => setActiveSubTab("grid")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
               activeSubTab === "grid"
-                ? "bg-white text-blue-700 shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                : "text-slate-400 hover:text-white"
             }`}
           >
             <Table className="w-4 h-4" />
@@ -414,25 +414,25 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
       {activeSubTab === "file" && (
         <div className="space-y-6">
           {/* 3-Step Indicator */}
-          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs">
+          <div className="glass-panel rounded-2xl p-4 border border-white/10 shadow-xl">
             <div className="flex items-center justify-around text-xs font-bold">
-              <div className={`flex items-center gap-2 ${uploadStep >= 1 ? "text-blue-600" : "text-slate-400"}`}>
+              <div className={`flex items-center gap-2 ${uploadStep >= 1 ? "text-blue-400" : "text-slate-500"}`}>
                 <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs text-white ${
-                  uploadStep >= 1 ? "bg-blue-600" : "bg-slate-300"
+                  uploadStep >= 1 ? "bg-blue-600" : "bg-white/10"
                 }`}>1</span>
                 <span>1. Upload File</span>
               </div>
-              <div className="w-12 h-0.5 bg-slate-200 hidden sm:block" />
-              <div className={`flex items-center gap-2 ${uploadStep >= 2 ? "text-blue-600" : "text-slate-400"}`}>
+              <div className="w-12 h-0.5 bg-white/10 hidden sm:block" />
+              <div className={`flex items-center gap-2 ${uploadStep >= 2 ? "text-blue-400" : "text-slate-500"}`}>
                 <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs text-white ${
-                  uploadStep >= 2 ? "bg-blue-600" : "bg-slate-300"
+                  uploadStep >= 2 ? "bg-blue-600" : "bg-white/10"
                 }`}>2</span>
                 <span>2. Preview & Fix Errors</span>
               </div>
-              <div className="w-12 h-0.5 bg-slate-200 hidden sm:block" />
-              <div className={`flex items-center gap-2 ${uploadStep >= 3 ? "text-emerald-600" : "text-slate-400"}`}>
+              <div className="w-12 h-0.5 bg-white/10 hidden sm:block" />
+              <div className={`flex items-center gap-2 ${uploadStep >= 3 ? "text-emerald-400" : "text-slate-500"}`}>
                 <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs text-white ${
-                  uploadStep >= 3 ? "bg-emerald-600" : "bg-slate-300"
+                  uploadStep >= 3 ? "bg-emerald-600" : "bg-white/10"
                 }`}>3</span>
                 <span>3. Confirm & Ingest</span>
               </div>
@@ -448,7 +448,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className="bg-white border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-3xl p-10 text-center cursor-pointer transition group shadow-xs hover:shadow-md"
+                  className="glass-panel border-2 border-dashed border-white/20 hover:border-blue-400 rounded-3xl p-10 text-center cursor-pointer transition group shadow-2xl"
                 >
                   <input
                     type="file"
@@ -457,18 +457,18 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                     accept=".csv, .xlsx, .xls"
                     className="hidden"
                   />
-                  <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition shadow-xs">
+                  <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition shadow-lg shadow-blue-500/10">
                     <UploadCloud className="w-8 h-8" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-900 mb-1">
+                  <h3 className="text-base font-bold text-white mb-1">
                     Drag and drop your Inventory CSV or Excel file here
                   </h3>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4">
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto mb-4">
                     Supports .CSV, .XLSX, and .XLS format. All columns are auto-mapped and validated instantly.
                   </p>
                   <button
                     type="button"
-                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition inline-flex items-center gap-2"
+                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-500/20 transition inline-flex items-center gap-2 cursor-pointer"
                   >
                     <FileSpreadsheet className="w-4 h-4" />
                     Browse Local File
@@ -477,25 +477,25 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
               </div>
 
               {/* Template Download */}
-              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
-                <div className="flex items-center gap-2 text-slate-900">
-                  <Download className="w-4 h-4 text-blue-600" />
+              <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl space-y-4">
+                <div className="flex items-center gap-2 text-white">
+                  <Download className="w-4 h-4 text-blue-400" />
                   <h4 className="text-sm font-bold">Standard Template</h4>
                 </div>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs text-slate-400 leading-relaxed">
                   Download our pre-formatted wholesale template with pre-filled sample rows for Grains, Oils, Dal, and Spices in ₹.
                 </p>
 
                 <button
                   onClick={downloadSampleCSVTemplate}
-                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs"
+                  className="w-full py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/10 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
                   Download CSV Template
                 </button>
 
-                <div className="pt-3 border-t border-slate-100">
-                  <h5 className="text-[11px] font-bold text-slate-700 uppercase mb-2">Supported Columns:</h5>
+                <div className="pt-3 border-t border-white/10">
+                  <h5 className="text-[11px] font-bold text-slate-400 uppercase mb-2">Supported Columns:</h5>
                   <div className="flex flex-wrap gap-1.5">
                     {[
                       "Product Name",
@@ -512,7 +512,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                     ].map((col) => (
                       <span
                         key={col}
-                        className="text-[10px] font-medium bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200"
+                        className="text-[10px] font-medium bg-white/5 text-slate-300 px-2 py-0.5 rounded-md border border-white/10"
                       >
                         {col}
                       </span>
@@ -525,18 +525,18 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
 
           {/* Step 2: Interactive Preview & Inline Correction Table */}
           {uploadStep === 2 && (
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+            <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-slate-900">
-                      File Preview & Validation: <span className="text-blue-600">{file?.name}</span>
+                    <h3 className="text-base font-bold text-white">
+                      File Preview & Validation: <span className="text-blue-400">{file?.name}</span>
                     </h3>
-                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300">
                       {parsedRows.length} Rows Total
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-400 mt-0.5">
                     Review parsed data. Cells with errors are highlighted in red. You can edit values directly inside this table before saving.
                   </p>
                 </div>
@@ -548,7 +548,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                       setFile(null);
                       setParsedRows([]);
                     }}
-                    className="px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition"
+                    className="px-3.5 py-2 text-xs font-bold text-slate-300 hover:bg-white/10 rounded-xl transition cursor-pointer"
                   >
                     Cancel / Pick Another File
                   </button>
@@ -556,7 +556,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                   <button
                     onClick={commitParsedUpload}
                     disabled={isProcessing || validParsedCount === 0}
-                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 disabled:opacity-50"
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-500/20 transition flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                   >
                     <Check className="w-4 h-4" />
                     {isProcessing ? "Ingesting..." : `Confirm & Save ${validParsedCount} Items`}
@@ -565,25 +565,25 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
               </div>
 
               {invalidParsedCount > 0 ? (
-                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between gap-3 text-xs text-amber-900">
+                <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-between gap-3 text-xs text-amber-300">
                   <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
                     <span>
                       <strong className="font-bold">{invalidParsedCount} row(s)</strong> have missing required fields. Edit them below or delete invalid rows.
                     </span>
                   </div>
                 </div>
               ) : (
-                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-2 text-xs text-emerald-900">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center gap-2 text-xs text-emerald-300">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>All <strong>{validParsedCount} products</strong> passed validation and are ready to save!</span>
                 </div>
               )}
 
               {/* Editable Preview Table */}
-              <div className="overflow-x-auto rounded-2xl border border-slate-200">
+              <div className="overflow-x-auto rounded-2xl border border-white/10">
                 <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                  <thead className="bg-[#090e1a]/90 backdrop-blur-md border-b border-white/10 text-slate-300 font-bold uppercase tracking-wider text-[10px]">
                     <tr>
                       <th className="p-2.5 text-center w-10">#</th>
                       <th className="p-2.5 min-w-[200px]">Product Name *</th>
@@ -599,15 +599,15 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                       <th className="p-2.5 text-center w-12">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody className="divide-y divide-white/5">
                     {parsedRows.map((row, idx) => (
                       <tr
                         key={row.id}
                         className={`transition ${
-                          !row.isValid ? "bg-red-50/50 hover:bg-red-50" : "hover:bg-slate-50/80"
+                          !row.isValid ? "bg-red-500/10 hover:bg-red-500/20" : "hover:bg-white/5"
                         }`}
                       >
-                        <td className="p-2.5 text-center font-mono text-[11px] text-slate-500">
+                        <td className="p-2.5 text-center font-mono text-[11px] text-slate-400">
                           {idx + 1}
                         </td>
                         <td className="p-2">
@@ -618,8 +618,8 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                             placeholder="Enter product name"
                             className={`w-full px-2.5 py-1 rounded-lg border text-xs font-semibold ${
                               !row.name.trim()
-                                ? "border-red-400 bg-red-50 text-red-900 focus:ring-2 focus:ring-red-500/20"
-                                : "border-slate-300 focus:border-blue-500"
+                                ? "border-red-400 bg-red-500/10 text-red-200 focus:ring-2 focus:ring-red-500/20"
+                                : "glass-input text-white focus:border-blue-500"
                             } outline-hidden`}
                           />
                         </td>
@@ -627,7 +627,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                           <select
                             value={row.category}
                             onChange={(e) => updateParsedRow(idx, "category", e.target.value)}
-                            className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs bg-white focus:border-blue-500 outline-hidden"
+                            className="w-full px-2 py-1 rounded-lg border border-white/10 text-xs bg-slate-900 text-slate-200 focus:border-blue-500 outline-hidden"
                           >
                             {allCategories.map((c) => (
                               <option key={c} value={c}>
@@ -640,7 +640,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                           <select
                             value={row.unit}
                             onChange={(e) => updateParsedRow(idx, "unit", e.target.value)}
-                            className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs bg-white focus:border-blue-500 outline-hidden"
+                            className="w-full px-2 py-1 rounded-lg border border-white/10 text-xs bg-slate-900 text-slate-200 focus:border-blue-500 outline-hidden"
                           >
                             {COMMON_UNITS.map((u) => (
                               <option key={u} value={u}>
@@ -655,7 +655,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                             min="1"
                             value={row.bulk_pack_size}
                             onChange={(e) => updateParsedRow(idx, "bulk_pack_size", parseInt(e.target.value, 10) || 1)}
-                            className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs text-center focus:border-blue-500 outline-hidden"
+                            className="w-full px-2 py-1 rounded-lg glass-input text-white text-xs text-center focus:border-blue-500 outline-hidden"
                           />
                         </td>
                         {isAdmin && (
@@ -666,7 +666,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                               min="0"
                               value={row.cost_price}
                               onChange={(e) => updateParsedRow(idx, "cost_price", parseFloat(e.target.value) || 0)}
-                              className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs font-mono font-bold focus:border-blue-500 outline-hidden"
+                              className="w-full px-2 py-1 rounded-lg glass-input text-white text-xs font-mono font-bold focus:border-blue-500 outline-hidden"
                             />
                           </td>
                         )}
@@ -677,7 +677,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                             min="0"
                             value={row.selling_price}
                             onChange={(e) => updateParsedRow(idx, "selling_price", parseFloat(e.target.value) || 0)}
-                            className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs font-mono font-bold text-blue-700 focus:border-blue-500 outline-hidden"
+                            className="w-full px-2 py-1 rounded-lg glass-input text-emerald-400 text-xs font-mono font-bold focus:border-blue-500 outline-hidden"
                           />
                         </td>
                         <td className="p-2">
@@ -686,7 +686,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                             min="0"
                             value={row.stock_quantity}
                             onChange={(e) => updateParsedRow(idx, "stock_quantity", parseInt(e.target.value, 10) || 0)}
-                            className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs font-bold text-center focus:border-blue-500 outline-hidden"
+                            className="w-full px-2 py-1 rounded-lg glass-input text-white text-xs font-bold text-center focus:border-blue-500 outline-hidden"
                           />
                         </td>
                         <td className="p-2">
@@ -695,7 +695,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                             min="1"
                             value={row.reorder_level}
                             onChange={(e) => updateParsedRow(idx, "reorder_level", parseInt(e.target.value, 10) || 10)}
-                            className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs text-center focus:border-blue-500 outline-hidden"
+                            className="w-full px-2 py-1 rounded-lg glass-input text-white text-xs text-center focus:border-blue-500 outline-hidden"
                           />
                         </td>
                         <td className="p-2">
@@ -704,7 +704,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                             value={row.supplier}
                             onChange={(e) => updateParsedRow(idx, "supplier", e.target.value)}
                             placeholder="Supplier"
-                            className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs focus:border-blue-500 outline-hidden"
+                            className="w-full px-2 py-1 rounded-lg glass-input text-white text-xs focus:border-blue-500 outline-hidden"
                           />
                         </td>
                         <td className="p-2">
@@ -712,14 +712,14 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                             type="date"
                             value={row.expiry_date}
                             onChange={(e) => updateParsedRow(idx, "expiry_date", e.target.value)}
-                            className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs focus:border-blue-500 outline-hidden"
+                            className="w-full px-2 py-1 rounded-lg glass-input text-white text-xs focus:border-blue-500 outline-hidden"
                           />
                         </td>
                         <td className="p-2 text-center">
                           <button
                             type="button"
                             onClick={() => removeParsedRow(idx)}
-                            className="p-1 text-slate-400 hover:text-red-600 rounded-md transition"
+                            className="p-1 text-slate-400 hover:text-red-400 rounded-md transition cursor-pointer"
                             title="Remove Row"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -735,30 +735,30 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
 
           {/* Step 3: Success Summary Banner */}
           {uploadStep === 3 && uploadSummary && (
-            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xs text-center space-y-6">
-              <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-md shadow-emerald-500/10">
+            <div className="glass-panel rounded-3xl p-8 border border-white/10 shadow-2xl text-center space-y-6">
+              <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/10">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
 
               <div>
-                <h3 className="text-xl font-bold text-slate-900">Bulk Ingestion Complete!</h3>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                <h3 className="text-xl font-bold text-white">Bulk Ingestion Complete!</h3>
+                <p className="text-xs sm:text-sm text-slate-400 mt-1">
                   Your warehouse inventory has been updated successfully in Indian Rupees (₹).
                 </p>
               </div>
 
               <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
-                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-                  <div className="text-2xl font-black text-emerald-700">{uploadSummary.inserted}</div>
-                  <span className="text-[11px] font-semibold text-emerald-800">New Products Added</span>
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
+                  <div className="text-2xl font-black text-emerald-400">{uploadSummary.inserted}</div>
+                  <span className="text-[11px] font-semibold text-emerald-300">New Products Added</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100">
-                  <div className="text-2xl font-black text-blue-700">{uploadSummary.updated}</div>
-                  <span className="text-[11px] font-semibold text-blue-800">Stock Updated</span>
+                <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30">
+                  <div className="text-2xl font-black text-blue-400">{uploadSummary.updated}</div>
+                  <span className="text-[11px] font-semibold text-blue-300">Stock Updated</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                  <div className="text-2xl font-black text-slate-700">{uploadSummary.failed}</div>
-                  <span className="text-[11px] font-semibold text-slate-600">Skipped / Failed</span>
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                  <div className="text-2xl font-black text-slate-400">{uploadSummary.failed}</div>
+                  <span className="text-[11px] font-semibold text-slate-400">Skipped / Failed</span>
                 </div>
               </div>
 
@@ -769,13 +769,13 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                     setFile(null);
                     setParsedRows([]);
                   }}
-                  className="px-5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                  className="px-5 py-2.5 rounded-xl border border-white/10 text-xs font-bold text-slate-300 hover:bg-white/10 transition cursor-pointer"
                 >
                   Upload Another File
                 </button>
                 <button
                   onClick={onSuccessNavigateToInventory}
-                  className="px-6 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 shadow-sm transition"
+                  className="px-6 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition cursor-pointer"
                 >
                   Go to Stock Catalog
                 </button>
@@ -787,14 +787,14 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
 
       {/* ===================== TAB 2: MANUAL SPREADSHEET GRID ENTRY ===================== */}
       {activeSubTab === "grid" && (
-        <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-2xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
             <div>
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Table className="w-4 h-4 text-blue-600" />
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Table className="w-4 h-4 text-blue-400" />
                 Spreadsheet-Style Grid Entry (₹)
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-400">
                 Type directly into this interactive grid like Excel to quickly add multiple items at once with Rupee pricing.
               </p>
             </div>
@@ -803,9 +803,9 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
               <button
                 type="button"
                 onClick={addGridRow}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
               >
-                <Plus className="w-4 h-4 text-blue-600" />
+                <Plus className="w-4 h-4 text-blue-400" />
                 Add Row
               </button>
 
@@ -813,7 +813,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                 type="button"
                 onClick={saveManualGrid}
                 disabled={isGridSubmitting}
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 disabled:opacity-50"
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-500/20 transition flex items-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 {isGridSubmitting ? "Saving All..." : "Save All to Catalog"}
@@ -822,16 +822,16 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
           </div>
 
           {gridErrorMsg && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-300 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
               {gridErrorMsg}
             </div>
           )}
 
           {/* Grid Table */}
-          <div className="overflow-x-auto rounded-2xl border border-slate-200">
+          <div className="overflow-x-auto rounded-2xl border border-white/10">
             <table className="w-full text-left text-xs border-collapse">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+              <thead className="bg-[#090e1a]/90 backdrop-blur-md border-b border-white/10 text-slate-300 font-bold uppercase tracking-wider text-[10px]">
                 <tr>
                   <th className="p-2.5 text-center w-10">#</th>
                   <th className="p-2.5 min-w-[200px]">Product Name *</th>
@@ -848,12 +848,12 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                   <th className="p-2.5 text-center w-16">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-white/5">
                 {gridRows.map((row, idx) => {
                   const margin = row.selling_price - row.cost_price;
                   return (
-                    <tr key={row.id} className="hover:bg-slate-50 transition">
-                      <td className="p-2.5 text-center font-mono text-[11px] text-slate-500">
+                    <tr key={row.id} className="hover:bg-white/5 transition">
+                      <td className="p-2.5 text-center font-mono text-[11px] text-slate-400">
                         {idx + 1}
                       </td>
                       <td className="p-2">
@@ -862,14 +862,14 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                           value={row.name}
                           onChange={(e) => updateGridRow(idx, "name", e.target.value)}
                           placeholder="e.g. Masoor Dal (25kg)"
-                          className="w-full px-2.5 py-1 rounded-lg border border-slate-300 focus:border-blue-500 text-xs font-semibold outline-hidden text-slate-900"
+                          className="w-full px-2.5 py-1 rounded-lg glass-input text-white text-xs font-semibold outline-hidden focus:border-blue-500"
                         />
                       </td>
                       <td className="p-2">
                         <select
                           value={row.category}
                           onChange={(e) => updateGridRow(idx, "category", e.target.value)}
-                          className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs bg-white focus:border-blue-500 outline-hidden font-medium text-slate-900"
+                          className="w-full px-2 py-1 rounded-lg border border-white/10 text-xs bg-slate-900 focus:border-blue-500 outline-hidden font-medium text-slate-200"
                         >
                           {allCategories.map((c) => (
                             <option key={c} value={c}>
@@ -882,7 +882,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                         <select
                           value={row.unit}
                           onChange={(e) => updateGridRow(idx, "unit", e.target.value)}
-                          className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs bg-white focus:border-blue-500 outline-hidden text-slate-900"
+                          className="w-full px-2 py-1 rounded-lg border border-white/10 text-xs bg-slate-900 focus:border-blue-500 outline-hidden text-slate-200"
                         >
                           {COMMON_UNITS.map((u) => (
                             <option key={u} value={u}>
@@ -897,7 +897,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                           min="1"
                           value={row.bulk_pack_size}
                           onChange={(e) => updateGridRow(idx, "bulk_pack_size", parseInt(e.target.value, 10) || 1)}
-                          className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs text-center focus:border-blue-500 outline-hidden text-slate-900"
+                          className="w-full px-2 py-1 rounded-lg glass-input text-white text-xs text-center focus:border-blue-500 outline-hidden"
                         />
                       </td>
                       {isAdmin && (
@@ -908,7 +908,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                             min="0"
                             value={row.cost_price}
                             onChange={(e) => updateGridRow(idx, "cost_price", parseFloat(e.target.value) || 0)}
-                            className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs font-mono font-bold focus:border-blue-500 outline-hidden text-slate-900"
+                            className="w-full px-2 py-1 rounded-lg glass-input text-white text-xs font-mono font-bold focus:border-blue-500 outline-hidden"
                           />
                         </td>
                       )}
@@ -919,14 +919,14 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                           min="0"
                           value={row.selling_price}
                           onChange={(e) => updateGridRow(idx, "selling_price", parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs font-mono font-bold text-blue-700 focus:border-blue-500 outline-hidden"
+                          className="w-full px-2 py-1 rounded-lg glass-input text-emerald-400 text-xs font-mono font-bold focus:border-blue-500 outline-hidden"
                         />
                       </td>
                       {isAdmin && (
                         <td className="p-2 text-center">
                           <span
                             className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                              margin >= 0 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                              margin >= 0 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : "bg-red-500/20 text-red-300 border border-red-500/30"
                             }`}
                           >
                             ₹{margin.toFixed(2)}
@@ -939,7 +939,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                           min="0"
                           value={row.stock_quantity}
                           onChange={(e) => updateGridRow(idx, "stock_quantity", parseInt(e.target.value, 10) || 0)}
-                          className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs font-bold text-center focus:border-blue-500 outline-hidden text-slate-900"
+                          className="w-full px-2 py-1 rounded-lg glass-input text-white text-xs font-bold text-center focus:border-blue-500 outline-hidden"
                         />
                       </td>
                       <td className="p-2">
@@ -948,7 +948,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                           min="1"
                           value={row.reorder_level}
                           onChange={(e) => updateGridRow(idx, "reorder_level", parseInt(e.target.value, 10) || 10)}
-                          className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs text-center focus:border-blue-500 outline-hidden text-slate-900"
+                          className="w-full px-2 py-1 rounded-lg glass-input text-white text-xs text-center focus:border-blue-500 outline-hidden"
                         />
                       </td>
                       <td className="p-2">
@@ -957,7 +957,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                           value={row.supplier}
                           onChange={(e) => updateGridRow(idx, "supplier", e.target.value)}
                           placeholder="Supplier Name"
-                          className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs focus:border-blue-500 outline-hidden text-slate-900"
+                          className="w-full px-2 py-1 rounded-lg glass-input text-white text-xs focus:border-blue-500 outline-hidden"
                         />
                       </td>
                       <td className="p-2">
@@ -965,7 +965,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                           type="date"
                           value={row.expiry_date}
                           onChange={(e) => updateGridRow(idx, "expiry_date", e.target.value)}
-                          className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs focus:border-blue-500 outline-hidden text-slate-900"
+                          className="w-full px-2 py-1 rounded-lg glass-input text-white text-xs focus:border-blue-500 outline-hidden"
                         />
                       </td>
                       <td className="p-2 text-center">
@@ -973,7 +973,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                           <button
                             type="button"
                             onClick={() => duplicateGridRow(idx)}
-                            className="p-1 text-slate-400 hover:text-blue-600 rounded-md transition"
+                            className="p-1 text-slate-400 hover:text-blue-400 rounded-md transition cursor-pointer"
                             title="Duplicate Row"
                           >
                             <Copy className="w-3.5 h-3.5" />
@@ -981,7 +981,7 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
                           <button
                             type="button"
                             onClick={() => removeGridRow(idx)}
-                            className="p-1 text-slate-400 hover:text-red-600 rounded-md transition"
+                            className="p-1 text-slate-400 hover:text-red-400 rounded-md transition cursor-pointer"
                             title="Delete Row"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -999,12 +999,12 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
             <button
               type="button"
               onClick={addGridRow}
-              className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 py-1"
+              className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 py-1 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               Add Another Row
             </button>
-            <span className="text-xs text-slate-500">{gridRows.length} rows in spreadsheet</span>
+            <span className="text-xs text-slate-400">{gridRows.length} rows in spreadsheet</span>
           </div>
         </div>
       )}

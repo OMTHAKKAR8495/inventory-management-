@@ -30,6 +30,7 @@ import {
   Eye,
   Download,
   Layers,
+  X,
 } from "lucide-react";
 import { Product, Customer, CartItem, PaymentMethod, SavedBill } from "@/lib/types";
 import { generateInvoicePDF } from "@/lib/exportUtils";
@@ -845,30 +846,30 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in text-slate-100">
       {/* Top Navigation & View Switcher Banner */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200">
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold border border-blue-500/30">
               Wholesale POS
             </span>
-            <span className="text-xs text-slate-500 font-medium">Quick Billing & Saved Hold Invoices</span>
+            <span className="text-xs text-slate-400 font-medium">Quick Billing & Saved Hold Invoices</span>
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+          <h2 className="text-2xl font-black text-slate-100 tracking-tight flex items-center gap-2">
             {viewMode === "counter" ? (
               <>
-                <ShoppingCart className="w-6 h-6 text-blue-600" />
+                <ShoppingCart className="w-6 h-6 text-blue-400" />
                 Shopfloor Quick Billing Counter
               </>
             ) : viewMode === "saved_bills" ? (
               <>
-                <Bookmark className="w-6 h-6 text-indigo-600" />
+                <Bookmark className="w-6 h-6 text-indigo-400" />
                 Saved Bills & Hold Invoices
               </>
             ) : (
               <>
-                <FileText className="w-6 h-6 text-emerald-600" />
+                <FileText className="w-6 h-6 text-emerald-400" />
                 Passed Bills & Invoice Archive
               </>
             )}
@@ -878,13 +879,13 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
         {/* View Mode Toggle & Quick Actions */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Segmented Switcher */}
-          <div className="bg-slate-100 p-1 rounded-2xl flex items-center border border-slate-200">
+          <div className="bg-white/5 p-1 rounded-2xl flex items-center border border-white/10">
             <button
               onClick={() => setViewMode("counter")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
                 viewMode === "counter"
-                  ? "bg-white text-blue-700 shadow-xs border border-slate-200"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-blue-500/20 text-blue-300 shadow-sm border border-blue-500/30"
+                  : "text-slate-400 hover:text-slate-200"
               }`}
             >
               <ShoppingCart className="w-3.5 h-3.5" />
@@ -900,8 +901,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
               onClick={() => setViewMode("saved_bills")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
                 viewMode === "saved_bills"
-                  ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-indigo-500/20 text-indigo-300 shadow-sm border border-indigo-500/30"
+                  : "text-slate-400 hover:text-slate-200"
               }`}
             >
               <Bookmark className="w-3.5 h-3.5" />
@@ -910,7 +911,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                 className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
                   savedBills.length > 0
                     ? "bg-indigo-600 text-white"
-                    : "bg-slate-200 text-slate-600"
+                    : "bg-white/10 text-slate-400"
                 }`}
               >
                 {savedBills.length}
@@ -924,8 +925,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
               }}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
                 viewMode === "passed_bills"
-                  ? "bg-white text-emerald-700 shadow-xs border border-slate-200"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-emerald-500/20 text-emerald-300 shadow-sm border border-emerald-500/30"
+                  : "text-slate-400 hover:text-slate-200"
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
@@ -934,7 +935,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                 className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
                   passedInvoices.length > 0
                     ? "bg-emerald-600 text-white"
-                    : "bg-slate-200 text-slate-600"
+                    : "bg-white/10 text-slate-400"
                 }`}
               >
                 {passedInvoices.length}
@@ -946,7 +947,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
           <button
             onClick={() => loadData()}
             disabled={isSearching}
-            className="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-blue-200"
+            className="px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-blue-500/30"
             title="Sync latest live stock quantities directly from database"
           >
             <RotateCw className={`w-3.5 h-3.5 ${isSearching ? "animate-spin text-blue-600" : ""}`} />
@@ -995,7 +996,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* LEFT (7 Cols): Product Catalog & Scanner */}
           <div className="lg:col-span-7 space-y-4">
-            <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
+            <div className="glass-panel rounded-3xl p-5 border border-white/10 shadow-xl space-y-4">
               {/* Search & Category Filter */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
@@ -1006,14 +1007,14 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Scan barcode or type product / SKU..."
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden"
+                    className="w-full pl-10 pr-4 py-2.5 glass-input rounded-xl text-xs font-medium focus:border-blue-400"
                   />
                 </div>
 
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 outline-hidden"
+                  className="px-3 py-2.5 glass-input rounded-xl text-xs font-medium"
                 >
                   <option value="all">All Departments ({products.length})</option>
                   {categories.map((c) => (
@@ -1038,8 +1039,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                       onClick={() => !isOutOfStock && addToCart(p)}
                       className={`p-3.5 rounded-2xl border transition text-left flex flex-col justify-between select-none relative group ${
                         isOutOfStock
-                          ? "bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed"
-                          : "bg-white hover:bg-blue-50/40 border-slate-200 hover:border-blue-300 shadow-2xs hover:shadow-xs cursor-pointer"
+                          ? "bg-white/5 border-white/5 opacity-50 cursor-not-allowed"
+                          : "bg-white/5 hover:bg-white/10 border-white/10 hover:border-blue-400/50 shadow-lg cursor-pointer"
                       }`}
                     >
                       {inCartQty > 0 && (
@@ -1052,29 +1053,29 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
                           {p.category}
                         </span>
-                        <h4 className="text-xs font-bold text-slate-900 line-clamp-2 mt-0.5 leading-snug">
+                        <h4 className="text-xs font-bold text-slate-100 line-clamp-2 mt-0.5 leading-snug">
                           {p.name}
                         </h4>
-                        <p className="text-[10px] font-mono text-slate-500 mt-1">
+                        <p className="text-[10px] font-mono text-slate-400 mt-1">
                           SKU: {p.sku}
                         </p>
                       </div>
 
-                      <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
+                      <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between">
                         <div>
-                          <div className="text-sm font-black text-slate-900">
+                          <div className="text-sm font-black text-amber-400 font-mono">
                             ₹{p.selling_price.toLocaleString("en-IN")}
                           </div>
                           {heldQty > 0 ? (
                             <div className="flex flex-col mt-0.5">
                               <span
                                 className={`text-[10px] font-black ${
-                                  isOutOfStock ? "text-red-600" : "text-emerald-600"
+                                  isOutOfStock ? "text-red-400" : "text-emerald-400"
                                 }`}
                               >
                                 {isOutOfStock ? "0 Available" : `${availableStock} ${p.unit} Available`}
                               </span>
-                              <span className="text-[9px] text-amber-700 font-bold bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200 inline-block w-fit mt-0.5">
+                              <span className="text-[9px] text-amber-300 font-bold bg-amber-500/20 px-1.5 py-0.2 rounded border border-amber-500/30 inline-block w-fit mt-0.5">
                                 {heldQty} in Saved Bills
                               </span>
                             </div>
@@ -1082,10 +1083,10 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                             <span
                               className={`text-[10px] font-semibold ${
                                 isOutOfStock
-                                  ? "text-red-600 font-bold"
+                                  ? "text-red-400 font-bold"
                                   : p.stock_quantity <= p.reorder_level
-                                  ? "text-amber-600"
-                                  : "text-emerald-600"
+                                  ? "text-amber-400"
+                                  : "text-emerald-400"
                               }`}
                             >
                               {isOutOfStock ? "Out of Stock" : `${p.stock_quantity} ${p.unit}`}
@@ -1094,7 +1095,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                         </div>
 
                         {!isOutOfStock && (
-                          <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition">
+                          <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition">
                             <Plus className="w-4 h-4" />
                           </div>
                         )}
@@ -1108,33 +1109,33 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
           {/* RIGHT (5 Cols): Active Cart, Hold Option & Complete Sale */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="glass-panel rounded-3xl p-5 border border-white/10 shadow-xl space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
                 <div className="flex items-center gap-2">
-                  <Receipt className="w-5 h-5 text-blue-600" />
-                  <h3 className="text-sm font-bold text-slate-900">Billing Cart ({cart.length} items)</h3>
+                  <Receipt className="w-5 h-5 text-blue-400" />
+                  <h3 className="text-sm font-bold text-slate-100">Billing Cart ({cart.length} items)</h3>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setViewMode("saved_bills")}
-                    className="text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-xl border border-indigo-200 transition flex items-center gap-1 shadow-2xs"
+                    className="text-[11px] font-bold text-indigo-300 bg-indigo-500/20 hover:bg-indigo-500/30 px-2.5 py-1 rounded-xl border border-indigo-500/30 transition flex items-center gap-1"
                     title="View held & saved bills"
                   >
                     <Bookmark className="w-3.5 h-3.5" />
                     Saved Bills ({savedBills.length})
                   </button>
-                  <span className="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-200">
+                  <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-xl border border-amber-500/30">
                     ₹{grandTotal.toLocaleString("en-IN")}
                   </span>
                 </div>
               </div>
 
               {/* Customer Selector / Khata Link */}
-              <div className="space-y-2 p-3 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+              <div className="space-y-2 p-3 bg-white/5 rounded-2xl border border-white/10">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-300">
                   <span>Customer Type:</span>
-                  <span className="text-[11px] text-blue-600 font-medium">B2B Khata / Retail Walk-in</span>
+                  <span className="text-[11px] text-blue-400 font-medium">B2B Khata / Retail Walk-in</span>
                 </div>
 
                 <select
@@ -1154,7 +1155,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                       }
                     }
                   }}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-hidden focus:border-blue-500"
+                  className="w-full px-3 py-2 glass-input rounded-xl text-xs font-semibold"
                 >
                   <option value="walk_in">Walk-in Cash Retail Customer</option>
                   {customers.map((c) => (
@@ -1171,31 +1172,31 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
                       placeholder="Customer Name"
-                      className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 outline-hidden"
+                      className="px-3 py-1.5 glass-input rounded-xl text-xs"
                     />
                     <input
                       type="tel"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
                       placeholder="Mobile (optional)"
-                      className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 outline-hidden"
+                      className="px-3 py-1.5 glass-input rounded-xl text-xs"
                     />
                   </div>
                 )}
               </div>
 
               {/* Cart Items List */}
-              <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-2xl">
+              <div className="max-h-56 overflow-y-auto divide-y divide-white/5 border border-white/10 rounded-2xl bg-white/5">
                 {cart.length === 0 ? (
-                  <div className="p-6 text-center text-slate-400 space-y-2">
-                    <ShoppingCart className="w-8 h-8 text-slate-300 mx-auto" />
-                    <p className="text-xs font-semibold text-slate-500">Cart is empty</p>
-                    <p className="text-[11px] text-slate-400">Click products from the catalog to add items</p>
+                  <div className="p-6 text-center text-slate-500 space-y-2">
+                    <ShoppingCart className="w-8 h-8 text-slate-600 mx-auto" />
+                    <p className="text-xs font-semibold text-slate-400">Cart is empty</p>
+                    <p className="text-[11px] text-slate-500">Click products from the catalog to add items</p>
                     {savedBills.length > 0 && (
                       <button
                         type="button"
                         onClick={() => setViewMode("saved_bills")}
-                        className="mt-2 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 border border-indigo-200"
+                        className="mt-2 px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 border border-indigo-500/30"
                       >
                         <Bookmark className="w-3.5 h-3.5" />
                         View {savedBills.length} Saved Hold Bills
@@ -1204,12 +1205,12 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   </div>
                 ) : (
                   cart.map((item) => (
-                    <div key={item.product.id} className="p-3 flex items-center justify-between gap-3 hover:bg-slate-50 transition">
+                    <div key={item.product.id} className="p-3 flex items-center justify-between gap-3 hover:bg-white/5 transition">
                       <div className="min-w-0 flex-1">
-                        <h5 className="text-xs font-bold text-slate-900 truncate">{item.product.name}</h5>
-                        <p className="text-[11px] text-slate-500 font-mono">
+                        <h5 className="text-xs font-bold text-slate-200 truncate">{item.product.name}</h5>
+                        <p className="text-[11px] text-slate-400 font-mono">
                           ₹{item.unit_price} × {item.quantity} = ₹{item.total_price.toLocaleString("en-IN")}
-                          <span className="ml-2 text-[10px] text-slate-400">
+                          <span className="ml-2 text-[10px] text-slate-500">
                             (Stock: {item.product.stock_quantity})
                           </span>
                         </p>
@@ -1218,22 +1219,22 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                          className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs"
+                          className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 flex items-center justify-center font-bold text-xs"
                         >
                           <Minus className="w-3 h-3" />
                         </button>
-                        <span className="w-7 text-center font-mono font-bold text-xs text-slate-900">
+                        <span className="w-7 text-center font-mono font-bold text-xs text-slate-100">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                          className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs"
+                          className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 flex items-center justify-center font-bold text-xs"
                         >
                           <Plus className="w-3 h-3" />
                         </button>
                         <button
                           onClick={() => removeFromCart(item.product.id)}
-                          className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg transition"
+                          className="p-1.5 text-slate-400 hover:text-red-400 rounded-lg transition"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1247,22 +1248,22 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
               <div className="space-y-3 pt-2">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Discount (₹)</label>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">Discount (₹)</label>
                     <input
                       type="number"
                       min="0"
                       value={discountAmount || ""}
                       onChange={(e) => setDiscountAmount(Math.max(0, Number(e.target.value) || 0))}
                       placeholder="₹0"
-                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 outline-hidden"
+                      className="w-full px-3 py-1.5 glass-input rounded-xl text-xs font-mono font-bold"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-600 mb-1">GST Tax Slab</label>
+                    <label className="block text-[11px] font-bold text-slate-400 mb-1">GST Tax Slab</label>
                     <select
                       value={taxPercent}
                       onChange={(e) => setTaxPercent(Number(e.target.value))}
-                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 outline-hidden"
+                      className="w-full px-3 py-1.5 glass-input rounded-xl text-xs font-semibold"
                     >
                       <option value={0}>0% (Tax Exempt)</option>
                       <option value={5}>5% GST (Grains / Oil)</option>
@@ -1279,24 +1280,24 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Bill / Hold Notes (e.g. Order token #, Delivery time)"
-                    className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 outline-hidden"
+                    className="w-full px-3 py-1.5 glass-input rounded-xl text-xs"
                   />
                 </div>
 
                 {/* Payment Mode Selector */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Payment Method</label>
+                  <label className="block text-[11px] font-bold text-slate-400 mb-1">Payment Method</label>
                   <div className="grid grid-cols-4 gap-1.5">
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("cash")}
                       className={`py-2 px-1 rounded-xl text-xs font-bold border transition flex flex-col items-center gap-1 ${
                         paymentMethod === "cash"
-                          ? "bg-emerald-50 border-emerald-400 text-emerald-800 shadow-2xs"
-                          : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-sm"
+                          : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
                       }`}
                     >
-                      <Banknote className="w-4 h-4 text-emerald-600" />
+                      <Banknote className="w-4 h-4 text-emerald-400" />
                       Cash
                     </button>
 
@@ -1305,11 +1306,11 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                       onClick={() => setPaymentMethod("upi")}
                       className={`py-2 px-1 rounded-xl text-xs font-bold border transition flex flex-col items-center gap-1 ${
                         paymentMethod === "upi"
-                          ? "bg-blue-50 border-blue-400 text-blue-800 shadow-2xs"
-                          : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                          ? "bg-blue-500/20 border-blue-500/40 text-blue-300 shadow-sm"
+                          : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
                       }`}
                     >
-                      <Smartphone className="w-4 h-4 text-blue-600" />
+                      <Smartphone className="w-4 h-4 text-blue-400" />
                       UPI / QR
                     </button>
 
@@ -1318,11 +1319,11 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                       onClick={() => setPaymentMethod("khata")}
                       className={`py-2 px-1 rounded-xl text-xs font-bold border transition flex flex-col items-center gap-1 ${
                         paymentMethod === "khata"
-                          ? "bg-purple-50 border-purple-400 text-purple-800 shadow-2xs"
-                          : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                          ? "bg-purple-500/20 border-purple-500/40 text-purple-300 shadow-sm"
+                          : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
                       }`}
                     >
-                      <BookOpen className="w-4 h-4 text-purple-600" />
+                      <BookOpen className="w-4 h-4 text-purple-400" />
                       Khata
                     </button>
 
@@ -1331,37 +1332,37 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                       onClick={() => setPaymentMethod("card")}
                       className={`py-2 px-1 rounded-xl text-xs font-bold border transition flex flex-col items-center gap-1 ${
                         paymentMethod === "card"
-                          ? "bg-amber-50 border-amber-400 text-amber-800 shadow-2xs"
-                          : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                          ? "bg-amber-500/20 border-amber-500/40 text-amber-300 shadow-sm"
+                          : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
                       }`}
                     >
-                      <CreditCard className="w-4 h-4 text-amber-600" />
+                      <CreditCard className="w-4 h-4 text-amber-400" />
                       Card
                     </button>
                   </div>
                 </div>
 
                 {/* Bill Totals Summary Card */}
-                <div className="p-4 bg-gradient-to-br from-slate-50 to-blue-50/50 rounded-2xl border border-slate-200 space-y-1.5 text-xs">
-                  <div className="flex justify-between text-slate-600 font-medium">
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-1.5 text-xs">
+                  <div className="flex justify-between text-slate-400 font-medium">
                     <span>Subtotal:</span>
                     <span>₹{subtotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                   </div>
                   {discountAmount > 0 && (
-                    <div className="flex justify-between text-emerald-700 font-medium">
+                    <div className="flex justify-between text-emerald-400 font-medium">
                       <span>Discount:</span>
                       <span>- ₹{discountAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                     </div>
                   )}
                   {taxAmount > 0 && (
-                    <div className="flex justify-between text-slate-600 font-medium">
+                    <div className="flex justify-between text-slate-400 font-medium">
                       <span>GST ({taxPercent}%):</span>
                       <span>+ ₹{taxAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                     </div>
                   )}
-                  <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
-                    <span className="text-sm font-bold text-slate-900">Total Payable:</span>
-                    <span className="text-xl font-black text-blue-700">
+                  <div className="pt-2 border-t border-white/10 flex justify-between items-center">
+                    <span className="text-sm font-bold text-slate-200">Total Payable:</span>
+                    <span className="text-xl font-black text-amber-400 font-mono">
                       ₹{grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -1374,10 +1375,10 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                     type="button"
                     onClick={handleSaveCurrentBill}
                     disabled={cart.length === 0}
-                    className="sm:col-span-1 py-3 px-3 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-2xl text-xs font-black shadow-xs transition flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="sm:col-span-1 py-3 px-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-2xl text-xs font-black shadow-lg transition flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Save current cart as draft without finalizing invoice"
                   >
-                    <Bookmark className="w-4 h-4 text-amber-600" />
+                    <Bookmark className="w-4 h-4 text-amber-400" />
                     Save Bill (Hold)
                   </button>
 
@@ -1386,7 +1387,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                     type="button"
                     onClick={handleCheckout}
                     disabled={isCheckingOut || cart.length === 0}
-                    className="sm:col-span-2 py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl text-xs font-black shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="sm:col-span-2 py-3.5 px-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 rounded-2xl text-xs font-black shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isCheckingOut ? (
                       "Processing Sale..."
@@ -1409,49 +1410,49 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
         <div className="space-y-6">
           {/* Summary Metric Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-2xs flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+            <div className="glass-panel p-4 rounded-3xl border border-white/10 shadow-lg flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold">
                 <Bookmark className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Saved</p>
-                <h4 className="text-xl font-black text-slate-900">{savedBills.length} Bills</h4>
+                <h4 className="text-xl font-black text-slate-100">{savedBills.length} Bills</h4>
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-2xs flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+            <div className="glass-panel p-4 rounded-3xl border border-emerald-500/30 shadow-lg flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
                 <Wallet className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Hold Value</p>
-                <h4 className="text-xl font-black text-emerald-700">₹{totalSavedValue.toLocaleString("en-IN")}</h4>
+                <h4 className="text-xl font-black text-emerald-400 font-mono">₹{totalSavedValue.toLocaleString("en-IN")}</h4>
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-2xs flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <div className="glass-panel p-4 rounded-3xl border border-blue-500/30 shadow-lg flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center font-bold">
                 <Calendar className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Saved Today</p>
-                <h4 className="text-xl font-black text-blue-700">{todaySavedCount} Bills</h4>
+                <h4 className="text-xl font-black text-blue-400">{todaySavedCount} Bills</h4>
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-2xs flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+            <div className="glass-panel p-4 rounded-3xl border border-purple-500/30 shadow-lg flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center font-bold">
                 <BookOpen className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Khata Credit Holds</p>
-                <h4 className="text-xl font-black text-purple-700">{khataSavedCount} Bills</h4>
+                <h4 className="text-xl font-black text-purple-400">{khataSavedCount} Bills</h4>
               </div>
             </div>
           </div>
 
           {/* Filter Bar */}
-          <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
+          <div className="glass-panel rounded-3xl p-5 border border-white/10 shadow-lg space-y-4">
             <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
               {/* Search */}
               <div className="relative w-full md:w-80">
@@ -1461,7 +1462,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   value={savedBillsSearch}
                   onChange={(e) => setSavedBillsSearch(e.target.value)}
                   placeholder="Search by Bill #, Customer, Phone, SKU..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-hidden"
+                  className="w-full pl-10 pr-4 py-2.5 glass-input rounded-xl text-xs font-medium focus:border-indigo-400"
                 />
               </div>
 
@@ -1471,8 +1472,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   onClick={() => setSavedBillsFilter("all")}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                     savedBillsFilter === "all"
-                      ? "bg-indigo-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
                   }`}
                 >
                   All ({savedBills.length})
@@ -1481,8 +1482,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   onClick={() => setSavedBillsFilter("today")}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                     savedBillsFilter === "today"
-                      ? "bg-indigo-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
                   }`}
                 >
                   Today ({todaySavedCount})
@@ -1491,8 +1492,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   onClick={() => setSavedBillsFilter("high_value")}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                     savedBillsFilter === "high_value"
-                      ? "bg-indigo-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
                   }`}
                 >
                   High Value (≥₹10k)
@@ -1501,8 +1502,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   onClick={() => setSavedBillsFilter("khata")}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                     savedBillsFilter === "khata"
-                      ? "bg-indigo-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
                   }`}
                 >
                   Khata Holds
@@ -1511,8 +1512,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   onClick={() => setSavedBillsFilter("cash")}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                     savedBillsFilter === "cash"
-                      ? "bg-indigo-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
                   }`}
                 >
                   Cash
@@ -1521,8 +1522,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   onClick={() => setSavedBillsFilter("upi")}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                     savedBillsFilter === "upi"
-                      ? "bg-indigo-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
                   }`}
                 >
                   UPI
@@ -1531,13 +1532,13 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
               {/* Sort Dropdown */}
               <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-                <span className="text-xs text-slate-500 font-bold flex items-center gap-1">
+                <span className="text-xs text-slate-400 font-bold flex items-center gap-1">
                   <SlidersHorizontal className="w-3.5 h-3.5" /> Sort:
                 </span>
                 <select
                   value={savedBillsSort}
                   onChange={(e: any) => setSavedBillsSort(e.target.value)}
-                  className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-hidden"
+                  className="px-3 py-2 glass-input rounded-xl text-xs font-semibold"
                 >
                   <option value="newest">Newest First</option>
                   <option value="oldest">Oldest First</option>
@@ -1550,19 +1551,19 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
           {/* Saved Bills List / Cards Grid */}
           {filteredSavedBills.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-3">
-              <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto">
+            <div className="glass-panel rounded-3xl p-12 text-center border border-white/10 space-y-3 shadow-lg">
+              <div className="w-14 h-14 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-full flex items-center justify-center mx-auto">
                 <Bookmark className="w-7 h-7" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">No Saved Bills Found</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              <h3 className="text-base font-bold text-slate-100">No Saved Bills Found</h3>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto">
                 {savedBillsSearch || savedBillsFilter !== "all"
                   ? "No saved bills match your current filters. Try resetting search or filter pills."
                   : "You haven't saved any draft bills yet. When creating a bill in Counter POS, click 'Save Bill (Hold)' to hold it here for later."}
               </p>
               <button
                 onClick={() => setViewMode("counter")}
-                className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-xs"
+                className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-md shadow-blue-600/20"
               >
                 <ShoppingCart className="w-4 h-4" /> Go to Billing Counter
               </button>
@@ -1577,17 +1578,17 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                 return (
                   <div
                     key={bill.id}
-                    className="bg-white rounded-3xl border border-slate-200 hover:border-indigo-300 shadow-sm hover:shadow-md transition flex flex-col justify-between overflow-hidden"
+                    className="glass-panel rounded-3xl border border-white/10 hover:border-indigo-400/50 shadow-lg transition flex flex-col justify-between overflow-hidden"
                   >
                     {/* Card Top */}
                     <div className="p-5 space-y-3.5">
-                      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-white/10">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-black text-sm text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-lg border border-indigo-200">
+                          <span className="font-mono font-black text-sm text-indigo-300 bg-indigo-500/20 px-2.5 py-0.5 rounded-lg border border-indigo-500/30">
                             #{bill.billNumber}
                           </span>
-                          <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-slate-400" />
+                          <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-slate-500" />
                             {dateStr}, {timeStr}
                           </span>
                         </div>
@@ -1595,10 +1596,10 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                         <span
                           className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md border ${
                             bill.paymentMethod === "khata"
-                              ? "bg-purple-50 text-purple-700 border-purple-200"
+                              ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
                               : bill.paymentMethod === "upi"
-                              ? "bg-blue-50 text-blue-700 border-blue-200"
-                              : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
+                              : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                           }`}
                         >
                           {bill.paymentMethod}
@@ -1607,27 +1608,27 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
                       {/* Customer info */}
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900 truncate">
+                        <h4 className="text-xs font-bold text-slate-100 truncate">
                           {bill.customerName}
                         </h4>
                         {bill.customerPhone && (
-                          <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                          <p className="text-[11px] text-slate-400 font-mono mt-0.5">
                             📞 {bill.customerPhone}
                           </p>
                         )}
                       </div>
 
                       {/* Item Summary Chips / List */}
-                      <div className="space-y-1.5 bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs">
-                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 mb-1">
+                      <div className="space-y-1.5 bg-white/5 p-3 rounded-2xl border border-white/10 text-xs">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mb-1">
                           <span>Items ({bill.cart.length})</span>
                           <span>Qty / Rate</span>
                         </div>
-                        <div className="max-h-24 overflow-y-auto divide-y divide-slate-100 pr-1 space-y-1">
+                        <div className="max-h-24 overflow-y-auto divide-y divide-white/5 pr-1 space-y-1">
                           {bill.cart.map((item) => (
-                            <div key={item.product.id} className="pt-1 flex items-center justify-between text-slate-700">
+                            <div key={item.product.id} className="pt-1 flex items-center justify-between text-slate-300">
                               <span className="truncate pr-2 font-medium">{item.product.name}</span>
-                              <span className="shrink-0 font-mono font-bold text-slate-900 text-[11px]">
+                              <span className="shrink-0 font-mono font-bold text-amber-400 text-[11px]">
                                 {item.quantity} × ₹{item.unit_price}
                               </span>
                             </div>
@@ -1637,21 +1638,21 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
                       {/* Notes if any */}
                       {bill.notes && (
-                        <p className="text-[11px] text-slate-600 italic bg-amber-50/60 p-2 rounded-xl border border-amber-200/60">
+                        <p className="text-[11px] text-slate-300 italic bg-amber-500/10 p-2 rounded-xl border border-amber-500/20">
                           📝 Note: {bill.notes}
                         </p>
                       )}
 
                       {/* Financial Breakdown */}
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                      <div className="pt-2 border-t border-white/10 flex items-center justify-between">
                         <div>
                           <span className="text-[10px] uppercase font-bold text-slate-400 block">Grand Total</span>
-                          <span className="text-lg font-black text-slate-900 font-mono">
+                          <span className="text-lg font-black text-amber-400 font-mono">
                             ₹{bill.grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                           </span>
                         </div>
                         {bill.discountAmount > 0 && (
-                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                          <span className="text-[10px] font-bold text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-md border border-emerald-500/30">
                             Saved ₹{bill.discountAmount}
                           </span>
                         )}
@@ -1659,7 +1660,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                     </div>
 
                     {/* Card Actions Footer */}
-                    <div className="p-3 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                    <div className="p-3 bg-white/5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => {
@@ -1670,25 +1671,25 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                                 : ""
                             );
                           }}
-                          className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-emerald-300 shadow-2xs"
+                          className="px-2.5 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-emerald-500/30"
                           title="Remind customer on WhatsApp"
                         >
-                          <MessageSquare className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          Remind on WhatsApp
+                          <MessageSquare className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          WhatsApp
                         </button>
 
                         <button
                           onClick={() => handlePrintDraftBill(bill)}
-                          className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-slate-200 shadow-2xs"
+                          className="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-white/10"
                           title="Print draft quotation / estimate"
                         >
-                          <Printer className="w-3.5 h-3.5 text-slate-500" />
+                          <Printer className="w-3.5 h-3.5 text-slate-400" />
                           Print Draft
                         </button>
 
                         <button
                           onClick={() => handleDeleteSavedBill(bill.id)}
-                          className="p-1.5 text-slate-400 hover:text-red-600 rounded-xl hover:bg-red-50 transition"
+                          className="p-1.5 text-slate-400 hover:text-red-400 rounded-xl hover:bg-white/10 transition"
                           title="Delete saved draft"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1697,7 +1698,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
                       <button
                         onClick={() => handleLoadSavedBill(bill)}
-                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20"
                       >
                         <ArrowRight className="w-3.5 h-3.5" />
                         Resume & Bill
@@ -1716,69 +1717,69 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
         <div className="space-y-6 animate-fade-in">
           {/* Summary Metrics Banner */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+            <div className="glass-panel p-5 rounded-3xl border border-emerald-500/30 shadow-lg flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
                 <Receipt className="w-6 h-6" />
               </div>
               <div className="min-w-0">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block truncate">
                   Total Passed Bills
                 </span>
-                <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">
+                <div className="text-lg sm:text-xl font-black text-slate-100 leading-tight">
                   {passedInvoices.length} Bills
                 </div>
-                <span className="text-[11px] text-emerald-700 font-bold">
+                <span className="text-[11px] text-emerald-400 font-bold font-mono">
                   ₹{totalPassedRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2 })} Total
                 </span>
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+            <div className="glass-panel p-5 rounded-3xl border border-blue-500/30 shadow-lg flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center shrink-0">
                 <Calendar className="w-6 h-6" />
               </div>
               <div className="min-w-0">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block truncate">
                   Today's Passed Bills
                 </span>
-                <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">
+                <div className="text-lg sm:text-xl font-black text-slate-100 leading-tight">
                   {todayPassedInvoices.length} Bills
                 </div>
-                <span className="text-[11px] text-blue-700 font-bold">
+                <span className="text-[11px] text-blue-400 font-bold font-mono">
                   ₹{todayPassedRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2 })} Today
                 </span>
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
+            <div className="glass-panel p-5 rounded-3xl border border-indigo-500/30 shadow-lg flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shrink-0">
                 <Smartphone className="w-6 h-6" />
               </div>
               <div className="min-w-0">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block truncate">
                   Cash & UPI Sales
                 </span>
-                <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">
+                <div className="text-lg sm:text-xl font-black text-amber-400 leading-tight font-mono">
                   ₹{(cashPassedRevenue + upiPassedRevenue).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </div>
-                <span className="text-[11px] text-indigo-700 font-bold">
+                <span className="text-[11px] text-indigo-400 font-bold">
                   Instant Paid Collections
                 </span>
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100">
+            <div className="glass-panel p-5 rounded-3xl border border-purple-500/30 shadow-lg flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center shrink-0">
                 <BookOpen className="w-6 h-6" />
               </div>
               <div className="min-w-0">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block truncate">
                   Khata Credit Bills
                 </span>
-                <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">
+                <div className="text-lg sm:text-xl font-black text-purple-400 leading-tight">
                   {khataPassedCount} Bills
                 </div>
-                <span className="text-[11px] text-purple-700 font-bold">
+                <span className="text-[11px] text-purple-300 font-bold">
                   Tracked in Khata Ledger
                 </span>
               </div>
@@ -1786,7 +1787,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
           </div>
 
           {/* Search, Filter Bar & Refresh */}
-          <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-4">
+          <div className="glass-panel rounded-3xl p-5 border border-white/10 shadow-lg space-y-4">
             <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
               {/* Search Bar */}
               <div className="relative flex-1 w-full">
@@ -1796,7 +1797,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   value={passedInvoicesSearch}
                   onChange={(e) => setPassedInvoicesSearch(e.target.value)}
                   placeholder="Search by Invoice # (e.g. 364576), customer name, mobile, item name, SKU..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-hidden"
+                  className="w-full pl-10 pr-4 py-2.5 glass-input rounded-xl text-xs font-medium focus:border-emerald-400"
                 />
               </div>
 
@@ -1806,8 +1807,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   onClick={() => setPassedInvoicesFilter("all")}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                     passedInvoicesFilter === "all"
-                      ? "bg-emerald-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
                   }`}
                 >
                   All ({passedInvoices.length})
@@ -1816,8 +1817,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   onClick={() => setPassedInvoicesFilter("today")}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                     passedInvoicesFilter === "today"
-                      ? "bg-emerald-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
                   }`}
                 >
                   Today ({todayPassedInvoices.length})
@@ -1826,8 +1827,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   onClick={() => setPassedInvoicesFilter("cash")}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                     passedInvoicesFilter === "cash"
-                      ? "bg-emerald-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
                   }`}
                 >
                   Cash
@@ -1836,8 +1837,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   onClick={() => setPassedInvoicesFilter("upi")}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                     passedInvoicesFilter === "upi"
-                      ? "bg-emerald-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
                   }`}
                 >
                   UPI
@@ -1846,8 +1847,8 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   onClick={() => setPassedInvoicesFilter("khata")}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                     passedInvoicesFilter === "khata"
-                      ? "bg-emerald-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "bg-white/5 text-slate-400 hover:bg-white/10"
                   }`}
                 >
                   Khata ({khataPassedCount})
@@ -1856,10 +1857,10 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                 <button
                   onClick={loadPassedInvoices}
                   disabled={isPassedInvoicesLoading}
-                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-200"
+                  className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-white/10"
                   title="Reload latest passed invoices"
                 >
-                  <RotateCw className={`w-3.5 h-3.5 ${isPassedInvoicesLoading ? "animate-spin text-emerald-600" : ""}`} />
+                  <RotateCw className={`w-3.5 h-3.5 ${isPassedInvoicesLoading ? "animate-spin text-emerald-400" : ""}`} />
                   {isPassedInvoicesLoading ? "Loading..." : "Sync Bills"}
                 </button>
               </div>
@@ -1868,19 +1869,19 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
           {/* Passed Invoices Cards Grid */}
           {filteredPassedInvoices.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-3">
-              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-100">
+            <div className="glass-panel rounded-3xl p-12 text-center border border-white/10 space-y-3 shadow-lg">
+              <div className="w-14 h-14 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto">
                 <Receipt className="w-7 h-7" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">No Passed Bills Found</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              <h3 className="text-base font-bold text-slate-100">No Passed Bills Found</h3>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto">
                 {passedInvoicesSearch || passedInvoicesFilter !== "all"
                   ? "No passed bills match your current search or filters. Try adjusting your query."
                   : "No bills have been completed yet. When you complete a sale in Counter POS, it will automatically be saved and archived here."}
               </p>
               <button
                 onClick={() => setViewMode("counter")}
-                className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-xs"
+                className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-md shadow-blue-600/20"
               >
                 <ShoppingCart className="w-4 h-4" /> Go to Billing Counter
               </button>
@@ -1896,21 +1897,21 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                 return (
                   <div
                     key={inv.id}
-                    className="bg-white rounded-3xl border border-slate-200 hover:border-emerald-300 shadow-xs hover:shadow-md transition flex flex-col justify-between overflow-hidden group"
+                    className="glass-panel rounded-3xl border border-white/10 hover:border-emerald-400/50 shadow-lg transition flex flex-col justify-between overflow-hidden group"
                   >
                     {/* Card Header */}
                     <div className="p-5 space-y-3.5">
-                      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-white/10">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm font-black text-slate-900">
+                          <span className="font-mono text-sm font-black text-slate-100">
                             #{inv.invoice_number}
                           </span>
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                             {inv.payment_method === "khata" ? "Khata Credit" : "Tax Invoice"}
                           </span>
                         </div>
-                        <span className="text-[11px] text-slate-500 font-medium flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-slate-400" />
+                        <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-slate-500" />
                           {timeStr}, {dateStr}
                         </span>
                       </div>
@@ -1918,32 +1919,32 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                       {/* Customer Info */}
                       <div>
                         <div className="flex items-center justify-between">
-                          <h4 className="text-xs font-bold text-slate-900 truncate">
+                          <h4 className="text-xs font-bold text-slate-100 truncate">
                             {inv.customer_name}
                           </h4>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 uppercase">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/10 text-slate-300 border border-white/10 uppercase">
                             {inv.payment_method} ({inv.payment_status?.toUpperCase() || "PAID"})
                           </span>
                         </div>
                         {inv.customer_phone && (
-                          <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                          <p className="text-[11px] text-slate-400 font-mono mt-0.5">
                             📞 {inv.customer_phone}
                           </p>
                         )}
                         {inv.created_by_name && (
-                          <p className="text-[10px] text-slate-400 mt-0.5">
+                          <p className="text-[10px] text-slate-500 mt-0.5">
                             Billed by: {inv.created_by_name}
                           </p>
                         )}
                       </div>
 
                       {/* Items List Breakdown */}
-                      <div className="space-y-1.5 bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs">
-                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 mb-1">
+                      <div className="space-y-1.5 bg-white/5 p-3 rounded-2xl border border-white/10 text-xs">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 mb-1">
                           <span>Items Billed ({itemsList.length})</span>
                           <span>Qty / Rate</span>
                         </div>
-                        <div className="max-h-28 overflow-y-auto divide-y divide-slate-100 pr-1 space-y-1">
+                        <div className="max-h-28 overflow-y-auto divide-y divide-white/5 pr-1 space-y-1">
                           {itemsList.map((item: any, idx: number) => {
                             const itemName = item.product_name || item.product?.name || "Item";
                             const itemUnit = item.unit || item.product?.unit || "";
@@ -1951,16 +1952,16 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                             const itemTotal = Number(item.total_price ?? item.totalPrice ?? (item.quantity * itemPrice));
 
                             return (
-                              <div key={item.id || idx} className="pt-1 flex items-center justify-between text-slate-700">
+                              <div key={item.id || idx} className="pt-1 flex items-center justify-between text-slate-300">
                                 <div className="min-w-0 pr-2">
-                                  <p className="truncate font-medium text-xs text-slate-900">{itemName}</p>
-                                  <span className="text-[10px] text-slate-400 font-mono">{item.sku || ""}</span>
+                                  <p className="truncate font-medium text-xs text-slate-100">{itemName}</p>
+                                  <span className="text-[10px] text-slate-500 font-mono">{item.sku || ""}</span>
                                 </div>
                                 <div className="text-right shrink-0">
-                                  <span className="block font-mono font-bold text-slate-900 text-xs">
+                                  <span className="block font-mono font-bold text-amber-400 text-xs">
                                     ₹{itemTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                                   </span>
-                                  <span className="text-[10px] text-slate-500 font-mono">
+                                  <span className="text-[10px] text-slate-400 font-mono">
                                     {item.quantity} {itemUnit} × ₹{itemPrice}
                                   </span>
                                 </div>
@@ -1971,22 +1972,22 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                       </div>
 
                       {/* Financial Totals */}
-                      <div className="pt-2 border-t border-slate-100 space-y-1 text-xs">
+                      <div className="pt-2 border-t border-white/10 space-y-1 text-xs">
                         {inv.discount_amount > 0 && (
-                          <div className="flex justify-between text-emerald-700 text-[11px] font-semibold">
+                          <div className="flex justify-between text-emerald-400 text-[11px] font-semibold">
                             <span>Discount Savings:</span>
                             <span className="font-mono">- ₹{Number(inv.discount_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                           </div>
                         )}
                         {inv.tax_amount > 0 && (
-                          <div className="flex justify-between text-slate-500 text-[11px]">
+                          <div className="flex justify-between text-slate-400 text-[11px]">
                             <span>GST Tax:</span>
                             <span className="font-mono">+ ₹{Number(inv.tax_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                           </div>
                         )}
-                        <div className="flex justify-between items-baseline pt-1 border-t border-slate-100">
-                          <span className="text-xs font-bold text-slate-700">Grand Total:</span>
-                          <span className="text-base font-black font-mono text-slate-900">
+                        <div className="flex justify-between items-baseline pt-1 border-t border-white/10">
+                          <span className="text-xs font-bold text-slate-300">Grand Total:</span>
+                          <span className="text-base font-black font-mono text-amber-400">
                             ₹{Number(inv.grand_total).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                           </span>
                         </div>
@@ -1994,7 +1995,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                     </div>
 
                     {/* Card Actions Bar */}
-                    <div className="p-3 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                    <div className="p-3 bg-white/5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => {
@@ -2027,25 +2028,25 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                               : `https://api.whatsapp.com/send?text=${encoded}`;
                             window.open(url, "_blank");
                           }}
-                          className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-emerald-300 shadow-2xs"
+                          className="px-2.5 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-emerald-500/30"
                           title="Share Tax Invoice on WhatsApp"
                         >
-                          <MessageSquare className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <MessageSquare className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                           WhatsApp
                         </button>
 
                         <button
                           onClick={() => handleDownloadPassedInvoicePDF(inv)}
-                          className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-slate-200 shadow-2xs"
+                          className="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-white/10"
                           title="Download Official Tax Invoice PDF"
                         >
-                          <Download className="w-3.5 h-3.5 text-slate-600" />
+                          <Download className="w-3.5 h-3.5 text-slate-400" />
                           PDF
                         </button>
 
                         <button
                           onClick={() => handlePrintPassedInvoicePDF(inv)}
-                          className="p-1.5 text-slate-500 hover:text-slate-800 rounded-xl hover:bg-slate-200 transition"
+                          className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-white/10 transition"
                           title="Quick Print Invoice"
                         >
                           <Printer className="w-4 h-4" />
@@ -2054,7 +2055,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
                       <button
                         onClick={() => handleOpenPassedInvoiceModal(inv)}
-                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         View Bill
@@ -2070,35 +2071,35 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
       {/* Completed Invoice Printable Modal & WhatsApp Dispatch */}
       {showReceiptModal && completedInvoice && (
-        <div className="receipt-modal-overlay fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="receipt-modal-container bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-fade-in my-8 text-slate-900 flex flex-col max-h-[90vh]">
+        <div className="receipt-modal-overlay fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="receipt-modal-container glass-modal rounded-3xl max-w-xl w-full shadow-2xl border border-white/10 overflow-hidden animate-fade-in my-8 text-slate-100 flex flex-col max-h-[90vh]">
             {/* Header (Hidden on Print) */}
-            <div className="no-print px-6 py-4 bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 text-white flex items-center justify-between">
+            <div className="no-print px-6 py-4 bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 border-b border-white/10 text-white flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-6 h-6 text-emerald-400" />
                 <div>
-                  <h3 className="text-base font-bold">Sale Completed Successfully</h3>
-                  <p className="text-xs text-blue-200">Invoice #{completedInvoice.invoice_number}</p>
+                  <h3 className="text-base font-bold text-slate-100">Sale Completed Successfully</h3>
+                  <p className="text-xs text-blue-300">Invoice #{completedInvoice.invoice_number}</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowReceiptModal(false)}
-                className="text-white hover:text-slate-200 text-xs font-bold"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition"
               >
-                Close
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* WhatsApp Phone Quick Dispatch Bar (Hidden on Print) */}
-            <div className="no-print px-6 py-3.5 bg-emerald-50 border-b border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-emerald-900">
-                <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+            <div className="no-print px-6 py-3.5 bg-emerald-950/40 border-b border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-emerald-300">
+                <MessageSquare className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>Send PDF Bill to Customer on WhatsApp:</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="flex items-center bg-white border border-emerald-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-500">
-                  <span className="px-2.5 py-1.5 bg-emerald-100/60 text-emerald-900 font-bold text-xs border-r border-emerald-200 select-none">
+                <div className="flex items-center glass-input border border-emerald-500/40 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/20">
+                  <span className="px-2.5 py-1.5 bg-emerald-500/20 text-emerald-300 font-bold text-xs border-r border-emerald-500/30 select-none">
                     +91
                   </span>
                   <input
@@ -2110,7 +2111,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                     }
                     id="whatsapp-phone-input"
                     placeholder="10-digit mobile number"
-                    className="px-3 py-1.5 text-xs font-semibold text-slate-900 outline-hidden w-36 sm:w-44 placeholder:text-slate-400"
+                    className="px-3 py-1.5 text-xs font-semibold text-slate-100 outline-hidden w-36 sm:w-44 bg-transparent placeholder:text-slate-500"
                   />
                 </div>
                 <button
@@ -2166,7 +2167,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
                     window.open(whatsappUrl, "_blank");
                   }}
-                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0"
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/20 shrink-0"
                 >
                   <FileDown className="w-3.5 h-3.5" />
                   Send PDF on WhatsApp
@@ -2176,15 +2177,15 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
             {/* Live Stock Calculation & Remaining Inventory Status (Non-Printable) */}
             {completedInvoice.updatedStock && completedInvoice.updatedStock.length > 0 && (
-              <div className="no-print mx-6 mt-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
+              <div className="no-print mx-6 mt-4 p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-200">
                       Live Inventory Stock Status After Bill
                     </h4>
                   </div>
-                  <span className="text-[11px] font-bold text-slate-500">
+                  <span className="text-[11px] font-bold text-slate-400">
                     {completedInvoice.updatedStock.length} Product(s) Deducted Live
                   </span>
                 </div>
@@ -2193,11 +2194,11 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                   {completedInvoice.updatedStock.map((st: any) => (
                     <div
                       key={st.productId}
-                      className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between gap-2 shadow-2xs"
+                      className="p-2.5 bg-white/5 rounded-xl border border-white/10 flex items-center justify-between gap-2"
                     >
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-900 truncate">{st.productName}</p>
-                        <p className="text-[10px] text-slate-500 font-mono">
+                        <p className="text-xs font-bold text-slate-100 truncate">{st.productName}</p>
+                        <p className="text-[10px] text-slate-400 font-mono">
                           Billed: -{st.quantitySold} {st.unit} (Prev: {st.previousStock} {st.unit})
                         </p>
                       </div>
@@ -2206,15 +2207,15 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                         <span
                           className={`inline-block px-2 py-0.5 rounded-lg text-xs font-black ${
                             st.status === "out_of_stock" || st.remainingStock <= 0
-                              ? "bg-red-100 text-red-700 border border-red-200"
+                              ? "bg-red-500/20 text-red-300 border border-red-500/30"
                               : st.status === "low_stock"
-                              ? "bg-amber-100 text-amber-800 border border-amber-200"
-                              : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                              ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                              : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                           }`}
                         >
                           {st.remainingStock} {st.unit} Left
                         </span>
-                        <span className="block text-[9px] text-slate-400 font-bold uppercase mt-0.5">
+                        <span className="block text-[9px] text-slate-500 font-bold uppercase mt-0.5">
                           {st.status === "out_of_stock" || st.remainingStock <= 0
                             ? "Out of Stock"
                             : st.status === "low_stock"
@@ -2355,7 +2356,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
             </div>
 
             {/* Action Buttons */}
-            <div className="no-print p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <div className="no-print p-4 bg-white/5 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
@@ -2368,7 +2369,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                       window.print();
                     }
                   }}
-                  className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs"
+                  className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-slate-100 border border-white/10 rounded-xl text-xs font-bold transition flex items-center gap-2"
                 >
                   <Printer className="w-4 h-4" />
                   Print Tax Receipt (1 Page)
@@ -2379,7 +2380,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                     const doc = generateInvoicePDF(completedInvoice);
                     doc.save(`Invoice_${completedInvoice.invoice_number}.pdf`);
                   }}
-                  className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs"
+                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md shadow-emerald-600/20"
                 >
                   <FileDown className="w-4 h-4" />
                   Download PDF Copy
@@ -2388,7 +2389,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
               <button
                 onClick={() => setShowReceiptModal(false)}
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-xs"
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-md shadow-blue-600/20"
               >
                 New Sale
               </button>
@@ -2399,42 +2400,42 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
       {/* WhatsApp Reminder Modal for Saved Bills */}
       {whatsappModalBill && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="glass-modal rounded-3xl max-w-md w-full shadow-2xl border border-white/10 overflow-hidden text-slate-100">
             {/* Modal Header */}
-            <div className="px-6 py-4 bg-emerald-600 text-white flex items-center justify-between">
+            <div className="px-6 py-4 bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-slate-800/40 border-b border-white/10 text-white flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
                   <MessageSquare className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold">Remind Customer on WhatsApp</h3>
-                  <p className="text-[11px] text-emerald-100">Draft Bill #{whatsappModalBill.billNumber}</p>
+                  <h3 className="text-sm font-bold text-slate-100">Remind Customer on WhatsApp</h3>
+                  <p className="text-[11px] text-emerald-300">Draft Bill #{whatsappModalBill.billNumber}</p>
                 </div>
               </div>
               <button
                 onClick={() => setWhatsappModalBill(null)}
-                className="text-white hover:text-emerald-200 text-xs font-bold"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Modal Content */}
             <div className="p-6 space-y-4 text-xs">
               {/* Draft Info Card */}
-              <div className="p-3.5 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-1">
-                <div className="flex justify-between font-bold text-slate-900">
+              <div className="p-3.5 bg-white/5 rounded-2xl border border-white/10 space-y-1">
+                <div className="flex justify-between font-bold text-slate-200">
                   <span>Customer:</span>
                   <span>{whatsappModalBill.customerName}</span>
                 </div>
-                <div className="flex justify-between text-slate-600 font-medium">
+                <div className="flex justify-between text-slate-400 font-medium">
                   <span>Items:</span>
                   <span>{whatsappModalBill.cart.length} Products</span>
                 </div>
-                <div className="flex justify-between text-slate-900 font-bold pt-1 border-t border-emerald-200">
+                <div className="flex justify-between text-slate-100 font-bold pt-1 border-t border-white/10">
                   <span>Total Payable:</span>
-                  <span className="text-sm font-black text-emerald-800 font-mono">
+                  <span className="text-sm font-black text-amber-400 font-mono">
                     ₹{whatsappModalBill.grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -2442,11 +2443,11 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
               {/* Phone Input */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+                <label className="block text-[11px] font-bold text-slate-300 mb-1.5">
                   Customer WhatsApp Mobile Number:
                 </label>
-                <div className="flex items-center bg-white border border-slate-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-500">
-                  <span className="px-3 py-2 bg-slate-100 text-slate-700 font-bold text-xs border-r border-slate-200 select-none">
+                <div className="flex items-center glass-input rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/20">
+                  <span className="px-3 py-2 bg-white/10 text-slate-300 font-bold text-xs border-r border-white/10 select-none">
                     +91
                   </span>
                   <input
@@ -2455,7 +2456,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                     onChange={(e) => setWhatsappTargetPhone(e.target.value)}
                     placeholder="10-digit mobile number"
                     autoFocus
-                    className="w-full px-3 py-2 text-xs font-bold text-slate-900 outline-hidden placeholder:text-slate-400"
+                    className="w-full px-3 py-2 text-xs font-bold text-slate-100 outline-hidden bg-transparent placeholder:text-slate-500"
                   />
                 </div>
               </div>
@@ -2465,14 +2466,14 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
                 <button
                   type="button"
                   onClick={() => setWhatsappModalBill(null)}
-                  className="w-1/3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
+                  className="w-1/3 py-2.5 bg-white/10 hover:bg-white/20 text-slate-300 rounded-xl text-xs font-bold transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSendWhatsAppReminder(whatsappModalBill, whatsappTargetPhone)}
-                  className="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
+                  className="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20"
                 >
                   <MessageSquare className="w-4 h-4" />
                   Send WhatsApp Reminder

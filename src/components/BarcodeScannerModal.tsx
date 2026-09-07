@@ -61,22 +61,22 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({ isOpen
   ];
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-fade-in my-8">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="glass-modal rounded-3xl max-w-lg w-full shadow-2xl border border-white/10 overflow-hidden animate-fade-in my-8 text-slate-100">
         {/* Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-blue-900 to-slate-900 text-white flex items-center justify-between">
+        <div className="px-6 py-4 bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-slate-800/40 border-b border-white/10 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-blue-300">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
               <ScanBarcode className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold">Shopfloor Barcode Scanner</h3>
-              <p className="text-xs text-blue-200">Scan or type EAN/UPC barcode or SKU code</p>
+              <h3 className="text-base font-bold text-slate-100">Shopfloor Barcode Scanner</h3>
+              <p className="text-xs text-slate-400">Scan or type EAN/UPC barcode or SKU code</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition"
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition"
           >
             <X className="w-4 h-4" />
           </button>
@@ -85,7 +85,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({ isOpen
         {/* Body */}
         <div className="p-6 space-y-4">
           <form onSubmit={handleScanOrSearch} className="space-y-3">
-            <label className="block text-xs font-bold text-slate-700">
+            <label className="block text-xs font-bold text-slate-300">
               Scan Barcode with Handheld Gun or Enter Code:
             </label>
             <div className="relative">
@@ -96,12 +96,12 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({ isOpen
                 value={barcodeInput}
                 onChange={(e) => setBarcodeInput(e.target.value)}
                 placeholder="e.g. 8901030384711 or GRN-BAS-25KG"
-                className="w-full pl-11 pr-24 py-3 rounded-2xl border-2 border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-hidden font-mono font-bold text-sm text-slate-900"
+                className="w-full pl-11 pr-24 py-3 rounded-2xl border-2 border-blue-500/50 glass-input focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 font-mono font-bold text-sm"
               />
               <button
                 type="submit"
                 disabled={isSearching}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition disabled:opacity-50"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition disabled:opacity-50 shadow-md shadow-blue-600/20"
               >
                 {isSearching ? "Searching..." : "Lookup"}
               </button>
@@ -109,7 +109,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({ isOpen
           </form>
 
           {/* Quick Barcode Simulator Buttons */}
-          <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+          <div className="p-3 bg-white/5 rounded-2xl border border-white/10 space-y-1.5">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
               Quick Test Barcodes (1-Click):
             </span>
@@ -119,7 +119,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({ isOpen
                   key={b.code}
                   type="button"
                   onClick={() => setBarcodeInput(b.code)}
-                  className="px-2.5 py-1 text-[11px] font-mono bg-white hover:bg-slate-200 border border-slate-300 rounded-lg text-slate-700 transition"
+                  className="px-2.5 py-1 text-[11px] font-mono bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-slate-300 transition"
                 >
                   {b.label}
                 </button>
@@ -128,42 +128,48 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({ isOpen
           </div>
 
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-3 rounded-xl bg-red-950/50 border border-red-500/30 text-xs text-red-300 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
               {errorMsg}
             </div>
           )}
 
           {/* Result Card */}
           {scannedProduct && (
-            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-3 animate-fade-in">
+            <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 space-y-3 animate-fade-in">
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider bg-emerald-100 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
                     Product Matched
                   </span>
-                  <h4 className="text-sm font-bold text-slate-900 mt-1">{scannedProduct.name}</h4>
-                  <p className="text-xs text-slate-600 font-mono">
-                    SKU: {scannedProduct.sku} {scannedProduct.barcode && `• Barcode: ${scannedProduct.barcode}`}
-                  </p>
+                  <h4 className="text-sm font-bold text-slate-100 mt-1">{scannedProduct.name}</h4>
+                  <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400 font-mono">
+                    <span>SKU: {scannedProduct.sku}</span>
+                    <span>•</span>
+                    <span>{scannedProduct.category}</span>
+                  </div>
                 </div>
+
                 <div className="text-right">
-                  <div className="text-base font-black text-slate-900">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">Available Stock</span>
+                  <div className="text-lg font-black text-emerald-400">
                     {scannedProduct.stock_quantity} {scannedProduct.unit}
                   </div>
-                  <span className="text-[11px] font-mono font-bold text-blue-700">
+                  <div className="text-xs font-bold text-amber-400 font-mono">
                     ₹{scannedProduct.selling_price.toLocaleString("en-IN")}
-                  </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end pt-2 border-t border-emerald-200/60">
+              {/* Action Buttons for Scanned Product */}
+              <div className="pt-2 border-t border-white/10 flex items-center justify-end gap-2">
                 <button
+                  type="button"
                   onClick={() => {
                     onProductFound(scannedProduct);
                     onClose();
                   }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-sm shadow-blue-600/20 flex items-center gap-1.5"
                 >
                   <PlusCircle className="w-4 h-4" />
                   Select for Quick Stock In / Out
