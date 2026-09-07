@@ -341,7 +341,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col selection:bg-blue-600 selection:text-white pb-16">
+    <div className="min-h-screen bg-transparent text-slate-100 flex flex-col selection:bg-blue-600 selection:text-white pb-16">
       {/* Top Navbar */}
       <Navbar
         user={user}

@@ -68,22 +68,22 @@ export const AuditLogsView: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in text-slate-100">
       {/* Header */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="glass-panel rounded-3xl p-6 sm:p-7 border border-white/10 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <History className="w-6 h-6 text-blue-600" />
-            Stock Movement & Audit Trail
+          <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+            <History className="w-6 h-6 text-blue-400" />
+            Stock Movement & Audit Logs
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Complete timestamped history of all stock-ins, sales deductions, bulk imports, and adjustments.
           </p>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white rounded-3xl p-4 border border-slate-200 shadow-xs flex flex-col sm:flex-row gap-3">
+      <div className="glass-panel rounded-3xl p-4 border border-white/10 shadow-2xl flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -94,7 +94,7 @@ export const AuditLogsView: React.FC = () => {
               setPage(1);
             }}
             placeholder="Search by product name, staff member, or reason..."
-            className="w-full pl-10 pr-4 py-2.5 text-xs font-medium rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden bg-slate-50/50 text-slate-900"
+            className="w-full pl-10 pr-4 py-2.5 text-xs font-medium rounded-xl border border-white/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden bg-slate-900/60 text-white placeholder:text-slate-500"
           />
         </div>
 
@@ -105,7 +105,7 @@ export const AuditLogsView: React.FC = () => {
               setChangeType(e.target.value);
               setPage(1);
             }}
-            className="px-3 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 outline-hidden focus:border-blue-500"
+            className="px-3 py-2.5 rounded-xl border border-white/10 bg-slate-900 text-xs font-semibold text-slate-200 outline-hidden focus:border-blue-500"
           >
             <option value="all">All Change Types</option>
             <option value="stock_in">Stock In (+)</option>
@@ -122,7 +122,7 @@ export const AuditLogsView: React.FC = () => {
                 setChangeType("all");
                 setPage(1);
               }}
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+              className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition cursor-pointer"
               title="Reset Filters"
             >
               <RotateCcw className="w-4 h-4" />
@@ -132,10 +132,10 @@ export const AuditLogsView: React.FC = () => {
       </div>
 
       {/* Logs Table */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+      <div className="glass-panel rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+            <thead className="bg-[#090e1a]/90 backdrop-blur-md border-b border-white/10 text-slate-300 font-bold uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="p-3.5 pl-6 min-w-[160px]">Timestamp</th>
                 <th className="p-3.5 min-w-[200px]">Product Name</th>
@@ -146,19 +146,19 @@ export const AuditLogsView: React.FC = () => {
                 <th className="p-3.5 pr-6 min-w-[200px]">Reason / Notes</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-white/5">
               {isLoading ? (
                 <tr>
                   <td colSpan={7} className="p-10 text-center text-slate-400">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
                       Loading stock audit logs...
                     </div>
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-10 text-center text-slate-500">
+                  <td colSpan={7} className="p-10 text-center text-slate-400">
                     No activity logs matched your criteria.
                   </td>
                 </tr>
@@ -169,9 +169,9 @@ export const AuditLogsView: React.FC = () => {
                   const badge = getBadgeForChangeType(log.change_type);
 
                   return (
-                    <tr key={log.id} className="hover:bg-slate-50/80 transition">
+                    <tr key={log.id} className="hover:bg-white/5 transition">
                       {/* Timestamp */}
-                      <td className="p-3.5 pl-6 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                      <td className="p-3.5 pl-6 font-mono text-[11px] text-slate-400 whitespace-nowrap">
                         {new Date(log.created_at).toLocaleString([], {
                           year: "numeric",
                           month: "short",
@@ -182,14 +182,14 @@ export const AuditLogsView: React.FC = () => {
                       </td>
 
                       {/* Product Name */}
-                      <td className="p-3.5 font-bold text-slate-900">
+                      <td className="p-3.5 font-bold text-white">
                         {log.product_name}
                       </td>
 
                       {/* Staff Member */}
                       <td className="p-3.5">
-                        <span className="font-semibold text-slate-800 flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-blue-500" />
+                        <span className="font-semibold text-slate-200 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-blue-400" />
                           {log.user_name}
                         </span>
                       </td>
@@ -206,10 +206,10 @@ export const AuditLogsView: React.FC = () => {
                         <span
                           className={`inline-flex items-center gap-0.5 ${
                             isPositive
-                              ? "text-emerald-600"
+                              ? "text-emerald-400"
                               : isNegative
-                              ? "text-red-600"
-                              : "text-slate-600"
+                              ? "text-red-400"
+                              : "text-slate-400"
                           }`}
                         >
                           {isPositive && <ArrowUpRight className="w-3.5 h-3.5" />}
@@ -219,14 +219,14 @@ export const AuditLogsView: React.FC = () => {
                       </td>
 
                       {/* Before / After */}
-                      <td className="p-3.5 font-mono text-xs text-slate-700">
+                      <td className="p-3.5 font-mono text-xs text-slate-300">
                         <span className="text-slate-400">{log.previous_quantity}</span>
-                        <span className="mx-1 text-slate-400">→</span>
-                        <strong className="text-slate-900 font-bold">{log.new_quantity}</strong>
+                        <span className="mx-1 text-slate-500">→</span>
+                        <strong className="text-white font-bold">{log.new_quantity}</strong>
                       </td>
 
                       {/* Reason */}
-                      <td className="p-3.5 pr-6 text-slate-600 text-xs">
+                      <td className="p-3.5 pr-6 text-slate-400 text-xs">
                         {log.reason || "-"}
                       </td>
                     </tr>
@@ -238,25 +238,25 @@ export const AuditLogsView: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs">
-          <span className="text-slate-500">
+        <div className="p-4 bg-[#090e1a]/80 border-t border-white/10 flex items-center justify-between text-xs">
+          <span className="text-slate-400">
             Total {total} stock movement records
           </span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+              className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 font-bold text-slate-300 hover:bg-white/10 disabled:opacity-40 cursor-pointer"
             >
               Previous
             </button>
-            <span className="font-bold text-slate-700">
+            <span className="font-bold text-slate-300">
               Page {page} of {totalPages}
             </span>
             <button
               onClick={() => setPage(Math.min(totalPages, page + 1))}
               disabled={page >= totalPages}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+              className="px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 font-bold text-slate-300 hover:bg-white/10 disabled:opacity-40 cursor-pointer"
             >
               Next
             </button>
