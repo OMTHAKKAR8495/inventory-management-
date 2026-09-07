@@ -23,6 +23,16 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const [forgotMsg, setForgotMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isForgotSubmitting, setIsForgotSubmitting] = useState(false);
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && showForgotModal) {
+        setShowForgotModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showForgotModal]);
+
   const handleLogin = async (overrideEmail?: string, overridePassword?: string) => {
     const targetEmail = overrideEmail || email;
     const targetPassword = overridePassword || password;

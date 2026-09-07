@@ -77,6 +77,21 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Close modals or collapse filters on Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (productToDelete) {
+          setProductToDelete(null);
+        } else if (showAdvancedFilters) {
+          setShowAdvancedFilters(false);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [productToDelete, showAdvancedFilters]);
+
   // Sync initialFilterStatus if provided from parent
   useEffect(() => {
     if (initialFilterStatus) {

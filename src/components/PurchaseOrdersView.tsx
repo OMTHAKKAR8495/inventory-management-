@@ -52,6 +52,16 @@ export const PurchaseOrdersView: React.FC<PurchaseOrdersViewProps> = ({ user, on
     fetchOrders();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selectedPO) {
+        setSelectedPO(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedPO]);
+
   const handleAutoGenerate = async () => {
     setIsGenerating(true);
     setMessage(null);

@@ -112,6 +112,43 @@ export default function Home() {
     });
   };
 
+  // Global Escape key listener to close any open top-level modal
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (isProductModalOpen) {
+          setIsProductModalOpen(false);
+          setEditingProduct(null);
+        } else if (isStockAdjustModalOpen) {
+          setIsStockAdjustModalOpen(false);
+          setAdjustingProduct(null);
+        } else if (isTasksModalOpen) {
+          setIsTasksModalOpen(false);
+          setTaskTargetProductId(null);
+          setTaskTargetProductName(null);
+        } else if (isBarcodeScannerOpen) {
+          setIsBarcodeScannerOpen(false);
+        } else if (isRecycleBinModalOpen) {
+          setIsRecycleBinModalOpen(false);
+        } else if (isBackupModalOpen) {
+          setIsBackupModalOpen(false);
+        } else if (isUsersModalOpen) {
+          setIsUsersModalOpen(false);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [
+    isProductModalOpen,
+    isStockAdjustModalOpen,
+    isTasksModalOpen,
+    isBarcodeScannerOpen,
+    isRecycleBinModalOpen,
+    isBackupModalOpen,
+    isUsersModalOpen,
+  ]);
+
   // Inactivity auto-logout (30 minutes of idle time - throttled to eliminate event lag)
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityRef = useRef<number>(Date.now());

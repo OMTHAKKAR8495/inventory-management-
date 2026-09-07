@@ -80,6 +80,23 @@ export const KhataLedgerView: React.FC<KhataLedgerViewProps> = ({ user }) => {
     fetchCustomers();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (isRecordPaymentOpen) {
+          setIsRecordPaymentOpen(false);
+        } else if (isAddCustomerOpen) {
+          setIsAddCustomerOpen(false);
+        } else if (selectedCustomerId) {
+          setSelectedCustomerId(null);
+          setSelectedCustomerData(null);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isRecordPaymentOpen, isAddCustomerOpen, selectedCustomerId]);
+
   const openCustomerDetail = async (custId: string) => {
     setSelectedCustomerId(custId);
     setIsLoadingDetail(true);

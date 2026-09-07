@@ -125,6 +125,25 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({ user, ca
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Close modals or clear search on Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showReceiptModal) {
+          setShowReceiptModal(false);
+          setCompletedInvoice(null);
+        } else if (whatsappModalBill) {
+          setWhatsappModalBill(null);
+        } else if (searchTerm) {
+          setSearchTerm("");
+          searchInputRef.current?.blur();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showReceiptModal, whatsappModalBill, searchTerm]);
+
   // Load products & customers from the real database API (Single Source of Truth)
   const loadData = async () => {
     setIsSearching(true);
