@@ -2,20 +2,25 @@ import { Pool } from "pg";
 import path from "path";
 import fs from "fs";
 
-// Helper: Convert direct Supabase connection URL (IPv6 only on free tier) to IPv4 pooler URL
+// Helper: Convert direct Supabase connection URL (IPv6 only on free tier) or session pooler to IPv4 transaction pooler URL (port 6543)
 function normalizeDatabaseUrl(rawUrl?: string): string {
   const defaultUrl =
-    "postgresql://postgres.jedhlmpafnwhjrnkaomb:9558413347%40Om@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres";
+    "postgresql://postgres.jedhlmpafnwhjrnkaomb:9558413347%40Om@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres";
 
-  const url = rawUrl || defaultUrl;
+  let url = rawUrl || defaultUrl;
 
-  // If URL uses direct db.<ref>.supabase.co, automatically translate to IPv4 pooler for Vercel/Lambda compatibility
+  // If URL uses direct db.<ref>.supabase.co, automatically translate to IPv4 pooler on port 6543 (Transaction mode for Vercel/Serverless)
   const directMatch = url.match(/postgresql:\/\/([^:]+):([^@]+)@db\.([a-zA-Z0-9_-]+)\.supabase\.co(?::\d+)?(\/.*)?/);
   if (directMatch) {
     const [, user, pass, projectRef, pathAndQuery] = directMatch;
     const poolerUser = user.includes(".") ? user : `${user}.${projectRef}`;
     const cleanPath = pathAndQuery || "/postgres";
-    return `postgresql://${poolerUser}:${pass}@aws-0-ap-southeast-1.pooler.supabase.com:5432${cleanPath}`;
+    return `postgresql://${poolerUser}:${pass}@aws-0-ap-southeast-1.pooler.supabase.com:6543${cleanPath}`;
+  }
+
+  // If URL uses pooler.supabase.com on port 5432 (Session mode), switch to 6543 (Transaction mode) to avoid EMAXCONNSESSION
+  if (url.includes(".pooler.supabase.com:5432")) {
+    url = url.replace(".pooler.supabase.com:5432", ".pooler.supabase.com:6543");
   }
 
   return url;
@@ -36,9 +41,9 @@ export const pool =
     ? new Pool({
         connectionString: databaseUrl,
         ssl: { rejectUnauthorized: false },
-        max: 15,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 10000,
+        max: 5,
+        idleTimeoutMillis: 10000,
+        connectionTimeoutMillis: 5000,
       })
     : undefined);
 
