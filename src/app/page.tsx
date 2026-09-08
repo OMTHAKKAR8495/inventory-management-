@@ -8,7 +8,6 @@ import { InventoryView } from "@/components/InventoryView";
 import { BulkUploadStudio } from "@/components/BulkUploadStudio";
 import { AuditLogsView } from "@/components/AuditLogsView";
 import { BillingCounterView } from "@/components/BillingCounterView";
-import { PurchaseOrdersView } from "@/components/PurchaseOrdersView";
 import { KhataLedgerView } from "@/components/KhataLedgerView";
 import { ProductFormModal } from "@/components/ProductFormModal";
 import { StockAdjustModal } from "@/components/StockAdjustModal";
@@ -20,8 +19,8 @@ import { ShopfloorTasksModal } from "@/components/ShopfloorTasksModal";
 import { LoginView } from "@/components/LoginView";
 import { CheckCircle2, AlertCircle, Store } from "lucide-react";
 
-type TabType = "dashboard" | "inventory" | "pos" | "procurement" | "khata" | "bulk" | "audit";
-const VALID_TABS: TabType[] = ["dashboard", "inventory", "pos", "procurement", "khata", "bulk", "audit"];
+type TabType = "dashboard" | "inventory" | "pos" | "khata" | "bulk" | "audit";
+const VALID_TABS: TabType[] = ["dashboard", "inventory", "pos", "khata", "bulk", "audit"];
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -408,7 +407,6 @@ export default function Home() {
             }}
             onNavigateToBulk={() => setActiveTab("bulk")}
             onNavigateToPOS={() => setActiveTab("pos")}
-            onNavigateToPO={() => setActiveTab("procurement")}
             onNavigateToKhata={() => setActiveTab("khata")}
             onOpenTasksModal={(pId?: string, pName?: string) => {
               setTaskTargetProductId(pId || null);
@@ -484,16 +482,6 @@ export default function Home() {
           )
         )}
 
-        {activeTab === "procurement" && (
-          <PurchaseOrdersView
-            user={user}
-            onRestocked={() => {
-              fetchMetrics();
-              setCatalogVersion((v) => v + 1);
-              showToast("Inward goods received and inventory catalog restocked!");
-            }}
-          />
-        )}
 
         {activeTab === "khata" && (
           user.role === "admin" ? (
@@ -605,9 +593,6 @@ export default function Home() {
           } catch (e) {
             console.error(e);
           }
-        }}
-        onNavigateToPO={() => {
-          setActiveTab("procurement");
         }}
         onTasksUpdated={() => {
           fetchTasksCount();

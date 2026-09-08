@@ -17,7 +17,6 @@ import {
   Layers,
   ArrowRight,
   ShoppingCart,
-  Truck,
   BookOpen,
   BarChart3,
   Award,
@@ -43,7 +42,6 @@ interface DashboardViewProps {
   onNavigateToInventory: (filterStatus?: string) => void;
   onNavigateToBulk: () => void;
   onNavigateToPOS?: () => void;
-  onNavigateToPO?: () => void;
   onNavigateToKhata?: () => void;
   onOpenTasksModal?: (productId?: string, productName?: string) => void;
   onQuickStockAdjust: (productId: string) => void;
@@ -58,7 +56,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onNavigateToInventory,
   onNavigateToBulk,
   onNavigateToPOS,
-  onNavigateToPO,
   onNavigateToKhata,
   onOpenTasksModal,
   onQuickStockAdjust,
@@ -138,15 +135,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </button>
             )}
 
-            {onNavigateToPO && (
-              <button
-                onClick={onNavigateToPO}
-                className="px-3.5 py-2.5 bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 rounded-xl text-xs font-bold border border-indigo-500/30 transition flex items-center gap-1.5 cursor-pointer"
-              >
-                <Truck className="w-4 h-4" />
-                Supplier POs
-              </button>
-            )}
 
             {isAdmin && onNavigateToKhata && (
               <button

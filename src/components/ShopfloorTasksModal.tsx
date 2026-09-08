@@ -16,7 +16,6 @@ import {
   CheckCheck,
   AlertCircle,
   FileText,
-  Truck,
   Sparkles,
   Layers,
 } from "lucide-react";
@@ -29,7 +28,6 @@ interface ShopfloorTasksModalProps {
   initialProductId?: string | null;
   initialProductName?: string | null;
   onNavigateToStockAdjust?: (productId: string) => void;
-  onNavigateToPO?: () => void;
   onTasksUpdated?: () => void;
 }
 
@@ -40,7 +38,6 @@ export const ShopfloorTasksModal: React.FC<ShopfloorTasksModalProps> = ({
   initialProductId = null,
   initialProductName = null,
   onNavigateToStockAdjust,
-  onNavigateToPO,
   onTasksUpdated,
 }) => {
   const [tasks, setTasks] = useState<ShopfloorTask[]>([]);
@@ -484,17 +481,6 @@ export const ShopfloorTasksModal: React.FC<ShopfloorTasksModalProps> = ({
                               </button>
                             )}
 
-                            {onNavigateToPO && (
-                              <button
-                                onClick={() => {
-                                  onClose();
-                                  onNavigateToPO();
-                                }}
-                                className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[11px] font-bold transition shadow-xs cursor-pointer"
-                              >
-                                Raise PO
-                              </button>
-                            )}
                           </div>
                         </div>
                       )}

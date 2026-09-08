@@ -20,7 +20,6 @@ import {
   Database,
   Moon,
   Sun,
-  Truck,
   BookOpen,
   MessageSquare,
   Receipt,
@@ -30,8 +29,8 @@ import { User, DashboardMetrics } from "@/lib/types";
 
 interface NavbarProps {
   user: User;
-  activeTab: "dashboard" | "inventory" | "pos" | "procurement" | "khata" | "bulk" | "audit";
-  setActiveTab: (tab: "dashboard" | "inventory" | "pos" | "procurement" | "khata" | "bulk" | "audit") => void;
+  activeTab: "dashboard" | "inventory" | "pos" | "khata" | "bulk" | "audit";
+  setActiveTab: (tab: "dashboard" | "inventory" | "pos" | "khata" | "bulk" | "audit") => void;
   onLogout: () => void;
   onOpenUsersModal?: () => void;
   onOpenRecycleBinModal?: () => void;
@@ -169,17 +168,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </>
             )}
-            <button
-              onClick={() => setActiveTab("procurement")}
-              className={`flex items-center gap-1 px-2 py-1 2xl:px-2.5 2xl:py-1.5 rounded-lg text-[11px] 2xl:text-xs font-semibold transition-all cursor-pointer ${
-                activeTab === "procurement"
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                  : "text-slate-300 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              <Truck className="w-3.5 h-3.5" />
-              <span><span className="hidden 2xl:inline">Supplier </span>POs</span>
-            </button>
             {isAdmin && (
               <button
                 onClick={() => setActiveTab("khata")}
@@ -546,15 +534,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </>
           )}
-          <button
-            onClick={() => setActiveTab("procurement")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition ${
-              activeTab === "procurement" ? "bg-indigo-600 text-white font-bold" : "text-slate-300 hover:bg-white/10"
-            }`}
-          >
-            <Truck className="w-3.5 h-3.5" />
-            Supplier POs
-          </button>
           {isAdmin && (
             <button
               onClick={() => setActiveTab("khata")}
