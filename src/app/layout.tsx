@@ -30,13 +30,13 @@ export default function RootLayout({
         <div 
           className="fixed inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
           style={{
-            backgroundImage: "url('/provision-smart-bg.png')",
+            backgroundImage: "url('/provision-smart-bg.jpg?v=2')",
             backgroundAttachment: "fixed",
           }}
         >
           {/* Clean Ambient Overlay for Crystal Clear Visibility and Glassmorphism Legibility */}
-          <div className="absolute inset-0 bg-[#070a12]/45 backdrop-blur-[1px]" />
-          <div className="absolute inset-0 bg-tech-grid opacity-20" />
+          <div className="absolute inset-0 bg-[#070a12]/25" />
+          <div className="absolute inset-0 bg-tech-grid opacity-10" />
         </div>
 
         <div className="relative z-10 flex flex-col min-h-screen">
