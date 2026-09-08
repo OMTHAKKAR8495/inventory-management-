@@ -202,58 +202,35 @@ export async function POST(req: Request) {
         );
       }
 
-      // 3. If registered customer, update customer balance and ledger
-      if (finalCustomerId) {
+      // 3. If registered customer and payment is on Khata (Credit), update customer balance and ledger
+      if (finalCustomerId && paymentMethod === "khata") {
         const customer = await tx.queryOne("SELECT * FROM customers WHERE id = ?", [finalCustomerId]);
         if (customer) {
-          if (paymentMethod === "khata") {
-            const newBal = Number((customer.current_balance + grandTotal).toFixed(2));
-            await tx.execute(
-              "UPDATE customers SET current_balance = ?, updated_at = ? WHERE id = ?",
-              [newBal, now, finalCustomerId]
-            );
+          const newBal = Number((customer.current_balance + grandTotal).toFixed(2));
+          await tx.execute(
+            "UPDATE customers SET current_balance = ?, updated_at = ? WHERE id = ?",
+            [newBal, now, finalCustomerId]
+          );
 
-            await tx.execute(
-              `
-              INSERT INTO khata_transactions (
-                id, customer_id, invoice_id, type, amount, previous_balance, new_balance,
-                payment_mode, notes, created_by_name, created_at
-              ) VALUES (?, ?, ?, 'debit_purchase', ?, ?, ?, 'Credit / Khata', ?, ?, ?)
-            `,
-              [
-                `ktx_${Math.random().toString(36).substring(2, 9)}`,
-                finalCustomerId,
-                invoiceId,
-                grandTotal,
-                customer.current_balance,
-                newBal,
-                `Khata Credit Bill #${invoiceNumber}`,
-                user.name,
-                now,
-              ]
-            );
-          } else {
-            // Instant Cash/UPI/Card paid purchase for customer: record in ledger history
-            await tx.execute(
-              `
-              INSERT INTO khata_transactions (
-                id, customer_id, invoice_id, type, amount, previous_balance, new_balance,
-                payment_mode, notes, created_by_name, created_at
-              ) VALUES (?, ?, ?, 'paid_bill', ?, ?, ?, ?, ?, ?, ?)
-            `,
-              [
-                `ktx_${Math.random().toString(36).substring(2, 9)}`,
-                finalCustomerId,
-                invoiceId,
-                grandTotal,
-                customer.current_balance,
-                customer.current_balance,
-                `${paymentMethod.toUpperCase()} Paid Bill #${invoiceNumber}`,
-                user.name,
-                now,
-              ]
-            );
-          }
+          await tx.execute(
+            `
+            INSERT INTO khata_transactions (
+              id, customer_id, invoice_id, type, amount, previous_balance, new_balance,
+              payment_mode, notes, created_by_name, created_at
+            ) VALUES (?, ?, ?, 'debit_purchase', ?, ?, ?, 'Credit / Khata', ?, ?, ?)
+          `,
+            [
+              `ktx_${Math.random().toString(36).substring(2, 9)}`,
+              finalCustomerId,
+              invoiceId,
+              grandTotal,
+              customer.current_balance,
+              newBal,
+              `Khata Credit Bill #${invoiceNumber}`,
+              user.name,
+              now,
+            ]
+          );
         }
       }
     });

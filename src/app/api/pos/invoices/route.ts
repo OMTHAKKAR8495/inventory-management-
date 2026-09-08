@@ -279,7 +279,7 @@ export async function PATCH(req: Request) {
               `INSERT INTO khata_transactions (
                 id, customer_id, invoice_id, type, amount, previous_balance, new_balance,
                 payment_mode, notes, created_by_name, created_at
-              ) VALUES (?, ?, ?, 'payment_collection', ?, ?, ?, ?, ?, ?, ?)`,
+              ) VALUES (?, ?, ?, 'credit_payment', ?, ?, ?, ?, ?, ?, ?)`,
               [
                 `ktx_${Math.random().toString(36).substring(2, 9)}`,
                 customerId,
@@ -348,7 +348,7 @@ export async function PATCH(req: Request) {
                 `ktx_${Math.random().toString(36).substring(2, 9)}`,
                 customerId,
                 invoiceId,
-                delta > 0 ? "debit_purchase" : "payment_collection",
+                delta > 0 ? "debit_purchase" : "credit_payment",
                 Math.abs(delta),
                 cust.current_balance,
                 updatedBal,
