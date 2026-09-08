@@ -1345,10 +1345,25 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                         </p>
                       </div>
 
-                      <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between">
-                        <div>
-                          <div className="text-sm font-black text-amber-400 font-mono">
-                            ₹{p.selling_price.toLocaleString("en-IN")}
+                      <div className="mt-3 pt-2 border-t border-white/10 flex items-end justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline gap-2 flex-wrap">
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400/90">
+                                SP:
+                              </span>
+                              <span className="text-sm font-black text-amber-400 font-mono">
+                                ₹{p.selling_price.toLocaleString("en-IN")}
+                              </span>
+                            </div>
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                                CP:
+                              </span>
+                              <span className="text-xs font-semibold text-slate-300 font-mono">
+                                ₹{(p.cost_price ?? 0).toLocaleString("en-IN")}
+                              </span>
+                            </div>
                           </div>
                           {heldQty > 0 ? (
                             <div className="flex flex-col mt-0.5">
@@ -1364,22 +1379,24 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                               </span>
                             </div>
                           ) : (
-                            <span
-                              className={`text-[10px] font-semibold ${
-                                isOutOfStock
-                                  ? "text-red-400 font-bold"
-                                  : p.stock_quantity <= p.reorder_level
-                                  ? "text-amber-400"
-                                  : "text-emerald-400"
-                              }`}
-                            >
-                              {isOutOfStock ? "Out of Stock" : `${p.stock_quantity} ${p.unit}`}
-                            </span>
+                            <div className="mt-0.5">
+                              <span
+                                className={`text-[10px] font-semibold ${
+                                  isOutOfStock
+                                    ? "text-red-400 font-bold"
+                                    : p.stock_quantity <= p.reorder_level
+                                    ? "text-amber-400"
+                                    : "text-emerald-400"
+                                }`}
+                              >
+                                {isOutOfStock ? "Out of Stock" : `${p.stock_quantity} ${p.unit}`}
+                              </span>
+                            </div>
                           )}
                         </div>
 
                         {!isOutOfStock && (
-                          <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition">
+                          <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition shrink-0 mb-0.5">
                             <Plus className="w-4 h-4" />
                           </div>
                         )}
@@ -1518,9 +1535,16 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                     <div key={item.product.id} className="p-3 flex items-center justify-between gap-3 hover:bg-white/5 transition">
                       <div className="min-w-0 flex-1">
                         <h5 className="text-xs font-bold text-slate-200 truncate">{item.product.name}</h5>
-                        <p className="text-[11px] text-slate-400 font-mono">
-                          ₹{item.unit_price} × {item.quantity} = ₹{item.total_price.toLocaleString("en-IN")}
-                          <span className="ml-2 text-[10px] text-slate-500">
+                        <p className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 flex-wrap">
+                          <span>
+                            <span className="text-[10px] text-amber-400 font-bold">SP:</span> ₹{item.unit_price} × {item.quantity} = <strong className="text-slate-100">₹{item.total_price.toLocaleString("en-IN")}</strong>
+                          </span>
+                          {item.product.cost_price !== undefined && (
+                            <span className="text-[10px] text-slate-400 bg-white/5 px-1 rounded border border-white/5">
+                              CP: ₹{item.product.cost_price}
+                            </span>
+                          )}
+                          <span className="text-[10px] text-slate-500">
                             (Stock: {item.product.stock_quantity})
                           </span>
                         </p>
@@ -2983,9 +3007,12 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                               </p>
                             </div>
                             <div className="text-right shrink-0">
-                              <span className="font-bold text-amber-400 font-mono text-xs">
-                                ₹{prod.selling_price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                              </span>
+                              <div className="font-bold text-amber-400 font-mono text-xs">
+                                SP: ₹{prod.selling_price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                              </div>
+                              <div className="text-[10px] text-slate-400 font-mono">
+                                CP: ₹{(prod.cost_price ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                              </div>
                               <span className="block text-[10px] text-emerald-400 font-bold">+ Add</span>
                             </div>
                           </div>
