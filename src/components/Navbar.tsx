@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Store,
   LayoutDashboard,
@@ -24,6 +24,7 @@ import {
   MessageSquare,
   Receipt,
   FileText,
+  Check,
 } from "lucide-react";
 import { User, DashboardMetrics } from "@/lib/types";
 
@@ -68,10 +69,78 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileNavDropdown, setShowMobileNavDropdown] = useState(false);
+  const mobileNavDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close mobile dropdown when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      if (
+        mobileNavDropdownRef.current &&
+        !mobileNavDropdownRef.current.contains(e.target as Node)
+      ) {
+        setShowMobileNavDropdown(false);
+      }
+    };
+    if (showMobileNavDropdown) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("touchstart", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [showMobileNavDropdown]);
 
   const isAdmin = Boolean(user && typeof user.role === "string" && user.role.toLowerCase().trim() === "admin");
   const criticalCount = (metrics?.low_stock_count || 0) + (metrics?.out_of_stock_count || 0);
   const trashCount = metrics?.trash_count || 0;
+
+  const getActiveOptionDetails = () => {
+    if (activeTab === "inventory") {
+      return {
+        label: "Catalog",
+        icon: <Boxes className="w-3.5 h-3.5 text-indigo-400" />,
+      };
+    }
+    if (activeTab === "pos") {
+      if (posViewMode === "passed_bills") {
+        return {
+          label: "Passed Bills",
+          icon: <Receipt className="w-3.5 h-3.5 text-teal-400" />,
+          count: metrics?.passed_bills_count,
+        };
+      }
+      return {
+        label: "Counter POS",
+        icon: <Store className="w-3.5 h-3.5 text-emerald-400" />,
+      };
+    }
+    if (activeTab === "khata") {
+      return {
+        label: "Khata Ledger",
+        icon: <BookOpen className="w-3.5 h-3.5 text-purple-400" />,
+      };
+    }
+    if (activeTab === "bulk") {
+      return {
+        label: "Bulk Add",
+        icon: <FileSpreadsheet className="w-3.5 h-3.5 text-amber-400" />,
+      };
+    }
+    if (activeTab === "audit") {
+      return {
+        label: "Logs",
+        icon: <History className="w-3.5 h-3.5 text-cyan-400" />,
+      };
+    }
+    return {
+      label: "Other Options",
+      icon: <ChevronDown className="w-3.5 h-3.5 text-amber-400" />,
+    };
+  };
+
+  const activeOptionDetails = getActiveOptionDetails();
 
   return (
     <header className="sticky top-0 z-40 bg-[#070a12]/90 dark:bg-[#070a12]/95 backdrop-blur-xl border-b border-white/10 shadow-xl transition-colors">
@@ -470,98 +539,265 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Mobile / Tablet Nav Bar */}
-        <div className="flex xl:hidden items-center justify-start py-1.5 border-t border-white/10 overflow-x-auto gap-1.5 scrollbar-none px-1.5">
+        {/* Mobile / Tablet Nav Bar with Dropdown for Other Options */}
+        <div className="flex xl:hidden items-center justify-between py-1.5 border-t border-white/10 px-1.5 sm:px-2 gap-2 relative">
+          {/* Overview Button */}
           <button
-            onClick={() => setActiveTab("dashboard")}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition whitespace-nowrap cursor-pointer ${
-              activeTab === "dashboard" ? "bg-blue-600 text-white font-bold shadow-sm shadow-blue-600/30" : "text-slate-300 hover:bg-white/10"
+            onClick={() => {
+              setActiveTab("dashboard");
+              setShowMobileNavDropdown(false);
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 select-none ${
+              activeTab === "dashboard"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-1 ring-blue-400/40"
+                : "bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white border border-white/10"
             }`}
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
-            Overview
+            <span>Overview</span>
           </button>
-          <button
-            onClick={() => setActiveTab("inventory")}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition whitespace-nowrap cursor-pointer ${
-              activeTab === "inventory" ? "bg-blue-600 text-white font-bold shadow-sm shadow-blue-600/30" : "text-slate-300 hover:bg-white/10"
-            }`}
-          >
-            <Boxes className="w-3.5 h-3.5" />
-            Catalog
-          </button>
-          {isAdmin && (
-            <>
-              <button
-                onClick={() => {
-                  if (onNavigateToCounterPOS) {
-                    onNavigateToCounterPOS();
-                  } else {
-                    setActiveTab("pos");
-                  }
-                }}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition whitespace-nowrap cursor-pointer ${
-                  activeTab === "pos" && posViewMode !== "passed_bills"
-                    ? "bg-emerald-600 text-white font-bold shadow-sm shadow-emerald-600/30"
-                    : "text-emerald-400 bg-emerald-500/15 hover:bg-emerald-500/25 font-bold"
-                }`}
-              >
-                <Store className="w-3.5 h-3.5" />
-                Counter POS
-              </button>
-              <button
-                onClick={() => {
-                  if (onNavigateToPassedBills) {
-                    onNavigateToPassedBills();
-                  } else {
-                    setActiveTab("pos");
-                  }
-                }}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition whitespace-nowrap cursor-pointer ${
-                  activeTab === "pos" && posViewMode === "passed_bills"
-                    ? "bg-teal-600 text-white font-bold shadow-sm shadow-teal-600/30"
-                    : "text-teal-300 bg-teal-500/15 hover:bg-teal-500/25 font-bold"
-                }`}
-              >
-                <Receipt className="w-3.5 h-3.5" />
-                <span>Passed Bills</span>
-                {(metrics?.passed_bills_count ?? 0) > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-400 text-slate-950">
-                    {metrics?.passed_bills_count}
-                  </span>
-                )}
-              </button>
-            </>
-          )}
-          {isAdmin && (
+
+          {/* Dropdown Menu for Other Options */}
+          <div className="relative flex-1 min-w-0" ref={mobileNavDropdownRef}>
             <button
-              onClick={() => setActiveTab("khata")}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition whitespace-nowrap cursor-pointer ${
-                activeTab === "khata" ? "bg-purple-600 text-white font-bold shadow-sm shadow-purple-600/30" : "text-slate-300 hover:bg-white/10"
+              onClick={() => setShowMobileNavDropdown((prev) => !prev)}
+              className={`w-full flex items-center justify-between gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border select-none ${
+                activeTab !== "dashboard"
+                  ? "bg-gradient-to-r from-blue-600/25 to-indigo-600/25 text-blue-200 border-blue-500/40 shadow-sm"
+                  : "bg-white/5 text-slate-300 hover:text-white border-white/10 hover:bg-white/10"
               }`}
+              aria-expanded={showMobileNavDropdown}
             >
-              <BookOpen className="w-3.5 h-3.5" />
-              Khata Ledger
+              <div className="flex items-center gap-1.5 truncate">
+                {activeTab !== "dashboard" ? (
+                  activeOptionDetails.icon
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                )}
+                <span className="truncate font-semibold">
+                  {activeTab !== "dashboard" ? activeOptionDetails.label : "Other Options"}
+                </span>
+                {activeOptionDetails.count ? (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-400 text-slate-950 shrink-0">
+                    {activeOptionDetails.count}
+                  </span>
+                ) : null}
+              </div>
+              <ChevronDown
+                className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
+                  showMobileNavDropdown ? "rotate-180 text-blue-400" : "text-slate-400"
+                }`}
+              />
             </button>
-          )}
-          <button
-            onClick={() => setActiveTab("bulk")}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition whitespace-nowrap cursor-pointer ${
-              activeTab === "bulk" ? "bg-blue-600 text-white font-bold shadow-sm shadow-blue-600/30" : "text-slate-300 hover:bg-white/10"
-            }`}
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            Bulk Add
-          </button>
-          <button
-            onClick={() => setActiveTab("audit")}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition whitespace-nowrap cursor-pointer ${
-              activeTab === "audit" ? "bg-blue-600 text-white font-bold shadow-sm shadow-blue-600/30" : "text-slate-300 hover:bg-white/10"
-            }`}
-          >
-            <History className="w-3.5 h-3.5" />
-            Logs
-          </button>
+
+            {/* Dropdown Options Popup */}
+            {showMobileNavDropdown && (
+              <div className="absolute right-0 left-auto top-full mt-2 w-72 max-w-[calc(100vw-1.5rem)] bg-[#0c1222]/98 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/15 p-2 z-50 animate-fade-in text-slate-100">
+                <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-white/10 mb-1 flex items-center justify-between">
+                  <span>Navigation Options</span>
+                  <span className="text-blue-400">Mobile Menu</span>
+                </div>
+
+                <div className="space-y-0.5 max-h-[70vh] overflow-y-auto">
+                  {/* Overview */}
+                  <button
+                    onClick={() => {
+                      setActiveTab("dashboard");
+                      setShowMobileNavDropdown(false);
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl text-left text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
+                      activeTab === "dashboard"
+                        ? "bg-blue-600/30 text-blue-200 border border-blue-500/40"
+                        : "hover:bg-white/10 text-slate-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/30 shrink-0">
+                        <LayoutDashboard className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-slate-100">Overview</div>
+                        <div className="text-[10px] text-slate-400">Warehouse Dashboard & Valuation</div>
+                      </div>
+                    </div>
+                    {activeTab === "dashboard" && <Check className="w-4 h-4 text-blue-400 shrink-0" />}
+                  </button>
+
+                  {/* Catalog */}
+                  <button
+                    onClick={() => {
+                      setActiveTab("inventory");
+                      setShowMobileNavDropdown(false);
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl text-left text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
+                      activeTab === "inventory"
+                        ? "bg-blue-600/30 text-blue-200 border border-blue-500/40"
+                        : "hover:bg-white/10 text-slate-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30 shrink-0">
+                        <Boxes className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-slate-100">Catalog</div>
+                        <div className="text-[10px] text-slate-400">Products, Stock & Pricing</div>
+                      </div>
+                    </div>
+                    {activeTab === "inventory" && <Check className="w-4 h-4 text-blue-400 shrink-0" />}
+                  </button>
+
+                  {isAdmin && (
+                    <>
+                      {/* Counter POS */}
+                      <button
+                        onClick={() => {
+                          setShowMobileNavDropdown(false);
+                          if (onNavigateToCounterPOS) {
+                            onNavigateToCounterPOS();
+                          } else {
+                            setActiveTab("pos");
+                          }
+                        }}
+                        className={`w-full px-3 py-2 rounded-xl text-left text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
+                          activeTab === "pos" && posViewMode !== "passed_bills"
+                            ? "bg-emerald-600/30 text-emerald-200 border border-emerald-500/40"
+                            : "hover:bg-white/10 text-slate-200"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shrink-0">
+                            <Store className="w-3.5 h-3.5" />
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-100 flex items-center gap-1.5">
+                              <span>Counter POS</span>
+                              <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-300 text-[9px] font-bold border border-emerald-500/30">
+                                Billing
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-slate-400">Retail & Wholesale Quick Sale</div>
+                          </div>
+                        </div>
+                        {activeTab === "pos" && posViewMode !== "passed_bills" && (
+                          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                        )}
+                      </button>
+
+                      {/* Passed Bills */}
+                      <button
+                        onClick={() => {
+                          setShowMobileNavDropdown(false);
+                          if (onNavigateToPassedBills) {
+                            onNavigateToPassedBills();
+                          } else {
+                            setActiveTab("pos");
+                          }
+                        }}
+                        className={`w-full px-3 py-2 rounded-xl text-left text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
+                          activeTab === "pos" && posViewMode === "passed_bills"
+                            ? "bg-teal-600/30 text-teal-200 border border-teal-500/40"
+                            : "hover:bg-white/10 text-slate-200"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-6 h-6 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center border border-teal-500/30 shrink-0">
+                            <Receipt className="w-3.5 h-3.5" />
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-100 flex items-center gap-1.5">
+                              <span>Passed Bills</span>
+                              {(metrics?.passed_bills_count ?? 0) > 0 && (
+                                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-400 text-slate-950">
+                                  {metrics?.passed_bills_count}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-slate-400">Completed Sales & Invoices History</div>
+                          </div>
+                        </div>
+                        {activeTab === "pos" && posViewMode === "passed_bills" && (
+                          <Check className="w-4 h-4 text-teal-400 shrink-0" />
+                        )}
+                      </button>
+
+                      {/* Khata Ledger */}
+                      <button
+                        onClick={() => {
+                          setActiveTab("khata");
+                          setShowMobileNavDropdown(false);
+                        }}
+                        className={`w-full px-3 py-2 rounded-xl text-left text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
+                          activeTab === "khata"
+                            ? "bg-purple-600/30 text-purple-200 border border-purple-500/40"
+                            : "hover:bg-white/10 text-slate-200"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/30 shrink-0">
+                            <BookOpen className="w-3.5 h-3.5" />
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-100">Khata Ledger</div>
+                            <div className="text-[10px] text-slate-400">Customer Credit & Outstanding Dues</div>
+                          </div>
+                        </div>
+                        {activeTab === "khata" && <Check className="w-4 h-4 text-purple-400 shrink-0" />}
+                      </button>
+                    </>
+                  )}
+
+                  {/* Bulk Add */}
+                  <button
+                    onClick={() => {
+                      setActiveTab("bulk");
+                      setShowMobileNavDropdown(false);
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl text-left text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
+                      activeTab === "bulk"
+                        ? "bg-amber-600/30 text-amber-200 border border-amber-500/40"
+                        : "hover:bg-white/10 text-slate-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 shrink-0">
+                        <FileSpreadsheet className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-slate-100">Bulk Add Studio</div>
+                        <div className="text-[10px] text-slate-400">Excel / CSV Batch Product Import</div>
+                      </div>
+                    </div>
+                    {activeTab === "bulk" && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
+                  </button>
+
+                  {/* Audit Logs */}
+                  <button
+                    onClick={() => {
+                      setActiveTab("audit");
+                      setShowMobileNavDropdown(false);
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl text-left text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
+                      activeTab === "audit"
+                        ? "bg-cyan-600/30 text-cyan-200 border border-cyan-500/40"
+                        : "hover:bg-white/10 text-slate-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-500/30 shrink-0">
+                        <History className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-slate-100">Activity Logs</div>
+                        <div className="text-[10px] text-slate-400">Audit Trail & Security Events</div>
+                      </div>
+                    </div>
+                    {activeTab === "audit" && <Check className="w-4 h-4 text-cyan-400 shrink-0" />}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
