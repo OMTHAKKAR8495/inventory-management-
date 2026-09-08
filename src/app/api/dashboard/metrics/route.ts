@@ -13,15 +13,18 @@ export async function GET() {
     }
 
     const isAdmin = user.role === "admin";
-    const products = (await queryAll("SELECT * FROM products WHERE deleted_at IS NULL")) as Product[];
-    const trashRecord = await queryOne<{ count: number }>(
-      "SELECT COUNT(*) as count FROM products WHERE deleted_at IS NOT NULL"
-    );
-    const trashCount = trashRecord?.count ? Number(trashRecord.count) : 0;
+    const recentActivitiesQuery = isAdmin
+      ? "SELECT * FROM stock_logs ORDER BY created_at DESC LIMIT 10"
+      : "SELECT * FROM stock_logs WHERE (change_type IN ('stock_in', 'bulk_import', 'product_created') OR quantity_delta > 0) AND (reason IS NULL OR (LOWER(reason) NOT LIKE '%pos sale%' AND LOWER(reason) NOT LIKE '%bill%')) ORDER BY created_at DESC LIMIT 10";
 
-    const invoiceRecord = await queryOne<{ count: number }>(
-      "SELECT COUNT(*) as count FROM invoices"
-    );
+    const [products, trashRecord, invoiceRecord, recentActivities] = await Promise.all([
+      queryAll("SELECT * FROM products WHERE deleted_at IS NULL") as Promise<Product[]>,
+      queryOne<{ count: number }>("SELECT COUNT(*) as count FROM products WHERE deleted_at IS NOT NULL"),
+      queryOne<{ count: number }>("SELECT COUNT(*) as count FROM invoices"),
+      queryAll(recentActivitiesQuery),
+    ]);
+
+    const trashCount = trashRecord?.count ? Number(trashRecord.count) : 0;
     const passedBillsCount = invoiceRecord?.count ? Number(invoiceRecord.count) : 0;
 
     let totalProducts = products.length;
@@ -117,11 +120,7 @@ export async function GET() {
       sales_value: Number(data.salesVal.toFixed(2)),
     }));
 
-    const recentActivities = await queryAll(
-      isAdmin
-        ? "SELECT * FROM stock_logs ORDER BY created_at DESC LIMIT 10"
-        : "SELECT * FROM stock_logs WHERE (change_type IN ('stock_in', 'bulk_import', 'product_created') OR quantity_delta > 0) AND (reason IS NULL OR (LOWER(reason) NOT LIKE '%pos sale%' AND LOWER(reason) NOT LIKE '%bill%')) ORDER BY created_at DESC LIMIT 10"
-    );
+
 
     const totalPotentialProfit = totalSalesVal - totalCostVal;
     const avgMarginPct = totalCostVal > 0 ? (totalPotentialProfit / totalCostVal) * 100 : 0;

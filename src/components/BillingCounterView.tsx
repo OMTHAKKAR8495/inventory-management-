@@ -63,6 +63,9 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
 
   const setViewMode = (mode: "counter" | "saved_bills" | "passed_bills") => {
     setViewModeState(mode);
+    if (mode === "passed_bills" && passedInvoices.length === 0) {
+      loadPassedInvoices();
+    }
     if (onViewModeChanged) {
       onViewModeChanged(mode);
     }
@@ -71,6 +74,9 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
   React.useEffect(() => {
     if (initialViewMode) {
       setViewModeState(initialViewMode);
+      if (initialViewMode === "passed_bills" && passedInvoices.length === 0) {
+        loadPassedInvoices();
+      }
     }
   }, [initialViewMode]);
 
@@ -207,7 +213,9 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
         fetch("/api/products?limit=200"),
         fetch("/api/khata"),
       ]);
-      loadPassedInvoices();
+      if (viewMode === "passed_bills") {
+        loadPassedInvoices();
+      }
 
       if (prodRes.ok) {
         const prodData = await prodRes.json();

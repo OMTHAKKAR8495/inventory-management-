@@ -110,7 +110,15 @@ export async function GET(req: Request) {
     const sortColumn = allowedSortCols[sortBy] || "updated_at";
     query += ` ORDER BY ${sortColumn} ${sortOrder}`;
 
-    const rawRows = await queryAll<Product>(query, params);
+    const [rawRows, catRows, suppRows] = await Promise.all([
+      queryAll<Product>(query, params),
+      queryAll<{ category: string }>(
+        "SELECT DISTINCT category FROM products WHERE deleted_at IS NULL ORDER BY category ASC"
+      ),
+      queryAll<{ supplier: string }>(
+        "SELECT DISTINCT supplier FROM products WHERE deleted_at IS NULL AND supplier IS NOT NULL AND supplier != '' ORDER BY supplier ASC"
+      ),
+    ]);
 
     // Compute status and margins in ₹
     const processedProducts: Product[] = rawRows.map((p) => {
@@ -140,15 +148,7 @@ export async function GET(req: Request) {
     });
 
     const totalCount = processedProducts.length;
-
-    const catRows = await queryAll<{ category: string }>(
-      "SELECT DISTINCT category FROM products WHERE deleted_at IS NULL ORDER BY category ASC"
-    );
     const categories = catRows.map((row) => row.category);
-
-    const suppRows = await queryAll<{ supplier: string }>(
-      "SELECT DISTINCT supplier FROM products WHERE deleted_at IS NULL AND supplier IS NOT NULL AND supplier != '' ORDER BY supplier ASC"
-    );
     const suppliers = suppRows.map((row) => row.supplier);
 
     if (isAll) {

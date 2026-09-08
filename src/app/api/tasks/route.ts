@@ -33,16 +33,17 @@ export async function GET(req: NextRequest) {
     query +=
       " ORDER BY CASE priority WHEN 'urgent' THEN 1 WHEN 'normal' THEN 2 WHEN 'low' THEN 3 ELSE 4 END, created_at DESC";
 
-    const tasks = (await queryAll(query, params)) as ShopfloorTask[];
+    const [tasks, pendingRecord, urgentRecord] = await Promise.all([
+      queryAll(query, params) as Promise<ShopfloorTask[]>,
+      queryOne<{ count: number }>(
+        "SELECT COUNT(*) as count FROM shopfloor_tasks WHERE status != 'completed'"
+      ),
+      queryOne<{ count: number }>(
+        "SELECT COUNT(*) as count FROM shopfloor_tasks WHERE status != 'completed' AND priority = 'urgent'"
+      ),
+    ]);
 
-    const pendingRecord = await queryOne<{ count: number }>(
-      "SELECT COUNT(*) as count FROM shopfloor_tasks WHERE status != 'completed'"
-    );
     const pendingCount = pendingRecord?.count ? Number(pendingRecord.count) : 0;
-
-    const urgentRecord = await queryOne<{ count: number }>(
-      "SELECT COUNT(*) as count FROM shopfloor_tasks WHERE status != 'completed' AND priority = 'urgent'"
-    );
     const urgentCount = urgentRecord?.count ? Number(urgentRecord.count) : 0;
 
     return NextResponse.json({

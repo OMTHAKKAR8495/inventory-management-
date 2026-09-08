@@ -40,10 +40,10 @@ interface NavbarProps {
   onOpenTasksModal?: (productId?: string, productName?: string) => void;
   pendingTasksCount?: number;
   metrics?: DashboardMetrics | null;
-  onSwitchRoleQuickDemo?: (role: "admin" | "manager") => void;
   onSelectAlertItem?: (productId: string) => void;
   isDarkMode?: boolean;
   onToggleDarkMode?: () => void;
+  onNavigateToCounterPOS?: () => void;
   onNavigateToPassedBills?: () => void;
   posViewMode?: "counter" | "saved_bills" | "passed_bills";
 }
@@ -60,10 +60,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenTasksModal,
   pendingTasksCount = 0,
   metrics,
-  onSwitchRoleQuickDemo,
   onSelectAlertItem,
   isDarkMode = false,
   onToggleDarkMode,
+  onNavigateToCounterPOS,
   onNavigateToPassedBills,
   posViewMode = "counter",
 }) => {
@@ -103,10 +103,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Navigation Tabs */}
-          <nav className="hidden xl:flex items-center gap-0.5 2xl:gap-1 bg-slate-900/60 backdrop-blur-md p-1 rounded-xl border border-white/10 shadow-inner shrink-0">
+          <nav className="hidden xl:flex items-center gap-0.5 2xl:gap-1 bg-slate-900/60 backdrop-blur-md p-1 rounded-xl border border-white/10 shadow-inner min-w-0 max-w-fit shrink">
             <button
               onClick={() => setActiveTab("dashboard")}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2 py-1 2xl:px-2.5 2xl:py-1.5 rounded-lg text-[11px] 2xl:text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "dashboard"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
                   : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -117,7 +117,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => setActiveTab("inventory")}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2 py-1 2xl:px-2.5 2xl:py-1.5 rounded-lg text-[11px] 2xl:text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "inventory"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
                   : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -130,16 +130,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               <>
                 <button
                   onClick={() => {
-                    setActiveTab("pos");
+                    if (onNavigateToCounterPOS) {
+                      onNavigateToCounterPOS();
+                    } else {
+                      setActiveTab("pos");
+                    }
                   }}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center gap-1 px-2 py-1 2xl:px-2.5 2xl:py-1.5 rounded-lg text-[11px] 2xl:text-xs font-semibold transition-all cursor-pointer ${
                     activeTab === "pos" && posViewMode !== "passed_bills"
                       ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
                       : "text-emerald-400 hover:bg-emerald-500/15 font-bold"
                   }`}
                 >
                   <Store className="w-3.5 h-3.5" />
-                  Counter POS
+                  <span><span className="hidden 2xl:inline">Counter </span>POS</span>
                 </button>
                 <button
                   onClick={() => {
@@ -149,14 +153,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                       setActiveTab("pos");
                     }
                   }}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center gap-1 px-2 py-1 2xl:px-2.5 2xl:py-1.5 rounded-lg text-[11px] 2xl:text-xs font-semibold transition-all cursor-pointer ${
                     activeTab === "pos" && posViewMode === "passed_bills"
                       ? "bg-teal-600 text-white shadow-md shadow-teal-600/30 font-bold"
                       : "text-teal-300 hover:text-white hover:bg-teal-500/15 font-bold"
                   }`}
                 >
                   <Receipt className="w-3.5 h-3.5 text-teal-400" />
-                  <span>Passed Bills</span>
+                  <span>Passed<span className="hidden 2xl:inline"> Bills</span></span>
                   {(metrics?.passed_bills_count ?? 0) > 0 && (
                     <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-400 text-slate-950">
                       {metrics?.passed_bills_count}
@@ -167,31 +171,31 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
             <button
               onClick={() => setActiveTab("procurement")}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2 py-1 2xl:px-2.5 2xl:py-1.5 rounded-lg text-[11px] 2xl:text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "procurement"
                   ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
                   : "text-slate-300 hover:text-white hover:bg-white/10"
               }`}
             >
               <Truck className="w-3.5 h-3.5" />
-              Supplier POs
+              <span><span className="hidden 2xl:inline">Supplier </span>POs</span>
             </button>
             {isAdmin && (
               <button
                 onClick={() => setActiveTab("khata")}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1 px-2 py-1 2xl:px-2.5 2xl:py-1.5 rounded-lg text-[11px] 2xl:text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === "khata"
                     ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
                     : "text-slate-300 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                Khata Ledger
+                <span>Khata<span className="hidden 2xl:inline"> Ledger</span></span>
               </button>
             )}
             <button
               onClick={() => setActiveTab("bulk")}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2 py-1 2xl:px-2.5 2xl:py-1.5 rounded-lg text-[11px] 2xl:text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "bulk"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
                   : "text-slate-300 hover:text-white hover:bg-white/10"
@@ -202,19 +206,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => setActiveTab("audit")}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2 py-1 2xl:px-2.5 2xl:py-1.5 rounded-lg text-[11px] 2xl:text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "audit"
                   ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
                   : "text-slate-300 hover:text-white hover:bg-white/10"
               }`}
             >
               <History className="w-3.5 h-3.5" />
-              Movement Logs
+              <span><span className="hidden 2xl:inline">Movement </span>Logs</span>
             </button>
           </nav>
 
-          {/* Right Controls: Barcode, Demo, Tasks, Notifications, Dark Mode, User */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Right Controls: Barcode, Tasks, Notifications, Dark Mode, User */}
+          <div className="flex items-center gap-1 sm:gap-1.5 2xl:gap-2 shrink-0">
             {/* Barcode Scanner Shortcut */}
             {onOpenBarcodeScanner && (
               <button
@@ -226,28 +230,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Quick Demo Switcher */}
-            {onSwitchRoleQuickDemo && (
-              <div className="hidden 2xl:flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-xl">
-                <span className="text-[10px] font-medium text-amber-300">Demo:</span>
-                <button
-                  onClick={() => onSwitchRoleQuickDemo("admin")}
-                  className={`text-[10px] px-1.5 py-0.5 rounded-lg font-medium transition cursor-pointer ${
-                    isAdmin ? "bg-amber-500 text-slate-950 font-bold" : "text-amber-300 hover:bg-amber-500/20"
-                  }`}
-                >
-                  Admin
-                </button>
-                <button
-                  onClick={() => onSwitchRoleQuickDemo("manager")}
-                  className={`text-[10px] px-1.5 py-0.5 rounded-lg font-medium transition cursor-pointer ${
-                    !isAdmin ? "bg-emerald-500 text-slate-950 font-bold" : "text-amber-300 hover:bg-amber-500/20"
-                  }`}
-                >
-                  Manager
-                </button>
-              </div>
-            )}
 
             {/* Shopfloor Direct Task & Dispatch Messages */}
             {onOpenTasksModal && (
@@ -285,7 +267,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-[#0c1222]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/15 py-3 z-50 animate-fade-in text-slate-100">
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 max-w-[calc(100vw-1.5rem)] bg-[#0c1222]/98 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/15 py-3 z-50 animate-fade-in text-slate-100">
                   <div className="px-4 pb-2 border-b border-white/10 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-amber-400" />
@@ -375,7 +357,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setShowUserMenu(!showUserMenu);
                   setShowNotifications(false);
                 }}
-                className="flex items-center gap-1.5 p-1 sm:px-2.5 sm:py-1 rounded-xl hover:bg-white/10 transition border border-transparent hover:border-white/10 cursor-pointer"
+                className="flex items-center gap-1.5 p-1 sm:px-2 sm:py-1 rounded-xl hover:bg-white/10 transition border border-transparent hover:border-white/10 cursor-pointer"
               >
                 <div
                   className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0 ${
@@ -384,17 +366,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <div className="text-left hidden md:block">
-                  <p className="text-xs font-semibold text-slate-200 leading-tight truncate max-w-[90px] lg:max-w-[120px]">{user.name}</p>
+                <div className="text-left hidden 2xl:block">
+                  <p className="text-xs font-semibold text-slate-200 leading-tight truncate max-w-[90px]">{user.name}</p>
                   <p className="text-[10px] text-slate-400 capitalize">{user.role}</p>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               </button>
 
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-60 bg-[#0c1222]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/15 py-2 z-50 animate-fade-in text-slate-100">
+                <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] bg-[#0c1222]/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/15 py-2 z-50 animate-fade-in text-slate-100">
                   <div className="px-4 py-2 border-b border-white/10">
-                    <p className="text-xs font-bold text-white">{user.name}</p>
+                    <p className="text-xs font-bold text-white truncate">{user.name}</p>
                     <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
                     <div className="mt-1 flex items-center gap-1.5">
                       {isAdmin ? (
@@ -477,7 +459,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <div className="flex items-center gap-2">
                         {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-sky-300" />}
-                        <span>{isDarkMode ? "Switch to Light Theme" : "Switch to Dark Theme"}</span>
+                        <span>{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
                       </div>
                       <span className="text-[10px] uppercase font-bold text-slate-400">
                         {isDarkMode ? "Dark" : "Light"}
@@ -525,7 +507,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <>
               <button
                 onClick={() => {
-                  setActiveTab("pos");
+                  if (onNavigateToCounterPOS) {
+                    onNavigateToCounterPOS();
+                  } else {
+                    setActiveTab("pos");
+                  }
                 }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition ${
                   activeTab === "pos" && posViewMode !== "passed_bills"

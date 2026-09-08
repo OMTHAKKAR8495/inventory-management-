@@ -33,6 +33,16 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
   }
 }
 
+const userCache = new Map<string, { user: User; expiresAt: number }>();
+
+export function invalidateUserCache(userId?: string) {
+  if (userId) {
+    userCache.delete(userId);
+  } else {
+    userCache.clear();
+  }
+}
+
 export async function getCurrentUser(): Promise<User | null> {
   try {
     const cookieStore = await cookies();
@@ -42,10 +52,20 @@ export async function getCurrentUser(): Promise<User | null> {
     const payload = await verifyToken(tokenCookie.value);
     if (!payload?.userId) return null;
 
+    const now = Date.now();
+    const cached = userCache.get(payload.userId);
+    if (cached && cached.expiresAt > now) {
+      return cached.user;
+    }
+
     const user = await queryOne<User>(
       "SELECT id, name, email, role, status, created_at FROM users WHERE id = ? AND status = 'active'",
       [payload.userId]
     );
+
+    if (user) {
+      userCache.set(payload.userId, { user, expiresAt: now + 60000 }); // 60s cache
+    }
 
     return user || null;
   } catch (err) {

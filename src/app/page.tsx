@@ -220,10 +220,12 @@ export default function Home() {
     }
   };
 
-  // Fetch Dashboard Metrics
-  const fetchMetrics = async () => {
+  // Fetch Dashboard Metrics (smooth background refresh if metrics already in memory)
+  const fetchMetrics = async (showLoadingSkeleton = false) => {
     if (!user) return;
-    setIsMetricsLoading(true);
+    if (showLoadingSkeleton || !metrics) {
+      setIsMetricsLoading(true);
+    }
     try {
       const res = await fetch("/api/dashboard/metrics");
       if (res.ok) {
@@ -243,7 +245,9 @@ export default function Home() {
 
   useEffect(() => {
     if (user) {
-      fetchMetrics();
+      if (activeTab === "dashboard" || !metrics) {
+        fetchMetrics();
+      }
       fetchTasksCount();
     }
   }, [user, activeTab]);
@@ -266,30 +270,6 @@ export default function Home() {
     }
   }, [user]);
 
-  const handleQuickRoleSwitch = async (targetRole: "admin" | "manager") => {
-    const creds =
-      targetRole === "admin"
-        ? { email: "admin@provision.store", password: "admin123" }
-        : { email: "manager@provision.store", password: "manager123" };
-
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(creds),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setUser(data.user);
-        if (data.user?.role !== "admin" && (activeTab === "pos" || activeTab === "khata")) {
-          setActiveTab("dashboard");
-        }
-        showToast(`Switched view to ${data.user.role === "admin" ? "Store Administrator" : "Inventory Manager"}`);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   // Save product (create or update)
   const handleSaveProduct = async (productData: any): Promise<boolean> => {
@@ -380,7 +360,10 @@ export default function Home() {
         isDarkMode={isDarkMode}
         onToggleDarkMode={toggleDarkMode}
         metrics={metrics}
-        onSwitchRoleQuickDemo={handleQuickRoleSwitch}
+        onNavigateToCounterPOS={() => {
+          setPosViewMode("counter");
+          setActiveTab("pos");
+        }}
         onNavigateToPassedBills={() => {
           setPosViewMode("passed_bills");
           setActiveTab("pos");
