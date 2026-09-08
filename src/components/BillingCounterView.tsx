@@ -1347,23 +1347,13 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
 
                       <div className="mt-3 pt-2 border-t border-white/10 flex items-end justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-baseline gap-2 flex-wrap">
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400/90">
-                                SP:
-                              </span>
-                              <span className="text-sm font-black text-amber-400 font-mono">
-                                ₹{p.selling_price.toLocaleString("en-IN")}
-                              </span>
-                            </div>
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                                CP:
-                              </span>
-                              <span className="text-xs font-semibold text-slate-300 font-mono">
-                                ₹{(p.cost_price ?? 0).toLocaleString("en-IN")}
-                              </span>
-                            </div>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400/90">
+                              SP:
+                            </span>
+                            <span className="text-sm font-black text-amber-400 font-mono">
+                              ₹{p.selling_price.toLocaleString("en-IN")}
+                            </span>
                           </div>
                           {heldQty > 0 ? (
                             <div className="flex flex-col mt-0.5">
@@ -1539,11 +1529,6 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                           <span>
                             <span className="text-[10px] text-amber-400 font-bold">SP:</span> ₹{item.unit_price} × {item.quantity} = <strong className="text-slate-100">₹{item.total_price.toLocaleString("en-IN")}</strong>
                           </span>
-                          {item.product.cost_price !== undefined && (
-                            <span className="text-[10px] text-slate-400 bg-white/5 px-1 rounded border border-white/5">
-                              CP: ₹{item.product.cost_price}
-                            </span>
-                          )}
                           <span className="text-[10px] text-slate-500">
                             (Stock: {item.product.stock_quantity})
                           </span>
@@ -3009,9 +2994,6 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                             <div className="text-right shrink-0">
                               <div className="font-bold text-amber-400 font-mono text-xs">
                                 SP: ₹{prod.selling_price.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                              </div>
-                              <div className="text-[10px] text-slate-400 font-mono">
-                                CP: ₹{(prod.cost_price ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                               </div>
                               <span className="block text-[10px] text-emerald-400 font-bold">+ Add</span>
                             </div>
