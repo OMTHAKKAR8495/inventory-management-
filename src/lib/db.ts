@@ -333,7 +333,7 @@ function seedData() {
   const userCount = db.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number };
   
   if (userCount && userCount.count === 0) {
-    const adminPasswordHash = bcrypt.hashSync("admin123", 10);
+    const adminPasswordHash = bcrypt.hashSync("9558413347@Om", 10);
     const managerPasswordHash = bcrypt.hashSync("manager123", 10);
     const now = new Date().toISOString();
 
@@ -342,7 +342,7 @@ function seedData() {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
-    insertUser.run("usr_admin_1", "Store Administrator", "admin@provision.store", adminPasswordHash, "admin", "active", now);
+    insertUser.run("usr_admin_1", "Asha Store Admin", "ashastore@gmail.com", adminPasswordHash, "admin", "active", now);
     insertUser.run("usr_manager_1", "Shopfloor Manager", "manager@provision.store", managerPasswordHash, "manager", "active", now);
   }
 

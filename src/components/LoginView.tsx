@@ -159,7 +159,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           <div className="grid grid-cols-2 gap-2.5">
             <button
               type="button"
-              onClick={() => handleLogin("admin@provision.store", "admin123")}
+              onClick={() => handleLogin("ashastore@gmail.com", "9558413347@Om")}
               disabled={isLoading}
               className="p-3 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-500/50 rounded-2xl text-left transition group cursor-pointer"
             >
@@ -169,7 +169,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   Admin
                 </span>
               </div>
-              <div className="text-xs font-bold text-white mt-1.5">Store Admin</div>
+              <div className="text-xs font-bold text-white mt-1.5">Asha Store Admin</div>
               <div className="text-[10px] text-purple-300/80 font-medium">Full financials & users</div>
             </button>
 
@@ -218,7 +218,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@provision.store"
+                  placeholder="ashastore@gmail.com"
                   className="w-full pl-10 pr-3 py-2.5 bg-slate-900/80 text-white placeholder:text-slate-500 rounded-xl border border-white/10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden text-xs font-medium"
                 />
               </div>
