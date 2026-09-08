@@ -369,15 +369,15 @@ export const BulkUploadStudio: React.FC<BulkUploadStudioProps> = ({
   const validParsedCount = parsedRows.length - invalidParsedCount;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in text-slate-100">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6 animate-fade-in text-slate-100">
       {/* Studio Header */}
-      <div className="glass-panel rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 sm:p-8 border border-white/10 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
         <div>
           <div className="flex items-center gap-2 text-blue-400 mb-1">
             <Sparkles className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-wider">Fast Bulk Inventory Ingestion</span>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">Fast Bulk Inventory Ingestion</span>
           </div>
-          <h2 className="text-2xl font-black text-white tracking-tight">Bulk Add & Upload Studio</h2>
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Bulk Add & Upload Studio</h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
             Effortlessly ingest large wholesale shipments into the warehouse. Choose between uploading a spreadsheet file or entering products directly into the interactive spreadsheet table with Rupee (₹) pricing.
           </p>

@@ -256,12 +256,12 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const totalPages = Math.ceil(totalCount / limit) || 1;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in text-slate-100">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6 animate-fade-in text-slate-100">
       {/* Top Banner & Main Action Buttons */}
-      <div className="glass-panel rounded-3xl p-6 sm:p-7 border border-white/10 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 sm:p-7 border border-white/10 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <Package className="w-6 h-6 text-blue-400" />
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+            <Package className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 shrink-0" />
             Wholesale Inventory Catalog
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
@@ -270,10 +270,10 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
         </div>
 
         {/* Priority Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           <button
             onClick={onOpenAddModal}
-            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-600/20 border border-white/10 transition flex items-center gap-2 cursor-pointer"
+            className="px-3.5 py-2 sm:px-4 sm:py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-600/20 border border-white/10 transition flex items-center gap-1.5 sm:gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Add Product
@@ -556,7 +556,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       </div>
 
       {/* Main Inventory Data Table (Glass Table Layout) */}
-      <div className="glass-panel rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+      <div className="glass-panel rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead className="bg-[#090e1a]/90 backdrop-blur-md border-b border-white/10 text-slate-300 font-bold uppercase tracking-wider text-[10px]">

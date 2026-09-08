@@ -1130,30 +1130,30 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fade-in text-slate-100">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6 animate-fade-in text-slate-100">
       {/* Top Navigation & View Switcher Banner */}
-      <div className="glass-panel rounded-3xl p-6 border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-white/10 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold border border-blue-500/30">
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px] sm:text-xs font-bold border border-blue-500/30">
               Wholesale POS
             </span>
-            <span className="text-xs text-slate-400 font-medium">Quick Billing & Saved Hold Invoices</span>
+            <span className="text-[11px] sm:text-xs text-slate-400 font-medium">Quick Billing & Saved Hold Invoices</span>
           </div>
-          <h2 className="text-2xl font-black text-slate-100 tracking-tight flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-100 tracking-tight flex items-center gap-2">
             {viewMode === "counter" ? (
               <>
-                <ShoppingCart className="w-6 h-6 text-blue-400" />
+                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 shrink-0" />
                 Shopfloor Quick Billing Counter
               </>
             ) : viewMode === "saved_bills" ? (
               <>
-                <Bookmark className="w-6 h-6 text-indigo-400" />
+                <Bookmark className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400 shrink-0" />
                 Saved Bills & Hold Invoices
               </>
             ) : (
               <>
-                <FileText className="w-6 h-6 text-emerald-400" />
+                <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400 shrink-0" />
                 Passed Bills & Invoice Archive
               </>
             )}

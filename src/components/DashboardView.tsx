@@ -93,67 +93,66 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   }));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in text-slate-100">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6 md:space-y-8 animate-fade-in text-slate-100">
       {/* Welcome Banner - High-Tech Glass Executive Header */}
-      <div className="relative overflow-hidden glass-panel rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/15 border border-blue-500/30 text-xs font-semibold text-blue-300">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                Live Wholesale Stock Pulse
+      <div className="relative overflow-hidden glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-white/10 shadow-2xl">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+          <div className="space-y-1.5 sm:space-y-2 max-w-xl">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-blue-500/15 border border-blue-500/30 text-[10px] sm:text-xs font-semibold text-blue-300">
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
+                Live Stock Pulse
               </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs font-semibold text-emerald-300">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Persistent Database: Online
+              <div className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] sm:text-xs font-semibold text-emerald-300">
+                <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                DB: Online
               </div>
               {metrics?.last_backup_at && (
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-xs font-semibold text-purple-300">
-                  <Clock className="w-3.5 h-3.5" />
-                  Last Backup: {new Date(metrics.last_backup_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-[10px] sm:text-xs font-semibold text-purple-300">
+                  <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  Backup: {new Date(metrics.last_backup_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </div>
               )}
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white tracking-tight">
               Good day, {user.name}
             </h2>
-            <p className="text-slate-300 text-sm leading-relaxed">
+            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed line-clamp-2 sm:line-clamp-none">
               {isAdmin
                 ? "Here is the real-time financial valuation, margin performance, and inventory health of the provision warehouse in Indian Rupees (₹)."
                 : "Manage wholesale goods, track low stock items, perform instant stock-in/out, and batch add inventory."}
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 pt-1 sm:pt-0">
             {isAdmin && onNavigateToPOS && (
               <button
                 onClick={onNavigateToPOS}
-                className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-500/20 border border-white/20 transition flex items-center gap-2 cursor-pointer"
+                className="col-span-1 px-3 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-500/20 border border-white/20 transition flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <ShoppingCart className="w-4 h-4" />
-                Quick Billing (POS)
+                <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Quick POS</span>
               </button>
             )}
-
 
             {isAdmin && onNavigateToKhata && (
               <button
                 onClick={onNavigateToKhata}
-                className="px-3.5 py-2.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 rounded-xl text-xs font-bold border border-purple-500/30 transition flex items-center gap-1.5 cursor-pointer"
+                className="col-span-1 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 rounded-xl text-xs font-bold border border-purple-500/30 transition flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <BookOpen className="w-4 h-4" />
-                Khata Ledger
+                <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Khata Ledger</span>
               </button>
             )}
 
             {onOpenTasksModal && (
               <button
                 onClick={() => onOpenTasksModal()}
-                className="px-3.5 py-2.5 bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 rounded-xl text-xs font-bold border border-blue-500/30 transition flex items-center gap-1.5 cursor-pointer"
+                className="col-span-2 sm:col-auto px-3 py-2 sm:px-3.5 sm:py-2.5 bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 rounded-xl text-xs font-bold border border-blue-500/30 transition flex items-center justify-center gap-1.5 cursor-pointer"
                 title="Dispatch direct work orders, reorders or audit tasks to floor manager"
               >
-                <MessageSquare className="w-4 h-4 text-blue-400" />
-                {isAdmin ? "Dispatch to Manager" : "Work Orders"}
+                <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
+                <span>{isAdmin ? "Dispatch to Manager" : "Work Orders"}</span>
               </button>
             )}
           </div>
@@ -165,85 +164,85 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* KPI Cards Grid */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3 sm:mb-4">
+          <h3 className="text-sm sm:text-base font-bold text-white tracking-tight flex items-center gap-2">
             <Layers className="w-4 h-4 text-blue-400" />
             Stock & Inventory Vital Statistics
           </h3>
-          <span className="text-xs text-slate-400">Auto-synchronized with shop floor</span>
+          <span className="text-[11px] sm:text-xs text-slate-400">Auto-synchronized with shop floor</span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
           {/* Total Products */}
           <div
             onClick={() => onNavigateToInventory()}
-            className="glass-panel-subtle glass-panel-hover p-5 rounded-2xl border border-white/10 shadow-lg cursor-pointer group"
+            className="glass-panel-subtle glass-panel-hover p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-white/10 shadow-lg cursor-pointer group"
           >
-            <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Total Products</span>
-              <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center group-hover:scale-110 transition border border-blue-500/30">
-                <Package className="w-4 h-4" />
+            <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate">Total Products</span>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center group-hover:scale-110 transition border border-blue-500/30 shrink-0">
+                <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-white">
+            <div className="text-xl sm:text-2xl md:text-3xl font-black text-white leading-tight">
               {metrics.total_products.toLocaleString("en-IN")}
             </div>
-            <div className="mt-2 text-xs text-slate-400 flex items-center gap-1">
+            <div className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-slate-400 flex items-center gap-1 truncate">
               <span className="font-semibold text-blue-400">Active SKUs</span> in catalog
             </div>
           </div>
 
           {/* Total Units */}
-          <div className="glass-panel-subtle glass-panel-hover p-5 rounded-2xl border border-white/10 shadow-lg">
-            <div className="flex items-center justify-between text-slate-400 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Total Warehouse Units</span>
-              <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
-                <Boxes className="w-4 h-4" />
+          <div className="glass-panel-subtle glass-panel-hover p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-white/10 shadow-lg">
+            <div className="flex items-center justify-between text-slate-400 mb-1.5 sm:mb-2">
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate">Total Units</span>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30 shrink-0">
+                <Boxes className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-white">
+            <div className="text-xl sm:text-2xl md:text-3xl font-black text-white leading-tight">
               {metrics.total_stock_units.toLocaleString("en-IN")}
             </div>
-            <div className="mt-2 text-xs text-slate-400">
-              Bulk sacks, tins, cartons, & units
+            <div className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-slate-400 truncate">
+              Bulk sacks, tins & units
             </div>
           </div>
 
           {/* Low Stock Warning */}
           <div
             onClick={() => onNavigateToInventory("low_stock")}
-            className="glass-panel-subtle glass-panel-hover p-5 rounded-2xl border border-amber-500/30 shadow-lg cursor-pointer group bg-gradient-to-b from-amber-500/10 to-transparent"
+            className="glass-panel-subtle glass-panel-hover p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-amber-500/30 shadow-lg cursor-pointer group bg-gradient-to-b from-amber-500/10 to-transparent"
           >
-            <div className="flex items-center justify-between text-amber-300 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Low Stock Threshold</span>
-              <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center group-hover:scale-110 transition border border-amber-500/30">
-                <AlertTriangle className="w-4 h-4" />
+            <div className="flex items-center justify-between text-amber-300 mb-1.5 sm:mb-2">
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate">Low Stock</span>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center group-hover:scale-110 transition border border-amber-500/30 shrink-0">
+                <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-amber-300">
+            <div className="text-xl sm:text-2xl md:text-3xl font-black text-amber-300 leading-tight">
               {metrics.low_stock_count}
             </div>
-            <div className="mt-2 text-xs text-amber-300 font-medium flex items-center gap-1">
-              Needs reorder soon <ArrowRight className="w-3 h-3" />
+            <div className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-amber-300 font-medium flex items-center gap-1 truncate">
+              Needs reorder soon <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
             </div>
           </div>
 
           {/* Out of Stock */}
           <div
             onClick={() => onNavigateToInventory("out_of_stock")}
-            className="glass-panel-subtle glass-panel-hover p-5 rounded-2xl border border-red-500/30 shadow-lg cursor-pointer group bg-gradient-to-b from-red-500/10 to-transparent"
+            className="glass-panel-subtle glass-panel-hover p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-red-500/30 shadow-lg cursor-pointer group bg-gradient-to-b from-red-500/10 to-transparent"
           >
-            <div className="flex items-center justify-between text-red-300 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider">Out of Stock</span>
-              <div className="w-8 h-8 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center group-hover:scale-110 transition border border-red-500/30">
-                <XCircle className="w-4 h-4" />
+            <div className="flex items-center justify-between text-red-300 mb-1.5 sm:mb-2">
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider truncate">Out of Stock</span>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center group-hover:scale-110 transition border border-red-500/30 shrink-0">
+                <XCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-red-400">
+            <div className="text-xl sm:text-2xl md:text-3xl font-black text-red-400 leading-tight">
               {metrics.out_of_stock_count}
             </div>
-            <div className="mt-2 text-xs text-red-300 font-medium flex items-center gap-1">
-              0 inventory on hand <ArrowRight className="w-3 h-3" />
+            <div className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-red-300 font-medium flex items-center gap-1 truncate">
+              0 inventory on hand <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
             </div>
           </div>
         </div>
@@ -251,96 +250,96 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* Admin Financial Metrics Section (Glass Card - Rupee Format) */}
       {isAdmin && (
-        <div className="glass-panel rounded-3xl p-6 sm:p-7 border border-purple-500/30 shadow-2xl space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-300 font-bold text-base flex items-center justify-center border border-purple-500/30">
+        <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 border border-purple-500/30 shadow-2xl space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 sm:pb-4 border-b border-white/10">
+            <div className="flex items-center gap-2.5 sm:gap-3">
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-purple-500/20 text-purple-300 font-bold text-sm sm:text-base flex items-center justify-center border border-purple-500/30 shrink-0">
                 ₹
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white tracking-wide uppercase">
+                <h4 className="text-xs sm:text-sm font-bold text-white tracking-wide uppercase">
                   Financial Valuation & Profit Potential
                 </h4>
-                <p className="text-xs text-slate-400">Live valuation calculated in Indian Rupees (₹) based on wholesale cost and selling rates</p>
+                <p className="text-[10px] sm:text-xs text-slate-400">Live valuation in INR (₹) based on wholesale cost and selling rates</p>
               </div>
             </div>
-            <span className="text-[11px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 px-3 py-1 rounded-full">
+            <span className="text-[10px] sm:text-[11px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full self-start sm:self-auto">
               Admin Confidential
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
             {/* Total Stock Cost Value */}
-            <div className="glass-panel-subtle rounded-2xl p-4 border border-white/10">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                Total Stock Cost Value
+            <div className="glass-panel-subtle rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider block truncate">
+                Stock Cost Value
               </span>
-              <div className="text-2xl font-black text-white mt-1">
+              <div className="text-base sm:text-xl lg:text-2xl font-black text-white mt-1 truncate">
                 ₹{metrics.total_cost_value?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
-              <p className="text-[11px] text-slate-400 mt-1 font-medium">Total invested in on-hand inventory</p>
+              <p className="text-[10px] sm:text-[11px] text-slate-400 mt-1 font-medium truncate">Total on-hand investment</p>
             </div>
 
             {/* Total Potential Sales Value */}
-            <div className="glass-panel-subtle rounded-2xl p-4 border border-emerald-500/20 bg-emerald-500/5">
-              <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
-                Total Potential Sales Value
+            <div className="glass-panel-subtle rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-emerald-500/20 bg-emerald-500/5">
+              <span className="text-[10px] sm:text-[11px] font-bold text-emerald-400 uppercase tracking-wider block truncate">
+                Potential Sales
               </span>
-              <div className="text-2xl font-black text-emerald-300 mt-1">
+              <div className="text-base sm:text-xl lg:text-2xl font-black text-emerald-300 mt-1 truncate">
                 ₹{metrics.total_sales_value?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
-              <p className="text-[11px] text-emerald-400/80 mt-1 font-medium">Expected gross revenue at current pricing</p>
+              <p className="text-[10px] sm:text-[11px] text-emerald-400/80 mt-1 font-medium truncate">Expected gross revenue</p>
             </div>
 
             {/* Projected Gross Profit */}
-            <div className="glass-panel-subtle rounded-2xl p-4 border border-blue-500/20 bg-blue-500/5">
-              <span className="text-[11px] font-bold text-blue-400 uppercase tracking-wider">
-                Projected Gross Margin
+            <div className="glass-panel-subtle rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-blue-500/20 bg-blue-500/5">
+              <span className="text-[10px] sm:text-[11px] font-bold text-blue-400 uppercase tracking-wider block truncate">
+                Gross Margin
               </span>
-              <div className="text-2xl font-black text-blue-300 mt-1 flex items-center gap-1.5">
+              <div className="text-base sm:text-xl lg:text-2xl font-black text-blue-300 mt-1 flex items-center gap-1 truncate">
                 ₹{metrics.total_potential_profit?.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                <ArrowUpRight className="w-5 h-5 text-emerald-400" />
+                <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
               </div>
-              <p className="text-[11px] text-blue-400/80 mt-1 font-medium">Selling Value minus Cost Value</p>
+              <p className="text-[10px] sm:text-[11px] text-blue-400/80 mt-1 font-medium truncate">Selling minus Cost</p>
             </div>
 
             {/* Average Margin % */}
-            <div className="glass-panel-subtle rounded-2xl p-4 border border-amber-500/20 bg-amber-500/5">
-              <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">
-                Average Store Markup
+            <div className="glass-panel-subtle rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-amber-500/20 bg-amber-500/5">
+              <span className="text-[10px] sm:text-[11px] font-bold text-amber-400 uppercase tracking-wider block truncate">
+                Store Markup
               </span>
-              <div className="text-2xl font-black text-amber-300 mt-1">
+              <div className="text-base sm:text-xl lg:text-2xl font-black text-amber-300 mt-1 truncate">
                 +{metrics.average_margin_percent}%
               </div>
-              <p className="text-[11px] text-amber-400/80 mt-1 font-medium">Across all wholesale goods categories</p>
+              <p className="text-[10px] sm:text-[11px] text-amber-400/80 mt-1 font-medium truncate">Across all goods</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Visual Charts: Recharts Bar & Pie breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         {/* Left: Bar Chart of Units */}
-        <div className={`${isAdmin ? "lg:col-span-7" : "lg:col-span-12"} glass-panel p-6 rounded-3xl border border-white/10 shadow-2xl space-y-4`}>
+        <div className={`${isAdmin ? "lg:col-span-7" : "lg:col-span-12"} glass-panel p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl space-y-3 sm:space-y-4`}>
           <div className="flex items-center justify-between pb-2 border-b border-white/10">
-            <h4 className="text-sm font-bold text-white flex items-center gap-2">
+            <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-blue-400" />
               Stock Volume by Department (Units)
             </h4>
-            <span className="text-xs text-slate-400 font-medium">Live On-Hand Inventory</span>
+            <span className="text-[10px] sm:text-xs text-slate-400 font-medium">On-Hand</span>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-56 sm:h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#94a3b8" }} interval={0} angle={-20} textAnchor="end" />
-                <YAxis tick={{ fontSize: 10, fill: "#94a3b8" }} />
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 20 }}>
+                <XAxis dataKey="name" tick={{ fontSize: 9, fill: "#94a3b8" }} interval={0} angle={-25} textAnchor="end" />
+                <YAxis tick={{ fontSize: 9, fill: "#94a3b8" }} />
                 <Tooltip
                   formatter={(value: any) => [`${value} units`, "Stock Count"]}
                   labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
-                  contentStyle={{ backgroundColor: "#0c1222", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.15)", color: "#ffffff", fontSize: "12px" }}
+                  contentStyle={{ backgroundColor: "#0c1222", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.15)", color: "#ffffff", fontSize: "11px" }}
                 />
-                <Bar dataKey="units" fill="#3b82f6" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                <Bar dataKey="units" fill="#3b82f6" radius={[4, 4, 0, 0]} isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -348,16 +347,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* Right (5 cols - Admin Confidential): Donut Chart of Valuation */}
         {isAdmin && (
-          <div className="lg:col-span-5 glass-panel p-6 rounded-3xl border border-white/10 shadow-2xl space-y-4">
+          <div className="lg:col-span-5 glass-panel p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl space-y-3 sm:space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+              <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
                 <PieIcon className="w-4 h-4 text-indigo-400" />
-                Inventory Valuation Share (₹)
+                Valuation Share (₹)
               </h4>
-              <span className="text-xs text-slate-400 font-medium">Department Split</span>
+              <span className="text-[10px] sm:text-xs text-slate-400 font-medium">Dept Split</span>
             </div>
 
-            <div className="h-64 w-full flex items-center justify-center">
+            <div className="h-56 sm:h-64 w-full flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -366,8 +365,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     nameKey="fullName"
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
+                    innerRadius={45}
+                    outerRadius={75}
                     paddingAngle={3}
                     isAnimationActive={false}
                   >
@@ -377,7 +376,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </Pie>
                   <Tooltip
                     formatter={(value: any) => [`₹${Number(value).toLocaleString("en-IN")}`, "Valuation"]}
-                    contentStyle={{ backgroundColor: "#0c1222", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.15)", color: "#ffffff", fontSize: "12px" }}
+                    contentStyle={{ backgroundColor: "#0c1222", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.15)", color: "#ffffff", fontSize: "11px" }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -387,20 +386,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Stock Health Bar & Urgent Attention */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left 2 Cols: Health Bar */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="glass-panel p-6 rounded-3xl border border-white/10 shadow-2xl">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+          <div className="glass-panel p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+              <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 Overall Inventory Health Ratio
               </h4>
-              <span className="text-xs text-slate-400">{metrics.total_products} items tracked</span>
+              <span className="text-[10px] sm:text-xs text-slate-400">{metrics.total_products} items</span>
             </div>
 
             {/* Progress Segment Bar */}
-            <div className="w-full h-3.5 bg-slate-800/80 rounded-full flex overflow-hidden p-0.5 gap-0.5 border border-white/5">
+            <div className="w-full h-3 bg-slate-800/80 rounded-full flex overflow-hidden p-0.5 gap-0.5 border border-white/5">
               <div
                 style={{ width: `${inStockPct}%` }}
                 className="bg-emerald-500 rounded-full transition-all duration-500"
@@ -418,17 +417,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               />
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 mt-4 text-xs font-medium">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+            <div className="flex flex-col xs:flex-row xs:flex-wrap items-start xs:items-center justify-between gap-2 mt-3.5 text-[11px] sm:text-xs font-medium">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
                 <span className="text-slate-300">Healthy ({metrics.in_stock_count} items - {inStockPct}%)</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
                 <span className="text-slate-300">Low Stock ({metrics.low_stock_count} items - {lowStockPct}%)</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
                 <span className="text-slate-300">Out of Stock ({metrics.out_of_stock_count} items - {outOfStockPct}%)</span>
               </div>
             </div>
@@ -436,31 +435,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Right 1 Col: Urgent Attention */}
-        <div className="space-y-6">
-          <div className="glass-panel p-6 rounded-3xl border border-white/10 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="glass-panel p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl">
+            <div className="flex items-center justify-between pb-2.5 border-b border-white/10 mb-3 sm:mb-4">
+              <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-400" />
                 Action Required ({metrics.critical_alerts.length})
               </h4>
               <button
                 onClick={() => onNavigateToInventory("low_stock")}
-                className="text-xs font-semibold text-blue-400 hover:text-blue-300 cursor-pointer"
+                className="text-[11px] sm:text-xs font-semibold text-blue-400 hover:text-blue-300 cursor-pointer"
               >
                 View all
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               {metrics.critical_alerts.length > 0 ? (
                 metrics.critical_alerts.map((item) => (
                   <div
                     key={item.id}
-                    className="p-3 rounded-2xl glass-panel-subtle border border-white/5 hover:border-white/15 transition flex items-center justify-between gap-3"
+                    className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl glass-panel-subtle border border-white/5 hover:border-white/15 transition flex items-center justify-between gap-2.5"
                   >
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-white truncate">{item.name}</p>
-                      <p className="text-[11px] text-slate-400">{item.category}</p>
+                      <p className="text-[10px] sm:text-[11px] text-slate-400 truncate">{item.category}</p>
                       {item.expiry_date && (
                         <p className="text-[10px] text-amber-400 font-medium">Exp: {item.expiry_date}</p>
                       )}
@@ -475,11 +474,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       >
                         {item.stock_quantity <= 0 ? "OUT OF STOCK" : `${item.stock_quantity} left`}
                       </span>
-                      <div className="flex items-center justify-end gap-2 mt-1">
+                      <div className="flex items-center justify-end gap-1.5 mt-1">
                         {onOpenTasksModal && (
                           <button
                             onClick={() => onOpenTasksModal(item.id, item.name)}
-                            className="text-[11px] font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-0.5 cursor-pointer"
+                            className="text-[10px] sm:text-[11px] font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-0.5 cursor-pointer"
                             title="Instruct manager to reorder or audit"
                           >
                             <Send className="w-3 h-3" />
@@ -488,7 +487,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         )}
                         <button
                           onClick={() => onQuickStockAdjust(item.id)}
-                          className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 cursor-pointer"
+                          className="text-[10px] sm:text-[11px] font-semibold text-blue-400 hover:text-blue-300 cursor-pointer"
                         >
                           + Restock
                         </button>
