@@ -38,10 +38,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Customer name is required" }, { status: 400 });
     }
 
-    const cleanPhone = (customerPhone || "").replace(/\D/g, "");
-    if (!customerPhone || !customerPhone.trim() || cleanPhone.length < 10) {
+    let effectiveCustomerPhone = (customerPhone || "").trim();
+    if (!effectiveCustomerPhone && (!customerId || customerId === "walk_in")) {
+      effectiveCustomerPhone = "9999999999";
+    }
+
+    const cleanPhone = effectiveCustomerPhone.replace(/\D/g, "");
+    if (cleanPhone.length < 10) {
       return NextResponse.json(
-        { error: "Customer mobile number is compulsory (valid 10-digit number required) to generate bill." },
+        { error: "Customer mobile number must be a valid 10-digit number." },
         { status: 400 }
       );
     }
@@ -98,7 +103,7 @@ export async function POST(req: Request) {
     const paymentStatus = paymentMethod === "khata" ? "unpaid" : "paid";
 
     let finalCustomerId = customerId || null;
-    if (!finalCustomerId && customerPhone) {
+    if (!finalCustomerId && customerPhone && customerPhone.trim() !== "9999999999") {
       const cleanPhone = customerPhone.replace(/\D/g, "");
       if (cleanPhone.length >= 10) {
         const matched = await queryOne(
@@ -127,7 +132,7 @@ export async function POST(req: Request) {
           invoiceNumber,
           finalCustomerId,
           customerName.trim(),
-          customerPhone?.trim() || null,
+          effectiveCustomerPhone,
           subtotal,
           discountAmount,
           taxAmount,

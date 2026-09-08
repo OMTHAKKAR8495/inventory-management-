@@ -179,6 +179,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
   const [completedInvoice, setCompletedInvoice] = useState<any | null>(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
 
   // WhatsApp Reminder Modal State for Saved Bills
   const [whatsappModalBill, setWhatsappModalBill] = useState<SavedBill | null>(null);
@@ -1040,13 +1041,19 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
       return;
     }
 
-    const effectivePhone = (selectedCustomer?.phone || customerPhone || "").trim();
+    let effectivePhone = (selectedCustomer?.phone || customerPhone || "").trim();
+    if (!effectivePhone && (!selectedCustomer || selectedCustomer.id === "walk_in")) {
+      effectivePhone = "9999999999";
+    }
+
     const cleanDigits = effectivePhone.replace(/\D/g, "");
-    if (!effectivePhone || cleanDigits.length < 10) {
+    if (cleanDigits.length < 10) {
       setFeedback({
         type: "error",
-        text: "Customer mobile number is compulsory to generate bill. Please enter a valid 10-digit mobile number.",
+        text: "Please enter a valid 10-digit customer mobile number.",
       });
+      phoneInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      phoneInputRef.current?.focus();
       return;
     }
 
@@ -1057,7 +1064,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
       const payload = {
         customerId: selectedCustomer?.id || null,
         customerName: selectedCustomer ? `${selectedCustomer.store_name} (${selectedCustomer.name})` : customerName,
-        customerPhone: selectedCustomer?.phone || customerPhone,
+        customerPhone: effectivePhone,
         items: cart.map((item) => ({
           productId: item.product.id,
           quantity: item.quantity,
@@ -1486,18 +1493,27 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                         className="px-3 py-1.5 glass-input rounded-xl text-xs"
                       />
                       <input
+                        ref={phoneInputRef}
                         type="tel"
                         value={customerPhone}
                         onChange={(e) => setCustomerPhone(e.target.value)}
-                        placeholder="Mobile (Compulsory) *"
+                        placeholder="Mobile (Walk-in: 9999999999)"
                         maxLength={13}
-                        required
-                        className="px-3 py-1.5 glass-input rounded-xl text-xs border-amber-500/40 focus:border-amber-400 placeholder:text-amber-300/60"
+                        className="px-3 py-1.5 glass-input rounded-xl text-xs border-white/10 focus:border-amber-400 placeholder:text-slate-400"
                       />
                     </div>
-                    <p className="text-[10px] text-amber-300/80 font-medium flex items-center gap-1">
-                      <span>* 10-digit mobile number is mandatory to generate bill</span>
-                    </p>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 px-0.5">
+                      <span>Walk-in cash sales use default (9999999999)</span>
+                      {!customerPhone && (
+                        <button
+                          type="button"
+                          onClick={() => setCustomerPhone("9999999999")}
+                          className="text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer"
+                        >
+                          Quick Fill
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1687,17 +1703,46 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                   </div>
                 </div>
 
+                {/* Inline Feedback Alert directly inside Cart */}
+                {feedback && (
+                  <div
+                    className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-between gap-2.5 animate-fade-in ${
+                      feedback.type === "success"
+                        ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                        : "bg-red-500/15 text-red-300 border-red-500/30"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      {feedback.type === "success" ? (
+                        <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                      ) : (
+                        <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+                      )}
+                      <span className="leading-snug break-words">{feedback.text}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFeedback(null)}
+                      className="p-1 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white shrink-0 cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
                 {/* Dual Buttons: Save Bill (Hold Draft) AND Complete Sale */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
                   {/* Save Bill / Hold Button */}
                   <button
                     type="button"
                     onClick={handleSaveCurrentBill}
-                    disabled={cart.length === 0}
-                    className="sm:col-span-1 py-3 px-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 rounded-2xl text-xs font-black shadow-lg transition flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isCheckingOut}
+                    className={`sm:col-span-1 py-3 px-3 bg-amber-500/20 hover:bg-amber-500/30 active:scale-[0.98] text-amber-300 border border-amber-500/30 rounded-2xl text-xs font-black shadow-lg transition flex items-center justify-center gap-1.5 touch-manipulation select-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                      cart.length === 0 ? "opacity-60" : ""
+                    }`}
                     title="Save current cart as draft without finalizing invoice"
                   >
-                    <Bookmark className="w-4 h-4 text-amber-400" />
+                    <Bookmark className="w-4 h-4 text-amber-400 shrink-0" />
                     Save Bill (Hold)
                   </button>
 
@@ -1705,11 +1750,16 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                   <button
                     type="button"
                     onClick={handleCheckout}
-                    disabled={isCheckingOut || cart.length === 0}
-                    className="sm:col-span-2 py-3.5 px-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 rounded-2xl text-xs font-black shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isCheckingOut}
+                    className={`sm:col-span-2 py-3.5 px-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-[0.98] text-slate-950 rounded-2xl text-xs font-black shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 touch-manipulation select-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                      cart.length === 0 ? "opacity-75" : ""
+                    }`}
                   >
                     {isCheckingOut ? (
-                      "Processing Sale..."
+                      <span className="flex items-center gap-2">
+                        <RotateCw className="w-4 h-4 animate-spin shrink-0" />
+                        Processing Sale...
+                      </span>
                     ) : (
                       <>
                         <PackageCheck className="w-4 h-4 shrink-0" />
