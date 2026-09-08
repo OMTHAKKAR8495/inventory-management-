@@ -175,7 +175,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
             <button
               type="button"
-              onClick={() => handleLogin("manager@provision.store", "manager123")}
+              onClick={() => handleLogin("ashamanager@gmail.com", "manager123")}
               disabled={isLoading}
               className="p-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 rounded-2xl text-left transition group cursor-pointer"
             >
@@ -185,7 +185,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   Staff
                 </span>
               </div>
-              <div className="text-xs font-bold text-white mt-1.5">Inventory Mgr</div>
+              <div className="text-xs font-bold text-white mt-1.5">Asha Store Manager</div>
               <div className="text-[10px] text-emerald-300/80 font-medium">Stock & bulk updates</div>
             </button>
           </div>

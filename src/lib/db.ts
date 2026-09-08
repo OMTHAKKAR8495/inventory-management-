@@ -343,7 +343,7 @@ function seedData() {
     `);
 
     insertUser.run("usr_admin_1", "Asha Store Admin", "ashastore@gmail.com", adminPasswordHash, "admin", "active", now);
-    insertUser.run("usr_manager_1", "Shopfloor Manager", "manager@provision.store", managerPasswordHash, "manager", "active", now);
+    insertUser.run("usr_manager_1", "Asha Store Manager", "ashamanager@gmail.com", managerPasswordHash, "manager", "active", now);
   }
 
   const productCount = db.prepare("SELECT COUNT(*) as count FROM products").get() as { count: number };
