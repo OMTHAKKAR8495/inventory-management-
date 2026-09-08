@@ -38,18 +38,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Customer name is required" }, { status: 400 });
     }
 
-    let effectiveCustomerPhone = (customerPhone || "").trim();
-    if (!effectiveCustomerPhone && (!customerId || customerId === "walk_in")) {
-      effectiveCustomerPhone = "9999999999";
-    }
-
-    const cleanPhone = effectiveCustomerPhone.replace(/\D/g, "");
-    if (cleanPhone.length < 10) {
-      return NextResponse.json(
-        { error: "Customer mobile number must be a valid 10-digit number." },
-        { status: 400 }
-      );
-    }
+    const effectiveCustomerPhone = customerPhone?.trim() || null;
 
     const now = new Date().toISOString();
     const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;

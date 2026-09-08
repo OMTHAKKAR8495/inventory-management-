@@ -947,11 +947,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
       setEditError("Customer Name is required.");
       return;
     }
-    const cleanPhone = editCustomerPhone.replace(/\D/g, "");
-    if (!editCustomerPhone.trim() || cleanPhone.length < 10) {
-      setEditError("Customer 10-digit mobile number is required.");
-      return;
-    }
+
     if (editItems.length === 0) {
       setEditError("The bill must contain at least 1 item.");
       return;
@@ -1041,21 +1037,7 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
       return;
     }
 
-    let effectivePhone = (selectedCustomer?.phone || customerPhone || "").trim();
-    if (!effectivePhone && (!selectedCustomer || selectedCustomer.id === "walk_in")) {
-      effectivePhone = "9999999999";
-    }
-
-    const cleanDigits = effectivePhone.replace(/\D/g, "");
-    if (cleanDigits.length < 10) {
-      setFeedback({
-        type: "error",
-        text: "Please enter a valid 10-digit customer mobile number.",
-      });
-      phoneInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      phoneInputRef.current?.focus();
-      return;
-    }
+    const effectivePhone = (selectedCustomer?.phone || customerPhone || "").trim();
 
     setIsCheckingOut(true);
     setFeedback(null);
@@ -1497,22 +1479,10 @@ export const BillingCounterView: React.FC<BillingCounterViewProps> = ({
                         type="tel"
                         value={customerPhone}
                         onChange={(e) => setCustomerPhone(e.target.value)}
-                        placeholder="Mobile (Walk-in: 9999999999)"
+                        placeholder="Mobile (Optional)"
                         maxLength={13}
-                        className="px-3 py-1.5 glass-input rounded-xl text-xs border-white/10 focus:border-amber-400 placeholder:text-slate-400"
+                        className="px-3 py-1.5 glass-input rounded-xl text-xs border-white/10 focus:border-blue-400 placeholder:text-slate-400"
                       />
-                    </div>
-                    <div className="flex items-center justify-between text-[10px] text-slate-400 px-0.5">
-                      <span>Walk-in cash sales use default (9999999999)</span>
-                      {!customerPhone && (
-                        <button
-                          type="button"
-                          onClick={() => setCustomerPhone("9999999999")}
-                          className="text-amber-400 hover:text-amber-300 font-bold underline cursor-pointer"
-                        >
-                          Quick Fill
-                        </button>
-                      )}
                     </div>
                   </div>
                 )}
