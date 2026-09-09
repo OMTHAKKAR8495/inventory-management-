@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   History,
   Search,
@@ -38,6 +39,11 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (initialSearch) {
@@ -409,11 +415,14 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
       </div>
 
       {/* Resolve Stock Movement Mistake Modal (Admin Only) */}
-      {resolvingLog && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="glass-modal rounded-3xl max-w-xl w-full shadow-2xl border border-white/10 overflow-hidden animate-fade-in my-8 text-slate-100">
+      {resolvingLog && isMounted && createPortal(
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div
+            className="glass-modal rounded-3xl max-w-xl w-full shadow-2xl border border-white/10 overflow-hidden text-slate-100 max-h-[90vh] flex flex-col my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
-            <div className="px-6 py-4 bg-gradient-to-r from-amber-600/30 via-orange-600/20 to-blue-600/20 border-b border-amber-500/20 text-white flex items-center justify-between">
+            <div className="px-6 py-4 bg-gradient-to-r from-amber-600/30 via-orange-600/20 to-blue-600/20 border-b border-amber-500/20 text-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0">
                   <Wrench className="w-4 h-4" />
@@ -428,6 +437,7 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   if (!isSubmittingResolution) {
                     setResolvingLog(null);
@@ -441,7 +451,7 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
             </div>
 
             {/* Body */}
-            <form onSubmit={handleConfirmResolution} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
+            <form onSubmit={handleConfirmResolution} className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1 flex flex-col">
               {resolutionFeedback && (
                 <div
                   className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-2 ${
@@ -626,7 +636,7 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
               </div>
 
               {/* Actions Footer */}
-              <div className="pt-3 border-t border-white/10 flex items-center justify-end gap-2.5">
+              <div className="pt-3 border-t border-white/10 flex items-center justify-end gap-2.5 shrink-0 mt-auto">
                 <button
                   type="button"
                   disabled={isSubmittingResolution}
@@ -648,7 +658,8 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
