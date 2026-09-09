@@ -10,21 +10,54 @@ import {
   RotateCcw,
   Calendar,
   Package,
+  Wrench,
+  X,
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+  Check,
+  AlertTriangle,
 } from "lucide-react";
-import { StockLog, User } from "@/lib/types";
+import { StockLog, User, Product } from "@/lib/types";
 
 interface AuditLogsViewProps {
   user?: User | null;
+  onLogResolved?: () => void;
+  initialSearch?: string;
 }
 
-export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ user }) => {
+export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
+  user,
+  onLogResolved,
+  initialSearch = "",
+}) => {
   const [logs, setLogs] = useState<StockLog[]>([]);
   const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [changeType, setChangeType] = useState("all");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (initialSearch) {
+      setSearch(initialSearch);
+      setPage(1);
+    }
+  }, [initialSearch]);
+
+  // Resolution Modal State for Admin
+  const [resolvingLog, setResolvingLog] = useState<StockLog | null>(null);
+  const [resolutionType, setResolutionType] = useState<"transfer" | "revert" | "adjust">("transfer");
+  const [targetProductId, setTargetProductId] = useState<string>("");
+  const [customQuantity, setCustomQuantity] = useState<string>("");
+  const [reasonNotes, setReasonNotes] = useState<string>("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isSubmittingResolution, setIsSubmittingResolution] = useState(false);
+  const [resolutionFeedback, setResolutionFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const isAdmin = user?.role === "admin";
 
@@ -52,6 +85,54 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ user }) => {
   useEffect(() => {
     fetchLogs();
   }, [search, changeType, page, limit]);
+
+  useEffect(() => {
+    if (resolvingLog && products.length === 0) {
+      fetch("/api/products?limit=200")
+        .then((res) => res.json())
+        .then((data) => setProducts(data.products || []))
+        .catch((e) => console.error(e));
+    }
+  }, [resolvingLog]);
+
+  const handleConfirmResolution = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resolvingLog) return;
+
+    setIsSubmittingResolution(true);
+    setResolutionFeedback(null);
+
+    try {
+      const res = await fetch("/api/audit-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          logId: resolvingLog.id,
+          resolutionType,
+          targetProductId: resolutionType === "transfer" ? targetProductId : undefined,
+          customQuantity: resolutionType === "adjust" ? customQuantity : undefined,
+          reasonNotes,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to resolve log mistake");
+
+      setResolutionFeedback({ type: "success", message: data.message });
+      fetchLogs();
+      if (onLogResolved) onLogResolved();
+      setTimeout(() => {
+        setResolvingLog(null);
+        setResolutionFeedback(null);
+        setTargetProductId("");
+        setReasonNotes("");
+      }, 1500);
+    } catch (err: any) {
+      setResolutionFeedback({ type: "error", message: err.message });
+    } finally {
+      setIsSubmittingResolution(false);
+    }
+  };
 
   const totalPages = Math.ceil(total / limit) || 1;
 
@@ -88,6 +169,16 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ user }) => {
           </p>
         </div>
       </div>
+
+      {/* Notice for Manager on resolving mistakes */}
+      {!isAdmin && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 flex items-center gap-2.5">
+          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+          <span>
+            <strong>Made an entry mistake?</strong> Store Administrators have direct tools here to <strong>Revert</strong> or <strong>Transfer</strong> mistaken stock quantities to the correct item. Log in as Store Administrator (<code>ashastore@gmail.com</code>) to resolve.
+          </span>
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="glass-panel rounded-3xl p-4 border border-white/10 shadow-2xl flex flex-col sm:flex-row gap-3">
@@ -165,13 +256,14 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ user }) => {
                 <th className="p-3.5 min-w-[130px]">Action Type</th>
                 <th className="p-3.5 min-w-[110px]">Quantity Delta</th>
                 <th className="p-3.5 min-w-[130px]">Before → After</th>
-                <th className="p-3.5 pr-6 min-w-[200px]">Reason / Notes</th>
+                <th className="p-3.5 min-w-[200px]">Reason / Notes</th>
+                {isAdmin && <th className="p-3.5 pr-6 text-right min-w-[120px]">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="p-10 text-center text-slate-400">
+                  <td colSpan={isAdmin ? 8 : 7} className="p-10 text-center text-slate-400">
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
                       Loading stock audit logs...
@@ -180,7 +272,7 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ user }) => {
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-10 text-center text-slate-400">
+                  <td colSpan={isAdmin ? 8 : 7} className="p-10 text-center text-slate-400">
                     No activity logs matched your criteria.
                   </td>
                 </tr>
@@ -248,9 +340,39 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ user }) => {
                       </td>
 
                       {/* Reason */}
-                      <td className="p-3.5 pr-6 text-slate-400 text-xs">
+                      <td className="p-3.5 text-slate-400 text-xs">
                         {log.reason || "-"}
                       </td>
+
+                      {/* Admin Resolution Action */}
+                      {isAdmin && (
+                        <td className="p-3.5 pr-6 text-right whitespace-nowrap">
+                          {log.reason?.includes("[RESOLVED:") || log.reason?.startsWith("Admin Correction:") ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+                              <CheckCircle2 className="w-3 h-3" />
+                              {log.reason?.startsWith("Admin Correction:") ? "Correction" : "Resolved"}
+                            </span>
+                          ) : log.quantity_delta !== 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setResolvingLog(log);
+                                setResolutionType("transfer");
+                                setTargetProductId("");
+                                setCustomQuantity(log.previous_quantity?.toString() || "0");
+                                setReasonNotes("");
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 text-amber-300 border border-amber-500/30 text-[11px] font-bold inline-flex items-center gap-1 transition cursor-pointer"
+                              title="Resolve / Correct this mistaken stock movement"
+                            >
+                              <Wrench className="w-3 h-3 text-amber-400" />
+                              Resolve
+                            </button>
+                          ) : (
+                            <span className="text-slate-500 text-[10px]">-</span>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   );
                 })
@@ -285,6 +407,249 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({ user }) => {
           </div>
         </div>
       </div>
+
+      {/* Resolve Stock Movement Mistake Modal (Admin Only) */}
+      {resolvingLog && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-modal rounded-3xl max-w-xl w-full shadow-2xl border border-white/10 overflow-hidden animate-fade-in my-8 text-slate-100">
+            {/* Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-amber-600/30 via-orange-600/20 to-blue-600/20 border-b border-amber-500/20 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0">
+                  <Wrench className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-amber-100">
+                    Resolve Stock Movement Mistake
+                  </h3>
+                  <p className="text-[11px] text-amber-300/80">
+                    Administrator Stock Correction & Audit Reconciliation
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  if (!isSubmittingResolution) {
+                    setResolvingLog(null);
+                    setResolutionFeedback(null);
+                  }
+                }}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <form onSubmit={handleConfirmResolution} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
+              {resolutionFeedback && (
+                <div
+                  className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-2 ${
+                    resolutionFeedback.type === "success"
+                      ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-300"
+                      : "bg-red-500/20 border-red-500/30 text-red-300"
+                  }`}
+                >
+                  {resolutionFeedback.type === "success" ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                  )}
+                  <span>{resolutionFeedback.message}</span>
+                </div>
+              )}
+
+              {/* Log Entry Summary */}
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Mistaken Product:</span>
+                  <span className="font-bold text-white text-right">{resolvingLog.product_name}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Movement Recorded:</span>
+                  <span className="font-mono font-bold text-amber-300">
+                    {resolvingLog.quantity_delta > 0 ? `+${resolvingLog.quantity_delta}` : resolvingLog.quantity_delta} units ({resolvingLog.previous_quantity} → {resolvingLog.new_quantity})
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Recorded By:</span>
+                  <span className="text-slate-200">{resolvingLog.user_name}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Original Reason:</span>
+                  <span className="text-slate-300 italic">{resolvingLog.reason || "N/A"}</span>
+                </div>
+              </div>
+
+              {/* Resolution Strategy Tabs */}
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-2">
+                  Select Resolution Action:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setResolutionType("transfer")}
+                    className={`p-2.5 rounded-xl border text-xs font-bold text-center transition cursor-pointer flex flex-col items-center gap-1 ${
+                      resolutionType === "transfer"
+                        ? "bg-blue-600/30 border-blue-500 text-blue-200 ring-1 ring-blue-500/50"
+                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                    }`}
+                  >
+                    <ArrowRight className="w-4 h-4 text-blue-400" />
+                    <span>Transfer to Intended Item</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setResolutionType("revert")}
+                    className={`p-2.5 rounded-xl border text-xs font-bold text-center transition cursor-pointer flex flex-col items-center gap-1 ${
+                      resolutionType === "revert"
+                        ? "bg-rose-600/30 border-rose-500 text-rose-200 ring-1 ring-rose-500/50"
+                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                    }`}
+                  >
+                    <RotateCcw className="w-4 h-4 text-rose-400" />
+                    <span>Undo / Revert Movement</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setResolutionType("adjust")}
+                    className={`p-2.5 rounded-xl border text-xs font-bold text-center transition cursor-pointer flex flex-col items-center gap-1 ${
+                      resolutionType === "adjust"
+                        ? "bg-amber-600/30 border-amber-500 text-amber-200 ring-1 ring-amber-500/50"
+                        : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
+                    }`}
+                  >
+                    <Package className="w-4 h-4 text-amber-400" />
+                    <span>Set Exact Count</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Resolution Details Form */}
+              {resolutionType === "transfer" && (
+                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl space-y-3">
+                  <p className="text-xs text-blue-300 font-bold flex items-center gap-1.5">
+                    <ArrowRight className="w-4 h-4" />
+                    Transfer {resolvingLog.quantity_delta > 0 ? `+${resolvingLog.quantity_delta}` : resolvingLog.quantity_delta} units to Intended Product
+                  </p>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                      Select Intended Product (e.g. Pure Cow Ghee): <span className="text-red-400">*</span>
+                    </label>
+                    <select
+                      value={targetProductId}
+                      onChange={(e) => setTargetProductId(e.target.value)}
+                      required
+                      className="w-full px-3 py-2 text-xs rounded-xl glass-input font-medium"
+                    >
+                      <option value="">-- Choose correct product to receive this quantity --</option>
+                      {products
+                        .filter((p) => p.id !== resolvingLog.product_id)
+                        .map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} (Current Stock: {p.stock_quantity} {p.unit})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  {targetProductId && (
+                    <div className="p-3 rounded-xl bg-blue-950/60 border border-blue-500/30 text-[11px] text-blue-200 space-y-1">
+                      <p>
+                        ✓ <strong>{resolvingLog.product_name}</strong> will revert by{" "}
+                        <span className="text-rose-400 font-bold font-mono">
+                          {-resolvingLog.quantity_delta > 0 ? `+${-resolvingLog.quantity_delta}` : -resolvingLog.quantity_delta} units
+                        </span>{" "}
+                        (back to original count).
+                      </p>
+                      <p>
+                        ✓ <strong>{products.find((p) => p.id === targetProductId)?.name}</strong> will receive{" "}
+                        <span className="text-emerald-400 font-bold font-mono">
+                          {resolvingLog.quantity_delta > 0 ? `+${resolvingLog.quantity_delta}` : resolvingLog.quantity_delta} units
+                        </span>.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {resolutionType === "revert" && (
+                <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl space-y-2">
+                  <p className="text-xs text-rose-300 font-bold flex items-center gap-1.5">
+                    <RotateCcw className="w-4 h-4" />
+                    Revert & Reverse Stock Movement
+                  </p>
+                  <p className="text-[11px] text-rose-200/90 leading-relaxed">
+                    This will reverse the mistaken {resolvingLog.quantity_delta > 0 ? `+${resolvingLog.quantity_delta}` : resolvingLog.quantity_delta} units on{" "}
+                    <strong>{resolvingLog.product_name}</strong>, restoring its stock back to its count prior to this entry, and log an audit reversal record.
+                  </p>
+                </div>
+              )}
+
+              {resolutionType === "adjust" && (
+                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl space-y-3">
+                  <p className="text-xs text-amber-300 font-bold flex items-center gap-1.5">
+                    <Package className="w-4 h-4" />
+                    Set Exact Verified Physical Count
+                  </p>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                      Actual Physical Stock in Warehouse:
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      required
+                      value={customQuantity}
+                      onChange={(e) => setCustomQuantity(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl glass-input font-mono font-bold text-amber-300"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Optional Notes */}
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1">
+                  Reconciliation Note / Reason <span className="text-slate-500">(Optional)</span>:
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Inward entry entered for wrong product by staff"
+                  value={reasonNotes}
+                  onChange={(e) => setReasonNotes(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl glass-input"
+                />
+              </div>
+
+              {/* Actions Footer */}
+              <div className="pt-3 border-t border-white/10 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  disabled={isSubmittingResolution}
+                  onClick={() => {
+                    setResolvingLog(null);
+                    setResolutionFeedback(null);
+                  }}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-slate-300 rounded-xl text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingResolution || (resolutionType === "transfer" && !targetProductId)}
+                  className="px-5 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 rounded-xl text-xs font-black shadow-lg shadow-amber-500/20 transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer active:scale-95"
+                >
+                  {isSubmittingResolution ? "Reconciling..." : "Confirm & Resolve Mistake"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

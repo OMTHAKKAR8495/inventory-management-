@@ -15,6 +15,7 @@ import {
   Trash2,
   AlertTriangle,
   Clock,
+  History,
   ArrowUpDown,
   ScanBarcode,
   Package,
@@ -33,6 +34,7 @@ interface InventoryViewProps {
   onOpenBarcodeScanner?: () => void;
   onOpenRecycleBin?: () => void;
   onOpenTasksModal?: (productId?: string, productName?: string) => void;
+  onNavigateToLogs?: (searchQuery?: string) => void;
   initialFilterStatus?: string;
 }
 
@@ -46,6 +48,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   onOpenBarcodeScanner,
   onOpenRecycleBin,
   onOpenTasksModal,
+  onNavigateToLogs,
   initialFilterStatus,
 }) => {
   const isAdmin = user.role === "admin";
@@ -798,6 +801,16 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                               title="Dispatch Work Order / Instruction for this item"
                             >
                               <MessageSquare className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          {onNavigateToLogs && (
+                            <button
+                              onClick={() => onNavigateToLogs(p.name)}
+                              className="p-1.5 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 rounded-lg transition cursor-pointer"
+                              title="View Movement Logs & Resolve Mistakes"
+                            >
+                              <History className="w-4 h-4" />
                             </button>
                           )}
 

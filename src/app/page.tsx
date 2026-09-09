@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { User, DashboardMetrics, Product } from "@/lib/types";
+import { User, DashboardMetrics, Product, ShopfloorTask } from "@/lib/types";
 import { Navbar } from "@/components/Navbar";
 import { DashboardView } from "@/components/DashboardView";
 import { InventoryView } from "@/components/InventoryView";
@@ -17,7 +17,20 @@ import { BackupModal } from "@/components/BackupModal";
 import { BarcodeScannerModal } from "@/components/BarcodeScannerModal";
 import { ShopfloorTasksModal } from "@/components/ShopfloorTasksModal";
 import { LoginView } from "@/components/LoginView";
-import { CheckCircle2, AlertCircle, Store } from "lucide-react";
+import {
+  CheckCircle2,
+  AlertCircle,
+  Store,
+  BellRing,
+  Volume2,
+  ArrowRight,
+  X,
+} from "lucide-react";
+import {
+  initAudioUnlock,
+  playTaskBuzzerSound,
+  sendDesktopNotification,
+} from "@/lib/soundUtils";
 
 type TabType = "dashboard" | "inventory" | "pos" | "khata" | "bulk" | "audit";
 const VALID_TABS: TabType[] = ["dashboard", "inventory", "pos", "khata", "bulk", "audit"];
@@ -71,9 +84,21 @@ export default function Home() {
   const [taskTargetProductId, setTaskTargetProductId] = useState<string | null>(null);
   const [taskTargetProductName, setTaskTargetProductName] = useState<string | null>(null);
   const [pendingTasksCount, setPendingTasksCount] = useState<number>(0);
+  const [auditSearchQuery, setAuditSearchQuery] = useState<string>("");
 
-  // Dark Mode
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // Real-time task arrival notification & sound buzzer state for Manager
+  const knownTaskIdsRef = useRef<Set<string> | null>(null);
+  const [activeTaskAlert, setActiveTaskAlert] = useState<{
+    id: string;
+    title: string;
+    from: string;
+    priority: "urgent" | "normal" | "low";
+    relatedProductName?: string | null;
+    count: number;
+  } | null>(null);
+
+  // Dark Mode (Default is dark mode, restored from localStorage)
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   // Live Catalog Version for real-time synchronization across views
   const [catalogVersion, setCatalogVersion] = useState(0);
@@ -95,12 +120,14 @@ export default function Home() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedTheme = localStorage.getItem("provisionsmart_theme");
-      if (savedTheme === "dark") {
-        document.documentElement.classList.add("dark");
-        setIsDarkMode(true);
-      } else {
+      if (savedTheme === "light") {
         document.documentElement.classList.remove("dark");
+        document.documentElement.classList.add("light");
         setIsDarkMode(false);
+      } else {
+        document.documentElement.classList.add("dark");
+        document.documentElement.classList.remove("light");
+        setIsDarkMode(true);
       }
     }
   }, []);
@@ -110,10 +137,14 @@ export default function Home() {
       const next = !prev;
       if (next) {
         document.documentElement.classList.add("dark");
+        document.documentElement.classList.remove("light");
         localStorage.setItem("provisionsmart_theme", "dark");
+        showToast("Switched to Dark Mode");
       } else {
         document.documentElement.classList.remove("dark");
+        document.documentElement.classList.add("light");
         localStorage.setItem("provisionsmart_theme", "light");
+        showToast("Switched to Light Mode");
       }
       return next;
     });
@@ -205,19 +236,93 @@ export default function Home() {
     }
   };
 
-  // Fetch Pending Tasks count
-  const fetchTasksCount = async () => {
+  // Poll Pending Tasks count & buzz for newly received tasks (Manager Login)
+  const pollTasks = async () => {
     if (!user) return;
     try {
       const res = await fetch("/api/tasks?status=pending");
-      if (res.ok) {
-        const data = await res.json();
-        setPendingTasksCount(data.pendingCount || 0);
+      if (!res.ok) return;
+      const data = await res.json();
+      const currentTasks: ShopfloorTask[] = data.tasks || [];
+      const currentCount = data.pendingCount || 0;
+      setPendingTasksCount(currentCount);
+
+      // On initial poll during session, store existing task IDs so we don't buzz for past tasks
+      if (knownTaskIdsRef.current === null) {
+        knownTaskIdsRef.current = new Set(currentTasks.map((t) => t.id));
+        return;
+      }
+
+      // Check if any brand new tasks arrived that were not known
+      const newTasks = currentTasks.filter((t) => !knownTaskIdsRef.current!.has(t.id));
+
+      // Record all active task IDs in known set
+      currentTasks.forEach((t) => knownTaskIdsRef.current!.add(t.id));
+
+      // If new tasks arrived, trigger buzzer sound and notification for Manager
+      if (newTasks.length > 0 && user.role === "manager") {
+        const latestTask = newTasks[0];
+        const hasUrgent = newTasks.some((t) => t.priority === "urgent");
+
+        // 1. Play audible buzzer sound ("berz" alert tone)
+        playTaskBuzzerSound({ urgent: hasUrgent });
+
+        // 2. Show floating interactive task alert banner
+        setActiveTaskAlert({
+          id: latestTask.id,
+          title: latestTask.title,
+          from: latestTask.from_user_name || "Store Administrator",
+          priority: latestTask.priority,
+          relatedProductName: latestTask.related_product_name,
+          count: newTasks.length,
+        });
+
+        // 3. Trigger native desktop/browser notification
+        sendDesktopNotification(`🚨 New Task: ${latestTask.title}`, {
+          body: `From ${latestTask.from_user_name || "Admin"} • Priority: ${latestTask.priority.toUpperCase()}${
+            latestTask.related_product_name ? ` • Product: ${latestTask.related_product_name}` : ""
+          }`,
+          onClick: () => {
+            setIsTasksModalOpen(true);
+            setActiveTaskAlert(null);
+          },
+        });
       }
     } catch (e) {
-      console.error(e);
+      console.error("Task polling error:", e);
     }
   };
+
+  // Auto-dismiss active task arrival banner after 12 seconds
+  useEffect(() => {
+    if (activeTaskAlert) {
+      const timer = setTimeout(() => {
+        setActiveTaskAlert(null);
+      }, 12000);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTaskAlert]);
+
+  // Periodic task polling (every 6 seconds) + audio unlock on user interaction
+  useEffect(() => {
+    if (!user) {
+      knownTaskIdsRef.current = null;
+      setActiveTaskAlert(null);
+      return;
+    }
+
+    const cleanupAudio = initAudioUnlock();
+    pollTasks();
+
+    const interval = setInterval(() => {
+      pollTasks();
+    }, 6000);
+
+    return () => {
+      clearInterval(interval);
+      cleanupAudio();
+    };
+  }, [user]);
 
   // Fetch Dashboard Metrics (smooth background refresh if metrics already in memory)
   const fetchMetrics = async (showLoadingSkeleton = false) => {
@@ -247,7 +352,7 @@ export default function Home() {
       if (activeTab === "dashboard" || !metrics) {
         fetchMetrics();
       }
-      fetchTasksCount();
+      pollTasks();
     }
   }, [user, activeTab]);
 
@@ -393,6 +498,105 @@ export default function Home() {
         </div>
       )}
 
+      {/* Real-time Task Reception Alert Banner for Manager */}
+      {activeTaskAlert && (
+        <div className="fixed top-18 right-3 sm:right-6 z-50 max-w-md w-[calc(100vw-1.5rem)] animate-fade-in">
+          <div className="relative overflow-hidden rounded-3xl border border-amber-500/40 bg-[#0c1222]/95 backdrop-blur-2xl p-4 sm:p-5 shadow-2xl shadow-amber-500/20 text-white ring-1 ring-white/10">
+            {/* Top decorative gradient bar */}
+            <div
+              className={`absolute top-0 left-0 right-0 h-1.5 ${
+                activeTaskAlert.priority === "urgent"
+                  ? "bg-gradient-to-r from-rose-500 via-red-500 to-amber-500 animate-pulse"
+                  : "bg-gradient-to-r from-amber-500 via-blue-500 to-emerald-500"
+              }`}
+            />
+
+            <div className="flex items-start gap-3.5">
+              {/* Pulsing Bell / Buzzer Icon */}
+              <div
+                className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${
+                  activeTaskAlert.priority === "urgent"
+                    ? "bg-rose-500/20 border-rose-500/40 text-rose-400 animate-pulse"
+                    : "bg-amber-500/20 border-amber-500/40 text-amber-400"
+                }`}
+              >
+                <BellRing className="w-5 h-5 animate-bounce" />
+              </div>
+
+              {/* Text content */}
+              <div className="flex-1 min-w-0 pr-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span
+                    className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                      activeTaskAlert.priority === "urgent"
+                        ? "bg-rose-500/30 text-rose-300 border-rose-500/40"
+                        : "bg-amber-500/30 text-amber-300 border-amber-500/40"
+                    }`}
+                  >
+                    {activeTaskAlert.priority === "urgent" ? "🚨 Urgent Work Order" : "🔔 New Task Received"}
+                  </span>
+                  {activeTaskAlert.count > 1 && (
+                    <span className="text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 rounded-md">
+                      +{activeTaskAlert.count} new
+                    </span>
+                  )}
+                </div>
+
+                <h4 className="text-sm font-black text-white truncate leading-snug">
+                  {activeTaskAlert.title}
+                </h4>
+
+                <p className="text-[11px] text-slate-300 mt-1 flex items-center gap-2 flex-wrap">
+                  <span>
+                    From: <strong className="text-slate-100">{activeTaskAlert.from}</strong>
+                  </span>
+                  {activeTaskAlert.relatedProductName && (
+                    <span className="text-slate-400 truncate">
+                      • Item: <strong className="text-amber-300">{activeTaskAlert.relatedProductName}</strong>
+                    </span>
+                  )}
+                </p>
+
+                {/* Actions: View Task & Replay Buzzer */}
+                <div className="flex items-center gap-2 mt-3.5">
+                  <button
+                    onClick={() => {
+                      setIsTasksModalOpen(true);
+                      setActiveTaskAlert(null);
+                    }}
+                    className="px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-md shadow-blue-500/20 transition cursor-pointer active:scale-95"
+                  >
+                    <span>View Task</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      playTaskBuzzerSound({ urgent: activeTaskAlert.priority === "urgent" });
+                    }}
+                    className="p-1.5 px-2.5 bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white rounded-xl text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
+                    title="Replay Buzzer Sound"
+                  >
+                    <Volume2 className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-[11px]">Buzzer</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <button
+                onClick={() => setActiveTaskAlert(null)}
+                className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer shrink-0"
+                title="Dismiss"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main View Switcher */}
       <main className="flex-1">
         {activeTab === "dashboard" && (
@@ -453,6 +657,10 @@ export default function Home() {
               setTaskTargetProductName(pName || null);
               setIsTasksModalOpen(true);
             }}
+            onNavigateToLogs={(productName) => {
+              if (productName) setAuditSearchQuery(productName);
+              setActiveTab("audit");
+            }}
           />
         )}
 
@@ -511,7 +719,16 @@ export default function Home() {
           />
         )}
 
-        {activeTab === "audit" && <AuditLogsView user={user} />}
+        {activeTab === "audit" && (
+          <AuditLogsView
+            user={user}
+            initialSearch={auditSearchQuery}
+            onLogResolved={() => {
+              fetchMetrics();
+              setCatalogVersion((v) => v + 1);
+            }}
+          />
+        )}
       </main>
 
       {/* Single Product Add / Edit Modal */}
@@ -595,7 +812,7 @@ export default function Home() {
           }
         }}
         onTasksUpdated={() => {
-          fetchTasksCount();
+          pollTasks();
         }}
       />
     </div>

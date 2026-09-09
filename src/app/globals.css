@@ -132,6 +132,262 @@ body {
   animation: pulseSubtle 2s infinite ease-in-out;
 }
 
+/* ==========================================================================
+   PROVISIONSMART LIGHT MODE THEME ENGINE
+   Activates whenever html has class 'light'
+   ========================================================================== */
+html.light body {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Background overlays */
+html.light .warehouse-ambient-overlay {
+  background-color: rgba(241, 245, 249, 0.90) !important;
+}
+
+html.light .warehouse-tech-grid {
+  opacity: 0.04 !important;
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 1px, transparent 1px) !important;
+}
+
+/* Glass Panels & Containers */
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02) !important;
+  color: #0f172a !important;
+}
+
+html.light .glass-panel-subtle {
+  background: rgba(248, 250, 252, 0.85) !important;
+  border-color: rgba(226, 232, 240, 0.8) !important;
+}
+
+html.light .glass-panel-hover:hover {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(203, 213, 225, 1) !important;
+  box-shadow: 0 14px 35px -5px rgba(0, 0, 0, 0.08) !important;
+}
+
+html.light .glass-modal {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(226, 232, 240, 1) !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.18) !important;
+  color: #0f172a !important;
+}
+
+html.light .glass-nav,
+html.light header {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Inputs & Forms */
+html.light .glass-input {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light .glass-input:focus {
+  background: #ffffff !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+html.light .glass-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.light .glass-input option {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Common Dark Utility Overrides in Light Mode */
+html.light .bg-\[\#070a12\],
+html.light .bg-\[\#070a12\]\/90,
+html.light .bg-\[\#070a12\]\/95 {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+}
+
+html.light .bg-\[\#0c1222\],
+html.light .bg-\[\#0c1222\]\/95,
+html.light .bg-\[\#0c1222\]\/98 {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-slate-900,
+html.light .bg-slate-950,
+html.light .bg-slate-900\/60,
+html.light .bg-slate-900\/70,
+html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/90,
+html.light .bg-slate-950\/80,
+html.light .bg-slate-950\/90 {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-slate-800,
+html.light .bg-slate-800\/50,
+html.light .bg-slate-800\/60,
+html.light .bg-slate-800\/70,
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800\/90 {
+  background-color: #f8fafc !important;
+}
+
+/* Translucent surfaces in light mode */
+html.light .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+html.light .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+html.light .bg-white\/15 {
+  background-color: rgba(0, 0, 0, 0.07) !important;
+}
+html.light .bg-white\/20 {
+  background-color: rgba(0, 0, 0, 0.09) !important;
+}
+
+html.light .hover\:bg-white\/5:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+html.light .hover\:bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.07) !important;
+}
+html.light .hover\:bg-white\/15:hover {
+  background-color: rgba(0, 0, 0, 0.09) !important;
+}
+html.light .hover\:bg-white\/20:hover {
+  background-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Borders in light mode */
+html.light .border-white\/5 {
+  border-color: rgba(0, 0, 0, 0.04) !important;
+}
+html.light .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+html.light .border-white\/15 {
+  border-color: rgba(0, 0, 0, 0.11) !important;
+}
+html.light .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.14) !important;
+}
+html.light .border-white\/30 {
+  border-color: rgba(0, 0, 0, 0.18) !important;
+}
+html.light .divide-white\/5 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(0, 0, 0, 0.05) !important;
+}
+html.light .divide-white\/10 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Typography in light mode */
+html.light .text-white:not([class*="bg-blue"]):not([class*="bg-emerald"]):not([class*="bg-teal"]):not([class*="bg-purple"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-indigo"]):not([class*="bg-gradient"]) {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-100:not([class*="bg-blue"]):not([class*="bg-emerald"]):not([class*="bg-teal"]):not([class*="bg-purple"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-indigo"]) {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-200:not([class*="bg-blue"]):not([class*="bg-emerald"]):not([class*="bg-teal"]):not([class*="bg-purple"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-indigo"]) {
+  color: #1e293b !important;
+}
+
+html.light .text-slate-300:not([class*="bg-blue"]):not([class*="bg-emerald"]):not([class*="bg-teal"]):not([class*="bg-purple"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-indigo"]) {
+  color: #334155 !important;
+}
+
+html.light .text-slate-400 {
+  color: #64748b !important;
+}
+
+html.light .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+/* Badges and status pills */
+html.light .text-emerald-300,
+html.light .text-emerald-400 {
+  color: #059669 !important;
+}
+html.light .bg-emerald-500\/10,
+html.light .bg-emerald-500\/15,
+html.light .bg-emerald-500\/20 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+}
+
+html.light .text-amber-300,
+html.light .text-amber-400 {
+  color: #d97706 !important;
+}
+html.light .bg-amber-500\/10,
+html.light .bg-amber-500\/15,
+html.light .bg-amber-500\/20 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+}
+
+html.light .text-rose-300,
+html.light .text-rose-400 {
+  color: #e11d48 !important;
+}
+html.light .bg-rose-500\/10,
+html.light .bg-rose-500\/15,
+html.light .bg-rose-500\/20 {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+}
+
+html.light .text-blue-300,
+html.light .text-blue-400 {
+  color: #2563eb !important;
+}
+html.light .bg-blue-500\/10,
+html.light .bg-blue-500\/15,
+html.light .bg-blue-500\/20 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+
+html.light .text-purple-300,
+html.light .text-purple-400 {
+  color: #7c3aed !important;
+}
+html.light .bg-purple-500\/10,
+html.light .bg-purple-500\/15,
+html.light .bg-purple-500\/20 {
+  background-color: #f5f3ff !important;
+  border-color: #ddd6fe !important;
+}
+
+/* Ensure colored action buttons retain crisp pure white text */
+html.light button.bg-blue-600,
+html.light button.bg-emerald-600,
+html.light button.bg-teal-600,
+html.light button.bg-purple-600,
+html.light button.bg-rose-600,
+html.light button.bg-red-600,
+html.light [class*="bg-blue-600"] *,
+html.light [class*="bg-emerald-600"] *,
+html.light [class*="bg-teal-600"] *,
+html.light [class*="bg-purple-600"] *,
+html.light [class*="bg-rose-600"] *,
+html.light [class*="bg-red-600"] * {
+  color: #ffffff !important;
+}
+
 /* Print styles for 1-page perfect receipt printing */
 @media print {
   html, body {

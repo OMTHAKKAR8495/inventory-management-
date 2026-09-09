@@ -18,8 +18,11 @@ import {
   FileText,
   Sparkles,
   Layers,
+  Volume2,
+  BellRing,
 } from "lucide-react";
 import { ShopfloorTask, User, Product, TaskPriority, TaskCategory } from "@/lib/types";
+import { playTaskBuzzerSound, requestNotificationPermission } from "@/lib/soundUtils";
 
 interface ShopfloorTasksModalProps {
   isOpen: boolean;
@@ -56,8 +59,16 @@ export const ShopfloorTasksModal: React.FC<ShopfloorTasksModalProps> = ({
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [isPlayingTestSound, setIsPlayingTestSound] = useState(false);
+  const [desktopNotifStatus, setDesktopNotifStatus] = useState<string>("default");
 
   const isAdmin = user.role === "admin";
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setDesktopNotifStatus(Notification.permission);
+    }
+  }, []);
 
   const fetchTasks = async () => {
     setIsLoading(true);
@@ -96,6 +107,12 @@ export const ShopfloorTasksModal: React.FC<ShopfloorTasksModalProps> = ({
         setTitle(`Reorder / Check stock for ${initialProductName || "Product"}`);
         setCategory("stock_order");
       }
+
+      const interval = setInterval(() => {
+        fetchTasks();
+      }, 6000);
+
+      return () => clearInterval(interval);
     }
   }, [isOpen, initialProductId, initialProductName]);
 
@@ -253,6 +270,38 @@ export const ShopfloorTasksModal: React.FC<ShopfloorTasksModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Test Buzzer Sound Button */}
+            <button
+              type="button"
+              disabled={isPlayingTestSound}
+              onClick={async () => {
+                setIsPlayingTestSound(true);
+                await playTaskBuzzerSound({ urgent: false });
+                setTimeout(() => setIsPlayingTestSound(false), 500);
+              }}
+              className="px-2.5 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+              title="Test Task Reception Buzzer Sound"
+            >
+              <Volume2 className={`w-3.5 h-3.5 text-amber-400 ${isPlayingTestSound ? "animate-bounce" : ""}`} />
+              <span className="hidden sm:inline">Test Buzzer</span>
+            </button>
+
+            {/* Desktop Notification Prompt if not yet granted/denied */}
+            {desktopNotifStatus === "default" && (
+              <button
+                type="button"
+                onClick={async () => {
+                  const perm = await requestNotificationPermission();
+                  setDesktopNotifStatus(perm);
+                }}
+                className="px-2.5 py-1.5 bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/30 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                title="Enable Desktop Notifications for Tasks"
+              >
+                <BellRing className="w-3.5 h-3.5 text-blue-400" />
+                <span className="hidden sm:inline">Enable Alerts</span>
+              </button>
+            )}
+
             <button
               onClick={fetchTasks}
               className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition cursor-pointer"

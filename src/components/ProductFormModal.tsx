@@ -373,9 +373,16 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           {/* Row 5: Stock Quantities & Threshold */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
-                Current Stock Quantity <span className="text-red-400">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-slate-300">
+                  Total Current Stock <span className="text-red-400">*</span>
+                </label>
+                {productToEdit && (
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    Existing: {productToEdit.stock_quantity} {unit}
+                  </span>
+                )}
+              </div>
               <input
                 type="number"
                 min="0"
@@ -384,6 +391,20 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 onChange={(e) => setStockQuantity(e.target.value)}
                 className="w-full px-3.5 py-2 text-xs rounded-xl glass-input font-bold"
               />
+              {productToEdit && !isNaN(parseInt(stockQuantity, 10)) && parseInt(stockQuantity, 10) !== productToEdit.stock_quantity && (
+                <p className="text-[11px] mt-1.5 text-amber-300 font-medium">
+                  Sets total stock to <strong>{parseInt(stockQuantity, 10)}</strong> (Net change:{" "}
+                  {parseInt(stockQuantity, 10) - productToEdit.stock_quantity >= 0
+                    ? `+${parseInt(stockQuantity, 10) - productToEdit.stock_quantity}`
+                    : parseInt(stockQuantity, 10) - productToEdit.stock_quantity}{" "}
+                  {unit})
+                </p>
+              )}
+              {productToEdit && (
+                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
+                  💡 <em>Note: This field sets the <strong>absolute total</strong> in stock. If you wanted to add 100 boxes to your existing {productToEdit.stock_quantity}, enter <strong>{productToEdit.stock_quantity + 100}</strong> here, or use the <strong>+</strong> Stock In button in Catalog.</em>
+                </p>
+              )}
             </div>
 
             <div>

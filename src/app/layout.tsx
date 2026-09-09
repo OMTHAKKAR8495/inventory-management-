@@ -35,8 +35,8 @@ export default function RootLayout({
           }}
         >
           {/* Clean Ambient Overlay for Crystal Clear Visibility and Glassmorphism Legibility */}
-          <div className="absolute inset-0 bg-[#070a12]/25" />
-          <div className="absolute inset-0 bg-tech-grid opacity-10" />
+          <div className="absolute inset-0 bg-[#070a12]/25 warehouse-ambient-overlay transition-colors duration-500" />
+          <div className="absolute inset-0 bg-tech-grid opacity-10 warehouse-tech-grid transition-opacity duration-500" />
         </div>
 
         <div className="relative z-10 flex flex-col min-h-screen">
