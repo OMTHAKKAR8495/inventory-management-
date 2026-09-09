@@ -18,8 +18,6 @@ import {
   ScanBarcode,
   Trash2,
   Database,
-  Moon,
-  Sun,
   BookOpen,
   MessageSquare,
   Receipt,
@@ -41,8 +39,6 @@ interface NavbarProps {
   pendingTasksCount?: number;
   metrics?: DashboardMetrics | null;
   onSelectAlertItem?: (productId: string) => void;
-  isDarkMode?: boolean;
-  onToggleDarkMode?: () => void;
   onNavigateToCounterPOS?: () => void;
   onNavigateToPassedBills?: () => void;
   posViewMode?: "counter" | "saved_bills" | "passed_bills";
@@ -61,8 +57,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   pendingTasksCount = 0,
   metrics,
   onSelectAlertItem,
-  isDarkMode = false,
-  onToggleDarkMode,
   onNavigateToCounterPOS,
   onNavigateToPassedBills,
   posViewMode = "counter",
@@ -389,22 +383,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
-            {/* Light / Dark Mode Toggle Button (Desktop & Tablet; also accessible inside User Menu) */}
-            {onToggleDarkMode && (
-              <button
-                type="button"
-                onClick={onToggleDarkMode}
-                className="hidden sm:flex p-1.5 sm:p-2 text-slate-300 hover:text-amber-300 rounded-xl hover:bg-white/10 transition border border-white/10 hover:border-white/20 items-center justify-center cursor-pointer shadow-sm shrink-0"
-                title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                aria-label="Toggle Theme"
-              >
-                {isDarkMode ? (
-                  <Sun className="w-4 h-4 text-amber-400 animate-pulse" />
-                ) : (
-                  <Moon className="w-4 h-4 text-sky-300" />
-                )}
-              </button>
-            )}
+
 
             {/* User Profile & Menu */}
             <div className="relative shrink-0">
@@ -505,23 +484,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
                   )}
 
-                  {onToggleDarkMode && (
-                    <button
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        onToggleDarkMode();
-                      }}
-                      className="w-full px-4 py-2 text-left text-xs text-slate-300 hover:text-white hover:bg-white/10 flex items-center justify-between font-medium cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2">
-                        {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-sky-300" />}
-                        <span>{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
-                      </div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400">
-                        {isDarkMode ? "Dark" : "Light"}
-                      </span>
-                    </button>
-                  )}
+
 
                   <button
                     onClick={() => {

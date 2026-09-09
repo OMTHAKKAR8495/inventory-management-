@@ -97,9 +97,6 @@ export default function Home() {
     count: number;
   } | null>(null);
 
-  // Dark Mode (Default is dark mode, restored from localStorage)
-  const [isDarkMode, setIsDarkMode] = useState(true);
-
   // Live Catalog Version for real-time synchronization across views
   const [catalogVersion, setCatalogVersion] = useState(0);
 
@@ -116,39 +113,14 @@ export default function Home() {
     }, 4000);
   };
 
-  // Theme initialization (Restore saved theme preference)
+  // Theme initialization (Always keep dark mode active)
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const savedTheme = localStorage.getItem("provisionsmart_theme");
-      if (savedTheme === "light") {
-        document.documentElement.classList.remove("dark");
-        document.documentElement.classList.add("light");
-        setIsDarkMode(false);
-      } else {
-        document.documentElement.classList.add("dark");
-        document.documentElement.classList.remove("light");
-        setIsDarkMode(true);
-      }
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
+      localStorage.removeItem("provisionsmart_theme");
     }
   }, []);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode((prev) => {
-      const next = !prev;
-      if (next) {
-        document.documentElement.classList.add("dark");
-        document.documentElement.classList.remove("light");
-        localStorage.setItem("provisionsmart_theme", "dark");
-        showToast("Switched to Dark Mode");
-      } else {
-        document.documentElement.classList.remove("dark");
-        document.documentElement.classList.add("light");
-        localStorage.setItem("provisionsmart_theme", "light");
-        showToast("Switched to Light Mode");
-      }
-      return next;
-    });
-  };
 
   // Global Escape key listener to close any open top-level modal
   useEffect(() => {
@@ -461,8 +433,6 @@ export default function Home() {
           setIsTasksModalOpen(true);
         }}
         pendingTasksCount={pendingTasksCount}
-        isDarkMode={isDarkMode}
-        onToggleDarkMode={toggleDarkMode}
         metrics={metrics}
         onNavigateToCounterPOS={() => {
           setPosViewMode("counter");

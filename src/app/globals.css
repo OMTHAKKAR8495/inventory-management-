@@ -25,14 +25,14 @@ body {
 
 /* Ambient Translucent Tech Grid & Glowing Gradient Mesh Background */
 .bg-tech-grid {
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
 .bg-radial-glow {
-  background: 
+  background:
     radial-gradient(circle at 15% 15%, rgba(249, 115, 22, 0.08) 0%, transparent 40%),
     radial-gradient(circle at 85% 25%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
     radial-gradient(circle at 50% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
@@ -102,21 +102,31 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
@@ -124,8 +134,15 @@ body {
 }
 
 @keyframes pulseSubtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .animate-pulse-subtle {
@@ -148,7 +165,7 @@ html.light .warehouse-ambient-overlay {
 
 html.light .warehouse-tech-grid {
   opacity: 0.04 !important;
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(0, 0, 0, 0.08) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 1px, transparent 1px) !important;
 }
@@ -245,12 +262,15 @@ html.light .bg-slate-800\/90 {
 html.light .bg-white\/5 {
   background-color: rgba(0, 0, 0, 0.03) !important;
 }
+
 html.light .bg-white\/10 {
   background-color: rgba(0, 0, 0, 0.05) !important;
 }
+
 html.light .bg-white\/15 {
   background-color: rgba(0, 0, 0, 0.07) !important;
 }
+
 html.light .bg-white\/20 {
   background-color: rgba(0, 0, 0, 0.09) !important;
 }
@@ -258,12 +278,15 @@ html.light .bg-white\/20 {
 html.light .hover\:bg-white\/5:hover {
   background-color: rgba(0, 0, 0, 0.04) !important;
 }
+
 html.light .hover\:bg-white\/10:hover {
   background-color: rgba(0, 0, 0, 0.07) !important;
 }
+
 html.light .hover\:bg-white\/15:hover {
   background-color: rgba(0, 0, 0, 0.09) !important;
 }
+
 html.light .hover\:bg-white\/20:hover {
   background-color: rgba(0, 0, 0, 0.12) !important;
 }
@@ -272,22 +295,28 @@ html.light .hover\:bg-white\/20:hover {
 html.light .border-white\/5 {
   border-color: rgba(0, 0, 0, 0.04) !important;
 }
+
 html.light .border-white\/10 {
   border-color: rgba(0, 0, 0, 0.08) !important;
 }
+
 html.light .border-white\/15 {
   border-color: rgba(0, 0, 0, 0.11) !important;
 }
+
 html.light .border-white\/20 {
   border-color: rgba(0, 0, 0, 0.14) !important;
 }
+
 html.light .border-white\/30 {
   border-color: rgba(0, 0, 0, 0.18) !important;
 }
-html.light .divide-white\/5 > :not([hidden]) ~ :not([hidden]) {
+
+html.light .divide-white\/5> :not([hidden])~ :not([hidden]) {
   border-color: rgba(0, 0, 0, 0.05) !important;
 }
-html.light .divide-white\/10 > :not([hidden]) ~ :not([hidden]) {
+
+html.light .divide-white\/10> :not([hidden])~ :not([hidden]) {
   border-color: rgba(0, 0, 0, 0.08) !important;
 }
 
@@ -321,6 +350,7 @@ html.light .text-emerald-300,
 html.light .text-emerald-400 {
   color: #059669 !important;
 }
+
 html.light .bg-emerald-500\/10,
 html.light .bg-emerald-500\/15,
 html.light .bg-emerald-500\/20 {
@@ -332,6 +362,7 @@ html.light .text-amber-300,
 html.light .text-amber-400 {
   color: #d97706 !important;
 }
+
 html.light .bg-amber-500\/10,
 html.light .bg-amber-500\/15,
 html.light .bg-amber-500\/20 {
@@ -343,6 +374,7 @@ html.light .text-rose-300,
 html.light .text-rose-400 {
   color: #e11d48 !important;
 }
+
 html.light .bg-rose-500\/10,
 html.light .bg-rose-500\/15,
 html.light .bg-rose-500\/20 {
@@ -354,6 +386,7 @@ html.light .text-blue-300,
 html.light .text-blue-400 {
   color: #2563eb !important;
 }
+
 html.light .bg-blue-500\/10,
 html.light .bg-blue-500\/15,
 html.light .bg-blue-500\/20 {
@@ -365,6 +398,7 @@ html.light .text-purple-300,
 html.light .text-purple-400 {
   color: #7c3aed !important;
 }
+
 html.light .bg-purple-500\/10,
 html.light .bg-purple-500\/15,
 html.light .bg-purple-500\/20 {
@@ -390,7 +424,9 @@ html.light [class*="bg-red-600"] * {
 
 /* Print styles for 1-page perfect receipt printing */
 @media print {
-  html, body {
+
+  html,
+  body {
     background: #ffffff !important;
     color: #000000 !important;
     margin: 0 !important;
