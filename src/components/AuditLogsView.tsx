@@ -56,6 +56,7 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
   const [resolvingLog, setResolvingLog] = useState<StockLog | null>(null);
   const [resolutionType, setResolutionType] = useState<"transfer" | "revert" | "adjust">("transfer");
   const [targetProductId, setTargetProductId] = useState<string>("");
+  const [productSearch, setProductSearch] = useState<string>("");
   const [customQuantity, setCustomQuantity] = useState<string>("");
   const [reasonNotes, setReasonNotes] = useState<string>("");
   const [products, setProducts] = useState<Product[]>([]);
@@ -93,11 +94,14 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
   }, [search, changeType, page, limit]);
 
   useEffect(() => {
-    if (resolvingLog && products.length === 0) {
-      fetch("/api/products?limit=200")
-        .then((res) => res.json())
-        .then((data) => setProducts(data.products || []))
-        .catch((e) => console.error(e));
+    if (resolvingLog) {
+      if (products.length === 0) {
+        fetch("/api/products?all=true")
+          .then((res) => res.json())
+          .then((data) => setProducts(data.products || []))
+          .catch((e) => console.error(e));
+      }
+      setProductSearch("");
     }
   }, [resolvingLog]);
 
@@ -131,6 +135,7 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
         setResolvingLog(null);
         setResolutionFeedback(null);
         setTargetProductId("");
+        setProductSearch("");
         setReasonNotes("");
       }, 1500);
     } catch (err: any) {
@@ -139,6 +144,20 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
       setIsSubmittingResolution(false);
     }
   };
+
+  const selectedTargetProduct = products.find((p) => p.id === targetProductId);
+
+  const filteredTransferProducts = products.filter((p) => {
+    if (resolvingLog && p.id === resolvingLog.product_id) return false;
+    if (!productSearch.trim()) return true;
+    const q = productSearch.toLowerCase().trim();
+    return (
+      p.name.toLowerCase().includes(q) ||
+      (p.sku && p.sku.toLowerCase().includes(q)) ||
+      (p.category && p.category.toLowerCase().includes(q)) ||
+      (p.sub_category && p.sub_category.toLowerCase().includes(q))
+    );
+  });
 
   const totalPages = Math.ceil(total / limit) || 1;
 
@@ -442,6 +461,7 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
                   if (!isSubmittingResolution) {
                     setResolvingLog(null);
                     setResolutionFeedback(null);
+                    setProductSearch("");
                   }
                 }}
                 className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition cursor-pointer"
@@ -545,43 +565,132 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
                     <ArrowRight className="w-4 h-4" />
                     Transfer {resolvingLog.quantity_delta > 0 ? `+${resolvingLog.quantity_delta}` : resolvingLog.quantity_delta} units to Intended Product
                   </p>
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-300 mb-1">
-                      Select Intended Product (e.g. Pure Cow Ghee): <span className="text-red-400">*</span>
-                    </label>
-                    <select
-                      value={targetProductId}
-                      onChange={(e) => setTargetProductId(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 text-xs rounded-xl glass-input font-medium"
-                    >
-                      <option value="">-- Choose correct product to receive this quantity --</option>
-                      {products
-                        .filter((p) => p.id !== resolvingLog.product_id)
-                        .map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name} (Current Stock: {p.stock_quantity} {p.unit})
-                          </option>
-                        ))}
-                    </select>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-[11px] font-bold text-slate-300">
+                        Search & Select Intended Product: <span className="text-red-400">*</span>
+                      </label>
+                      <span className="text-[10px] text-slate-400">
+                        {filteredTransferProducts.length} item{filteredTransferProducts.length !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+
+                    {/* Instant Live Search Input */}
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={productSearch}
+                        onChange={(e) => setProductSearch(e.target.value)}
+                        placeholder="Type product name or SKU to search (e.g. Pure Cow Ghee)..."
+                        className="w-full pl-9 pr-8 py-2 text-xs rounded-xl glass-input font-medium placeholder:text-slate-500 text-white focus:ring-2 focus:ring-blue-500/40"
+                      />
+                      {productSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setProductSearch("")}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-0.5 rounded transition cursor-pointer"
+                          title="Clear search"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Filtered Interactive Product List */}
+                    <div className="max-h-44 overflow-y-auto custom-scrollbar border border-white/10 rounded-xl bg-slate-900/90 divide-y divide-white/5 shadow-inner">
+                      {filteredTransferProducts.length === 0 ? (
+                        <div className="p-4 text-center text-slate-400 text-xs space-y-1">
+                          <p>No products found matching &ldquo;{productSearch}&rdquo;</p>
+                          <button
+                            type="button"
+                            onClick={() => setProductSearch("")}
+                            className="text-blue-400 hover:underline text-[11px] cursor-pointer"
+                          >
+                            Clear search
+                          </button>
+                        </div>
+                      ) : (
+                        filteredTransferProducts.map((p) => {
+                          const isSelected = p.id === targetProductId;
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => {
+                                setTargetProductId(p.id);
+                              }}
+                              className={`w-full p-2.5 text-left text-xs flex items-center justify-between transition cursor-pointer ${
+                                isSelected
+                                  ? "bg-blue-600/30 text-white font-bold border-l-4 border-blue-400"
+                                  : "hover:bg-white/5 text-slate-200"
+                              }`}
+                            >
+                              <div className="min-w-0 pr-2">
+                                <div className="font-bold truncate text-white flex items-center gap-1.5">
+                                  <span>{p.name}</span>
+                                  {isSelected && <Check className="w-3.5 h-3.5 text-blue-400 shrink-0" />}
+                                </div>
+                                <div className="text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                  <span className="font-mono bg-white/5 px-1 py-0.2 rounded border border-white/5 text-slate-300">{p.sku}</span>
+                                  <span>•</span>
+                                  <span className="truncate">{p.category}</span>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <span className="font-mono text-[11px] font-bold text-slate-200">
+                                  {p.stock_quantity} {p.unit}
+                                </span>
+                                <div className="text-[9px] text-slate-400 uppercase tracking-wider">In Stock</div>
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
 
-                  {targetProductId && (
-                    <div className="p-3 rounded-xl bg-blue-950/60 border border-blue-500/30 text-[11px] text-blue-200 space-y-1">
-                      <p>
-                        ✓ <strong>{resolvingLog.product_name}</strong> will revert by{" "}
-                        <span className="text-rose-400 font-bold font-mono">
-                          {-resolvingLog.quantity_delta > 0 ? `+${-resolvingLog.quantity_delta}` : -resolvingLog.quantity_delta} units
-                        </span>{" "}
-                        (back to original count).
+                  {/* Transfer Summary Preview Card */}
+                  {targetProductId && selectedTargetProduct ? (
+                    <div className="p-3 rounded-xl bg-blue-950/70 border border-blue-500/30 text-[11px] text-blue-200 space-y-1.5 animate-fade-in">
+                      <div className="flex items-center justify-between pb-1 border-b border-blue-500/20">
+                        <span className="text-[10px] uppercase font-bold text-blue-300 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                          Selected Target Product
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setTargetProductId("")}
+                          className="text-[10px] text-blue-400 hover:text-blue-200 underline cursor-pointer"
+                        >
+                          Change
+                        </button>
+                      </div>
+                      <p className="font-bold text-xs text-white">
+                        {selectedTargetProduct.name}
                       </p>
-                      <p>
-                        ✓ <strong>{products.find((p) => p.id === targetProductId)?.name}</strong> will receive{" "}
-                        <span className="text-emerald-400 font-bold font-mono">
-                          {resolvingLog.quantity_delta > 0 ? `+${resolvingLog.quantity_delta}` : resolvingLog.quantity_delta} units
-                        </span>.
-                      </p>
+                      <div className="space-y-0.5 pt-0.5">
+                        <p>
+                          ✓ <strong>{resolvingLog.product_name}</strong> will revert by{" "}
+                          <span className="text-rose-400 font-bold font-mono">
+                            {-resolvingLog.quantity_delta > 0 ? `+${-resolvingLog.quantity_delta}` : -resolvingLog.quantity_delta} units
+                          </span>{" "}
+                          (back to {resolvingLog.previous_quantity} units).
+                        </p>
+                        <p>
+                          ✓ <strong>{selectedTargetProduct.name}</strong> will receive{" "}
+                          <span className="text-emerald-400 font-bold font-mono">
+                            {resolvingLog.quantity_delta > 0 ? `+${resolvingLog.quantity_delta}` : resolvingLog.quantity_delta} units
+                          </span>{" "}
+                          (moving from {selectedTargetProduct.stock_quantity} → {selectedTargetProduct.stock_quantity + resolvingLog.quantity_delta} {selectedTargetProduct.unit}).
+                        </p>
+                      </div>
                     </div>
+                  ) : (
+                    <p className="text-[10px] text-slate-400 italic">
+                      Click any product from the list above to assign the {resolvingLog.quantity_delta > 0 ? `+${resolvingLog.quantity_delta}` : resolvingLog.quantity_delta} units to it.
+                    </p>
                   )}
                 </div>
               )}
@@ -643,6 +752,7 @@ export const AuditLogsView: React.FC<AuditLogsViewProps> = ({
                   onClick={() => {
                     setResolvingLog(null);
                     setResolutionFeedback(null);
+                    setProductSearch("");
                   }}
                   className="px-4 py-2 bg-white/10 hover:bg-white/20 text-slate-300 rounded-xl text-xs font-bold transition disabled:opacity-50 cursor-pointer"
                 >
