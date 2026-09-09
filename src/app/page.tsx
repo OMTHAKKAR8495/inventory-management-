@@ -760,6 +760,7 @@ export default function Home() {
       <UsersModal
         isOpen={isUsersModalOpen}
         onClose={() => setIsUsersModalOpen(false)}
+        currentUser={user}
       />
 
       {/* Recycle Bin / Soft-Deleted Items Modal (Admin Only) */}

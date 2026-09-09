@@ -6,7 +6,7 @@ export interface User {
   email: string;
   role: UserRole;
   created_at: string;
-  status: "active" | "inactive";
+  status: "active" | "inactive" | "deactivated";
 }
 
 export type StockStatus = "in_stock" | "low_stock" | "out_of_stock";
