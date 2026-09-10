@@ -165,11 +165,79 @@ export async function POST(req: Request) {
       });
     }
 
+    // 3. Delete Customer / Khata Account
+    if (action === "delete_customer") {
+      const { customerId } = body;
+      if (!customerId) {
+        return NextResponse.json({ error: "Customer ID is required." }, { status: 400 });
+      }
+
+      const customer = await queryOne("SELECT * FROM customers WHERE id = ?", [customerId]);
+      if (!customer) {
+        return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+      }
+
+      await withTransaction(async (tx) => {
+        await tx.execute("DELETE FROM khata_transactions WHERE customer_id = ?", [customerId]);
+        await tx.execute("UPDATE invoices SET customer_id = NULL WHERE customer_id = ?", [customerId]);
+        await tx.execute("DELETE FROM customers WHERE id = ?", [customerId]);
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `Khata account for "${customer.store_name}" (${customer.name}) deleted successfully.`,
+      });
+    }
+
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (err: any) {
     console.error("Khata action error:", err);
     return NextResponse.json(
       { error: err.message || "Failed to process Khata action" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/khata?customerId=xyz - Delete customer & khata account
+export async function DELETE(req: Request) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const customerId = searchParams.get("customerId") || searchParams.get("customer_id");
+
+    if (!customerId) {
+      return NextResponse.json({ error: "Customer ID is required." }, { status: 400 });
+    }
+
+    const customer = await queryOne("SELECT * FROM customers WHERE id = ?", [customerId]);
+    if (!customer) {
+      return NextResponse.json({ error: "Customer not found" }, { status: 404 });
+    }
+
+    await withTransaction(async (tx) => {
+      // 1. Delete associated Khata ledger transactions
+      await tx.execute("DELETE FROM khata_transactions WHERE customer_id = ?", [customerId]);
+
+      // 2. Dissociate customer from any past invoices to keep financial history safe
+      await tx.execute("UPDATE invoices SET customer_id = NULL WHERE customer_id = ?", [customerId]);
+
+      // 3. Delete the customer record
+      await tx.execute("DELETE FROM customers WHERE id = ?", [customerId]);
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `Khata account for "${customer.store_name}" (${customer.name}) deleted successfully.`,
+    });
+  } catch (err: any) {
+    console.error("Khata delete error:", err);
+    return NextResponse.json(
+      { error: err.message || "Failed to delete Khata" },
       { status: 500 }
     );
   }

@@ -20,6 +20,8 @@ import {
   Calendar,
   Eye,
   X,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { Customer, KhataTransaction, User } from "@/lib/types";
 
@@ -60,6 +62,10 @@ export const KhataLedgerView: React.FC<KhataLedgerViewProps> = ({ user }) => {
   const [payNotes, setPayNotes] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Delete Khata state
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const fetchCustomers = async () => {
@@ -85,7 +91,9 @@ export const KhataLedgerView: React.FC<KhataLedgerViewProps> = ({ user }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        if (isRecordPaymentOpen) {
+        if (customerToDelete) {
+          setCustomerToDelete(null);
+        } else if (isRecordPaymentOpen) {
           setIsRecordPaymentOpen(false);
         } else if (isAddCustomerOpen) {
           setIsAddCustomerOpen(false);
@@ -97,7 +105,33 @@ export const KhataLedgerView: React.FC<KhataLedgerViewProps> = ({ user }) => {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isRecordPaymentOpen, isAddCustomerOpen, selectedCustomerId]);
+  }, [customerToDelete, isRecordPaymentOpen, isAddCustomerOpen, selectedCustomerId]);
+
+  const handleDeleteCustomer = async () => {
+    if (!customerToDelete) return;
+    setIsDeleting(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/khata?customerId=${customerToDelete.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete Khata account");
+
+      setMessage({ type: "success", text: data.message });
+      if (selectedCustomerId === customerToDelete.id) {
+        setSelectedCustomerId(null);
+        setSelectedCustomerData(null);
+      }
+      setCustomerToDelete(null);
+      fetchCustomers();
+    } catch (err: any) {
+      setMessage({ type: "error", text: err.message });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const openCustomerDetail = async (custId: string) => {
     setSelectedCustomerId(custId);
@@ -361,10 +395,19 @@ export const KhataLedgerView: React.FC<KhataLedgerViewProps> = ({ user }) => {
 
                       <button
                         onClick={() => openCustomerDetail(c.id)}
-                        className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-white/10"
+                        className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-white/10 cursor-pointer"
                       >
                         <History className="w-3.5 h-3.5" />
                         Ledger
+                      </button>
+
+                      <button
+                        onClick={() => setCustomerToDelete(c)}
+                        className="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 hover:text-red-200 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-red-500/30 hover:border-red-500/50 cursor-pointer shadow-sm shadow-red-500/10 active:scale-95"
+                        title={`Delete Khata for ${c.store_name}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete
                       </button>
                     </div>
                   </div>
@@ -386,15 +429,25 @@ export const KhataLedgerView: React.FC<KhataLedgerViewProps> = ({ user }) => {
                   {selectedCustomerData.customer.name} • {selectedCustomerData.customer.phone}
                 </p>
               </div>
-              <button
-                onClick={() => {
-                  setSelectedCustomerId(null);
-                  setSelectedCustomerData(null);
-                }}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCustomerToDelete(selectedCustomerData.customer)}
+                  className="px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 hover:text-red-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-red-500/30 cursor-pointer active:scale-95"
+                  title="Delete this Khata account"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Khata</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedCustomerId(null);
+                    setSelectedCustomerData(null);
+                  }}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
@@ -725,6 +778,66 @@ export const KhataLedgerView: React.FC<KhataLedgerViewProps> = ({ user }) => {
                 {isSubmitting ? "Registering..." : "Save Customer"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Khata Confirmation Modal */}
+      {customerToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-modal bg-[#0c1222]/95 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-white/15 space-y-4 animate-fade-in text-slate-100">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center mx-auto border border-red-500/30 shadow-inner">
+              <Trash2 className="w-6 h-6" />
+            </div>
+
+            <div className="text-center space-y-2">
+              <h3 className="text-base font-bold text-white">Delete Khata Account?</h3>
+              <p className="text-xs text-slate-300">
+                Are you sure you want to permanently delete the Khata account for:
+              </p>
+              <div className="py-2.5 px-3 bg-white/5 rounded-2xl border border-white/10 text-center space-y-0.5">
+                <div className="text-sm font-black text-slate-100">{customerToDelete.store_name}</div>
+                <div className="text-xs text-purple-300 font-medium">
+                  {customerToDelete.name} • <span className="font-mono">{customerToDelete.phone}</span>
+                </div>
+              </div>
+
+              {customerToDelete.current_balance > 0 ? (
+                <div className="p-3.5 bg-red-500/15 border border-red-500/30 rounded-2xl text-left space-y-1 mt-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-red-300">
+                    <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
+                    <span>Outstanding Due: ₹{customerToDelete.current_balance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <p className="text-[11px] text-red-200/80 leading-relaxed">
+                    This customer currently has an unpaid balance. Deleting this account will permanently remove their Khata ledger and transaction records.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center text-xs text-emerald-300 font-medium mt-2">
+                  ✓ Account has zero balance. Safe to delete.
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setCustomerToDelete(null)}
+                disabled={isDeleting}
+                className="px-4 py-2 text-xs font-bold text-slate-300 hover:bg-white/10 rounded-xl transition cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteCustomer}
+                disabled={isDeleting}
+                className="px-5 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded-xl shadow-lg shadow-red-600/30 transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer active:scale-95"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {isDeleting ? "Deleting Khata..." : "Permanently Delete Khata"}
+              </button>
+            </div>
           </div>
         </div>
       )}
