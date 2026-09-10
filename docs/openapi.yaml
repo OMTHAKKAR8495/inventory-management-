@@ -1,0 +1,832 @@
+openapi: 3.0.3
+info:
+  title: ProvisionSmart Enterprise API
+  description: |
+    Commercial-grade REST API for wholesale provision, FMCG distributor, POS counter billing, procurement, and B2B trade credit management (Khata ledger).
+  version: 1.0.0
+  contact:
+    name: ProvisionSmart Engineering
+    email: admin@provision.store
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+  - url: https://inventory-management-phi-neon.vercel.app
+    description: Production Cloud Deployment
+
+tags:
+  - name: Authentication
+    description: Session tokens, password recovery, and staff login
+  - name: Catalog & Products
+    description: Multi-filter inventory search, SKU generation, and stock management
+  - name: POS & Billing
+    description: Counter billing, stock deductions, tax calculations, and invoices
+  - name: Khata Ledger
+    description: B2B trade credit balances, settlements, and customer accounts
+  - name: Procurement & POs
+    description: Low-stock supplier orders and inward goods receipt
+  - name: Shopfloor Tasks
+    description: Admin-to-Manager work order dispatch and tracking
+  - name: Audit & Logs
+    description: Chronological movement logs and mistake resolution
+  - name: Staff Management
+    description: User account roles, activation, and access control
+  - name: Dashboard & Metrics
+    description: Executive stock valuation (₹) and inventory analytics
+  - name: System & Backup
+    description: Database health checks and snapshot management
+
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: provision_auth_token
+      description: Signed JWT HTTP-only session cookie (7-day validity).
+
+  schemas:
+    UserRole:
+      type: string
+      enum: [admin, manager]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: usr_admin_1
+        name:
+          type: string
+          example: Store Administrator
+        email:
+          type: string
+          format: email
+          example: admin@provision.store
+        role:
+          $ref: '#/components/schemas/UserRole'
+        status:
+          type: string
+          enum: [active, inactive, deactivated]
+          example: active
+        created_at:
+          type: string
+          format: date-time
+
+    StockStatus:
+      type: string
+      enum: [in_stock, low_stock, out_of_stock]
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          example: prod_rice_25kg
+        sku:
+          type: string
+          example: GRN-RICE-01
+        name:
+          type: string
+          example: Basmati Long Grain Rice (25kg)
+        category:
+          type: string
+          example: Grains & Cereals
+        sub_category:
+          type: string
+          example: Rice
+        unit:
+          type: string
+          example: Bag
+        bulk_pack_size:
+          type: integer
+          example: 1
+        cost_price:
+          type: number
+          format: float
+          description: Visible to Administrator only; masked to 0 for Managers
+          example: 1650.00
+        selling_price:
+          type: number
+          format: float
+          example: 2100.00
+        stock_quantity:
+          type: integer
+          example: 65
+        reorder_level:
+          type: integer
+          example: 20
+        supplier:
+          type: string
+          example: Golden Harvest Rice Mills
+        expiry_date:
+          type: string
+          format: date
+          example: "2027-06-30"
+        barcode:
+          type: string
+          example: "890103001001"
+        status:
+          $ref: '#/components/schemas/StockStatus'
+        profit_margin:
+          type: number
+          example: 450.00
+        profit_margin_percent:
+          type: number
+          example: 27.3
+        stock_cost_value:
+          type: number
+          example: 107250.00
+        stock_sales_value:
+          type: number
+          example: 136500.00
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          example: cust_gupta
+        name:
+          type: string
+          example: Suresh Gupta
+        store_name:
+          type: string
+          example: Gupta Provision Mart
+        phone:
+          type: string
+          example: "+91 98980 67890"
+        address:
+          type: string
+          example: "Shop 14, Main Bazaar"
+        credit_limit:
+          type: number
+          example: 75000.00
+        current_balance:
+          type: number
+          description: Pending credit due amount (₹)
+          example: 68219.20
+        created_at:
+          type: string
+          format: date-time
+
+    KhataTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          example: ktx_12345
+        customer_id:
+          type: string
+          example: cust_gupta
+        invoice_id:
+          type: string
+          nullable: true
+        type:
+          type: string
+          enum: [debit_purchase, credit_payment]
+        amount:
+          type: number
+          example: 5000.00
+        previous_balance:
+          type: number
+          example: 63219.20
+        new_balance:
+          type: number
+          example: 68219.20
+        payment_mode:
+          type: string
+          example: "UPI / PhonePe"
+        notes:
+          type: string
+        created_by_name:
+          type: string
+          example: Store Administrator
+        created_at:
+          type: string
+          format: date-time
+
+    InvoiceItem:
+      type: object
+      properties:
+        product_id:
+          type: string
+          example: prod_rice_25kg
+        product_name:
+          type: string
+          example: Basmati Long Grain Rice (25kg)
+        sku:
+          type: string
+          example: GRN-RICE-01
+        unit:
+          type: string
+          example: Bag
+        unit_price:
+          type: number
+          example: 2100.00
+        quantity:
+          type: integer
+          example: 2
+        total_price:
+          type: number
+          example: 4200.00
+
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+          example: inv_9921
+        invoice_number:
+          type: string
+          example: INV-2026-004
+        customer_id:
+          type: string
+          nullable: true
+        customer_name:
+          type: string
+          example: Walk-in Retailer
+        customer_phone:
+          type: string
+        subtotal:
+          type: number
+          example: 4200.00
+        discount_amount:
+          type: number
+          example: 100.00
+        tax_amount:
+          type: number
+          example: 205.00
+        grand_total:
+          type: number
+          example: 4305.00
+        payment_method:
+          type: string
+          enum: [cash, upi, khata, card]
+        payment_status:
+          type: string
+          enum: [paid, pending]
+        created_by_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceItem'
+
+paths:
+  # ----------------------------------------------------------------------------
+  # 1. AUTHENTICATION & SESSIONS
+  # ----------------------------------------------------------------------------
+  /api/auth/login:
+    post:
+      tags: [Authentication]
+      summary: User Login & Session Generation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: admin@provision.store
+                password:
+                  type: string
+                  example: admin123
+      responses:
+        200:
+          description: Authentication successful (sets session cookie)
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/User'
+        400:
+          description: Missing email or password
+        401:
+          description: Invalid email or password
+        429:
+          description: Too many failed login attempts (locked)
+
+  /api/auth/logout:
+    post:
+      tags: [Authentication]
+      summary: User Logout & Session Invalidation
+      responses:
+        200:
+          description: Successfully logged out
+
+  /api/auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get Current Authenticated Session
+      security:
+        - CookieAuth: []
+      responses:
+        200:
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        401:
+          description: Unauthorized
+
+  /api/auth/forgot-password:
+    post:
+      tags: [Authentication]
+      summary: Request Password Reset Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+      responses:
+        200:
+          description: Password reset link generated
+
+  /api/auth/reset-password:
+    post:
+      tags: [Authentication]
+      summary: Reset Password with Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password]
+              properties:
+                token:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Password updated successfully
+
+  # ----------------------------------------------------------------------------
+  # 2. PRODUCTS & INVENTORY
+  # ----------------------------------------------------------------------------
+  /api/products:
+    get:
+      tags: [Catalog & Products]
+      summary: Query Filterable Product Catalog
+      security:
+        - CookieAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [all, in_stock, low_stock, out_of_stock]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 15
+      responses:
+        200:
+          description: List of products with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+        401:
+          description: Unauthorized
+
+    post:
+      tags: [Catalog & Products]
+      summary: Create New Product (Admin only)
+      security:
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sku, name, category, unit, cost_price, selling_price, stock_quantity]
+              properties:
+                sku:
+                  type: string
+                name:
+                  type: string
+                category:
+                  type: string
+                unit:
+                  type: string
+                cost_price:
+                  type: number
+                selling_price:
+                  type: number
+                stock_quantity:
+                  type: integer
+      responses:
+        201:
+          description: Product created successfully
+
+  /api/products/{id}:
+    get:
+      tags: [Catalog & Products]
+      summary: Get Single Product Details & Logs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Product details and stock history
+    put:
+      tags: [Catalog & Products]
+      summary: Update Product Information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Product updated
+    delete:
+      tags: [Catalog & Products]
+      summary: Soft Delete or Purge Product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: purge
+          in: query
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: Product deleted
+
+  /api/products/bulk:
+    post:
+      tags: [Catalog & Products]
+      summary: Bulk Import Products from CSV/Spreadsheet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                products:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        200:
+          description: Bulk import results with success/failure breakdown
+
+  /api/products/stock-adjust:
+    post:
+      tags: [Catalog & Products]
+      summary: Manual Stock Adjustment (Stock-In / Stock-Out)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId, quantityDelta, changeType]
+              properties:
+                productId:
+                  type: string
+                quantityDelta:
+                  type: integer
+                changeType:
+                  type: string
+                  enum: [stock_in, stock_out, manual_adjustment]
+                reason:
+                  type: string
+      responses:
+        200:
+          description: Stock adjusted successfully
+
+  # ----------------------------------------------------------------------------
+  # 3. POS & BILLING
+  # ----------------------------------------------------------------------------
+  /api/pos/checkout:
+    post:
+      tags: [POS & Billing]
+      summary: Execute Counter POS Sale & Generate Tax Invoice
+      security:
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customerName, items, paymentMethod]
+              properties:
+                customerId:
+                  type: string
+                  nullable: true
+                customerName:
+                  type: string
+                  example: Walk-in Client
+                customerPhone:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [productId, quantity]
+                    properties:
+                      productId:
+                        type: string
+                      quantity:
+                        type: integer
+                discountAmount:
+                  type: number
+                  default: 0
+                taxAmount:
+                  type: number
+                  default: 0
+                paymentMethod:
+                  type: string
+                  enum: [cash, upi, khata, card]
+      responses:
+        200:
+          description: Bill checkout completed with stock deduction
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  invoice:
+                    $ref: '#/components/schemas/Invoice'
+
+  /api/pos/invoices:
+    get:
+      tags: [POS & Billing]
+      summary: List Past Billed Invoices & Receipts
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        200:
+          description: List of invoices
+
+  # ----------------------------------------------------------------------------
+  # 4. KHATA LEDGER & B2B TRADE CREDIT
+  # ----------------------------------------------------------------------------
+  /api/khata:
+    get:
+      tags: [Khata Ledger]
+      summary: Get Khata Directory or Customer Ledger
+      parameters:
+        - name: customer_id
+          in: query
+          description: Optional customer ID to fetch ledger and invoices
+          schema:
+            type: string
+      responses:
+        200:
+          description: Khata summary or detailed customer transactions
+    post:
+      tags: [Khata Ledger]
+      summary: Register Customer or Record Khata Settlement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [create_customer, record_payment, delete_customer]
+                name:
+                  type: string
+                storeName:
+                  type: string
+                phone:
+                  type: string
+                customerId:
+                  type: string
+                amount:
+                  type: number
+                paymentMode:
+                  type: string
+      responses:
+        200:
+          description: Action processed successfully
+    delete:
+      tags: [Khata Ledger]
+      summary: Permanently Delete Khata Account & Transactions
+      parameters:
+        - name: customerId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Customer Khata deleted successfully
+
+  # ----------------------------------------------------------------------------
+  # 5. PROCUREMENT & PURCHASE ORDERS
+  # ----------------------------------------------------------------------------
+  /api/procurement/purchase-orders:
+    get:
+      tags: [Procurement & POs]
+      summary: Query Purchase Orders & Low Stock Suggestions
+      responses:
+        200:
+          description: Purchase order records
+    post:
+      tags: [Procurement & POs]
+      summary: Create Draft or Issued Purchase Order
+      responses:
+        201:
+          description: Purchase order created
+    patch:
+      tags: [Procurement & POs]
+      summary: Receive & Stock Inward PO Delivery
+      responses:
+        200:
+          description: Stock added to catalog
+
+  # ----------------------------------------------------------------------------
+  # 6. SHOPFLOOR WORK ORDERS & TASKS
+  # ----------------------------------------------------------------------------
+  /api/tasks:
+    get:
+      tags: [Shopfloor Tasks]
+      summary: Get Work Order Tasks (Pending / Active)
+      responses:
+        200:
+          description: List of work orders
+    post:
+      tags: [Shopfloor Tasks]
+      summary: Dispatch Task from Admin to Manager
+      responses:
+        201:
+          description: Task created
+    patch:
+      tags: [Shopfloor Tasks]
+      summary: Update Task Status
+      responses:
+        200:
+          description: Task status progressed
+    delete:
+      tags: [Shopfloor Tasks]
+      summary: Remove Completed Task
+      responses:
+        200:
+          description: Task deleted
+
+  # ----------------------------------------------------------------------------
+  # 7. AUDIT LOGS & MOVEMENT HISTORIES
+  # ----------------------------------------------------------------------------
+  /api/audit-logs:
+    get:
+      tags: [Audit & Logs]
+      summary: Search Historical Stock Changes
+      responses:
+        200:
+          description: Chronological audit trail
+    post:
+      tags: [Audit & Logs]
+      summary: Resolve or Revert Stock Mistake Log
+      responses:
+        200:
+          description: Mistake resolved and counter-log inserted
+
+  # ----------------------------------------------------------------------------
+  # 8. STAFF & USER ACCOUNTS
+  # ----------------------------------------------------------------------------
+  /api/users:
+    get:
+      tags: [Staff Management]
+      summary: List Store Staff Accounts (Admin only)
+      responses:
+        200:
+          description: Staff users list
+    post:
+      tags: [Staff Management]
+      summary: Create New Staff Login Credentials
+      responses:
+        201:
+          description: User created
+    patch:
+      tags: [Staff Management]
+      summary: Deactivate or Reactivate Staff ID
+      responses:
+        200:
+          description: Status updated
+    delete:
+      tags: [Staff Management]
+      summary: Delete Staff Record
+      responses:
+        200:
+          description: User record removed
+
+  # ----------------------------------------------------------------------------
+  # 9. DASHBOARD & FINANCIAL METRICS
+  # ----------------------------------------------------------------------------
+  /api/dashboard/metrics:
+    get:
+      tags: [Dashboard & Metrics]
+      summary: Get Financial Valuation (₹), Stock Ratios & KPIs
+      responses:
+        200:
+          description: Executive metrics and critical alerts
+
+  # ----------------------------------------------------------------------------
+  # 10. SYSTEM & BACKUP
+  # ----------------------------------------------------------------------------
+  /api/health:
+    get:
+      tags: [System & Backup]
+      summary: System Health & Database Latency Check
+      responses:
+        200:
+          description: Service healthy
+        500:
+          description: Database connection error
+
+  /api/backup:
+    get:
+      tags: [System & Backup]
+      summary: List or Download Database Snapshot Backups
+      parameters:
+        - name: download
+          in: query
+          description: Filename to download
+          schema:
+            type: string
+      responses:
+        200:
+          description: Backup list or file stream
+    post:
+      tags: [System & Backup]
+      summary: Create Immediate Snapshot Backup
+      responses:
+        201:
+          description: Snapshot created

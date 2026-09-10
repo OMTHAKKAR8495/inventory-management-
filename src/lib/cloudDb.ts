@@ -4,6 +4,10 @@ import fs from "fs";
 
 // Helper: Convert direct Supabase connection URL (IPv6 only on free tier) or session pooler to IPv4 transaction pooler URL (port 6543)
 function normalizeDatabaseUrl(rawUrl?: string): string {
+  if (process.env.NODE_ENV === "test" || rawUrl === "sqlite" || rawUrl === "") {
+    return "";
+  }
+
   const defaultUrl =
     "postgresql://postgres.jedhlmpafnwhjrnkaomb:9558413347%40Om@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres";
 
@@ -117,6 +121,11 @@ function normalizeRow(row: any): any {
   return copy;
 }
 
+// Helper: Strip PostgreSQL schema prefixes (e.g. 'public.') for local SQLite compatibility
+function cleanSqlForSqlite(sql: string): string {
+  return sql.replace(/\bpublic\./gi, "");
+}
+
 /**
  * Execute a query that returns multiple rows
  */
@@ -127,7 +136,7 @@ export async function queryAll<T = any>(sql: string, params: any[] = []): Promis
     return result.rows.map(normalizeRow) as T[];
   } else {
     const db = getSqlite();
-    const rows = db.prepare(sql).all(...params);
+    const rows = db.prepare(cleanSqlForSqlite(sql)).all(...params);
     return rows.map(normalizeRow) as T[];
   }
 }
@@ -143,7 +152,7 @@ export async function queryOne<T = any>(sql: string, params: any[] = []): Promis
     return normalizeRow(result.rows[0]) as T;
   } else {
     const db = getSqlite();
-    const row = db.prepare(sql).get(...params);
+    const row = db.prepare(cleanSqlForSqlite(sql)).get(...params);
     if (!row) return null;
     return normalizeRow(row) as T;
   }
@@ -158,7 +167,7 @@ export async function execute(sql: string, params: any[] = []): Promise<any> {
     return await pool.query(pgSql, params);
   } else {
     const db = getSqlite();
-    return db.prepare(sql).run(...params);
+    return db.prepare(cleanSqlForSqlite(sql)).run(...params);
   }
 }
 
@@ -205,21 +214,28 @@ export async function withTransaction<T>(
     }
   } else {
     const db = getSqlite();
-    const runTx = db.transaction(async () => {
+    db.exec("BEGIN");
+    try {
       const tx = {
         queryAll: async <R = any>(sql: string, params: any[] = []): Promise<R[]> => {
-          return db.prepare(sql).all(...params).map(normalizeRow) as R[];
+          return db.prepare(cleanSqlForSqlite(sql)).all(...params).map(normalizeRow) as R[];
         },
         queryOne: async <R = any>(sql: string, params: any[] = []): Promise<R | null> => {
-          const row = db.prepare(sql).get(...params);
+          const row = db.prepare(cleanSqlForSqlite(sql)).get(...params);
           return row ? (normalizeRow(row) as R) : null;
         },
         execute: async (sql: string, params: any[] = []): Promise<any> => {
-          return db.prepare(sql).run(...params);
+          return db.prepare(cleanSqlForSqlite(sql)).run(...params);
         },
       };
-      return await callback(tx);
-    });
-    return runTx();
+      const result = await callback(tx);
+      db.exec("COMMIT");
+      return result;
+    } catch (err) {
+      try {
+        db.exec("ROLLBACK");
+      } catch (e) {}
+      throw err;
+    }
   }
 }

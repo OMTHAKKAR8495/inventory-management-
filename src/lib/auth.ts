@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { queryOne } from "./cloudDb";
 import { User, UserRole } from "./types";
 
+export type { User, UserRole };
+
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "wholesale-provision-store-super-secure-key-2026-xyz-9988"
 );

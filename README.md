@@ -105,16 +105,86 @@ inventory-management-/
 
 ---
 
-## 🚀 Running Locally
+## 🚀 Getting Started Locally
 
 ```bash
 # 1. Install dependencies
-npm install
+npm install --legacy-peer-deps
 
-# 2. Start development server
+# 2. Configure environment
+cp .env.example .env.local
+
+# 3. Seed demo wholesale data (products, users, khata ledgers)
+npm run seed
+
+# 4. Run automated test suite
+npm test
+
+# 5. Start development server
 npm run dev
 
-# 3. Open in browser
+# 6. Open in browser
 http://localhost:3000
 ```
+
+---
+
+## 🧪 Automated Testing
+
+ProvisionSmart includes a comprehensive unit and integration test suite powered by **Vitest**:
+
+```bash
+# Run all unit and integration tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+```
+
+**Test Coverage Highlights**:
+- **Unit Tests**: JWT signing & verification (`src/lib/auth.ts`), SQLite database & backup snapshots (`src/lib/db.ts`), PDF tax invoices & CSV generation (`src/lib/exportUtils.ts`).
+- **Integration Tests**: Login & session cookies (`/api/auth/login`), catalog query & filtering (`/api/products`), counter billing & stock deduction (`/api/pos/checkout`), B2B trade credit settlements (`/api/khata`).
+
+---
+
+## 🚢 Deployment Options
+
+### 1. Deploying to Vercel (Recommended)
+ProvisionSmart includes a pre-configured [`vercel.json`](vercel.json):
+1. Push your repository to GitHub.
+2. Import the project in [Vercel](https://vercel.com).
+3. Set the following Environment Variables in the Vercel Dashboard:
+   - `JWT_SECRET`: A 32+ character random string.
+   - `DATABASE_URL`: PostgreSQL connection string (use Supabase port 6543 pooler for serverless).
+4. Deploy! Builds and deployments are automated on every git push.
+
+### 2. Deploying with Docker & Docker Compose
+A multi-stage [`Dockerfile`](Dockerfile) and [`docker-compose.yml`](docker-compose.yml) are included for containerized environments:
+
+```bash
+# Build and run container in detached mode
+docker compose up -d --build
+
+# View real-time container logs
+docker compose logs -f
+
+# Check health endpoint
+curl http://localhost:3000/api/health
+```
+
+The `./data` directory is automatically mounted as a persistent volume, preserving SQLite database files and snapshot backups across container restarts.
+
+---
+
+## 📖 API Documentation
+
+Complete OpenAPI 3.0.3 specification documenting all 19 REST endpoints is available at:
+- **YAML Spec**: [`docs/openapi.yaml`](docs/openapi.yaml)
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
 

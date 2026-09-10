@@ -950,13 +950,13 @@ function seedData() {
   }
 }
 
-export function createDatabaseBackup(): { success: boolean; filename: string; filePath: string; size: number } {
+export async function createDatabaseBackup(): Promise<{ success: boolean; filename: string; filePath: string; size: number }> {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const filename = `inventory_backup_${timestamp}.db`;
   const backupFilePath = path.join(backupDir, filename);
 
   try {
-    db.backup(backupFilePath);
+    await db.backup(backupFilePath);
     const stat = fs.statSync(backupFilePath);
     return {
       success: true,
